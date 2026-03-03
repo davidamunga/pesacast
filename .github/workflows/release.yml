@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "pesacast@*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. pesacast@1.0.0) — leave blank to use current version in desktop/package.json"
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -15,6 +21,7 @@ jobs:
     outputs:
       release_id: ${{ steps.release.outputs.id }}
       version: ${{ steps.tag.outputs.version }}
+      ref: ${{ steps.tag.outputs.ref }}
 
     steps:
       - uses: actions/checkout@v4
@@ -22,12 +29,23 @@ jobs:
       - name: Extract version from tag
         id: tag
         shell: bash
-        run: echo "version=${GITHUB_REF_NAME#pesacast@}" >> "$GITHUB_OUTPUT"
+        run: |
+          if [ -n "${{ inputs.tag }}" ]; then
+            REF="${{ inputs.tag }}"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION=$(node -p "require('./desktop/package.json').version")
+            REF="pesacast@${VERSION}"
+          else
+            REF="${{ github.ref_name }}"
+          fi
+          echo "version=${REF#pesacast@}" >> "$GITHUB_OUTPUT"
+          echo "ref=${REF}" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         id: release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.tag.outputs.ref }}
           name: "PesaCast v${{ steps.tag.outputs.version }}"
           draft: false
           prerelease: false
@@ -71,6 +89,7 @@ jobs:
       - name: Upload APK to release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ needs.create-release.outputs.ref }}
           files: android/app/build/outputs/apk/release/app-release.apk
 
   build-desktop:
