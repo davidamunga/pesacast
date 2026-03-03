@@ -1,0 +1,92 @@
+# ============================================================
+# PesaCast — root .gitignore
+# Covers: android/ (Kotlin/Gradle) and desktop/ (Tauri/Rust + React/Vite)
+# ============================================================
+
+# ──────────────────────────────────────────
+# OS & editor
+# ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+.Spotlight-V100
+.Trashes
+
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+nbproject/
+.project
+.classpath
+.settings/
+
+# ──────────────────────────────────────────
+# Android (android/)
+# ──────────────────────────────────────────
+android/.gradle/
+android/build/
+android/app/build/
+android/captures/
+android/local.properties
+android/*.keystore
+android/*.jks
+android/keystore.properties
+android/.cxx/
+android/**/*.apk
+android/**/*.aab
+android/**/*.ap_
+android/**/*.class
+android/**/*.dex
+android/app/release/
+android/app/debug/
+android/google-services.json
+
+# ──────────────────────────────────────────
+# Desktop — Rust / Tauri backend (desktop/src-tauri/)
+# ──────────────────────────────────────────
+desktop/src-tauri/target/
+desktop/src-tauri/WixTools/
+desktop/src-tauri/vendor/btleplug/target/
+
+# ──────────────────────────────────────────
+# Desktop — Node / Vite / React frontend (desktop/)
+# ──────────────────────────────────────────
+desktop/node_modules/
+desktop/dist/
+desktop/.vite/
+desktop/.cache/
+desktop/.parcel-cache/
+desktop/.turbo/
+
+# ──────────────────────────────────────────
+# Desktop — Tauri build outputs
+# ──────────────────────────────────────────
+desktop/src-tauri/gen/
+desktop/src-tauri/Cargo.lock.bak
+
+# ──────────────────────────────────────────
+# Environment & secrets
+# ──────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.pfx
+
+# ──────────────────────────────────────────
+# Logs & temp files
+# ──────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tmp
+*.temp

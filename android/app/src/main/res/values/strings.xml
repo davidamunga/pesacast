@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PesaCast</string>
+    <string name="mac_connection">Mac Connection</string>
+    <string name="settings">Settings</string>
+    <string name="select_device">Select paired Mac</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="mirror_to_desktop">Mirror to Desktop</string>
+    <string name="send_test">Send Test Notification</string>
+    <string name="recent_transactions">Recent Transactions</string>
+    <string name="no_transactions">No transactions yet</string>
+    <string name="status_disconnected">Not connected</string>
+    <string name="status_connecting">Connecting…</string>
+    <string name="status_connected">Connected</string>
+    <string name="perm_rationale_sms">PesaCast needs SMS permission to detect M-PESA transactions.</string>
+    <string name="perm_rationale_bt">PesaCast needs Bluetooth permission to connect to your Mac.</string>
+
+    <!-- Foreground service notification -->
+    <string name="notif_channel_name">Transport</string>
+    <string name="notif_channel_desc">Keeps M-PESA mirroring active in the background</string>
+    <string name="notif_transport_starting">Starting…</string>
+    <string name="notif_status_connected">Connected — mirroring M-PESA SMS</string>
+    <string name="notif_status_connecting">Connecting to desktop…</string>
+    <string name="notif_status_disconnected">Waiting for connection</string>
+    <string name="notif_action_stop">Stop</string>
+
+    <string name="ble_status">BLE</string>
+    <string name="status_ble_advertising">Advertising…</string>
+</resources>

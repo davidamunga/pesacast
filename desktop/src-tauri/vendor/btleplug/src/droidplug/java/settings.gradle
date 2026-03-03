@@ -1,0 +1,11 @@
+pluginManagement {
+    repositories {
+        google()
+    }
+    plugins {
+        id 'com.android.library' version '7.4.2'
+    }
+}
+
+rootProject.name = 'droidplug'
+

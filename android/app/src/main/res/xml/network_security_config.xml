@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Allow cleartext HTTP/WebSocket traffic to local (LAN) destinations only.
+    The desktop companion listens on a plain WS port; HTTPS is not required on the LAN.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

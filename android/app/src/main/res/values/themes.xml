@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.PesaCast" parent="Theme.Material3.Dark.NoActionBar">
+        <!-- Brand green primary — no purple -->
+        <item name="colorPrimary">@color/green_600</item>
+        <item name="colorOnPrimary">@android:color/white</item>
+        <item name="colorPrimaryContainer">@color/green_900</item>
+        <item name="colorOnPrimaryContainer">@android:color/white</item>
+
+        <!-- Secondary and tertiary inherit green to eliminate purple tints -->
+        <item name="colorSecondary">@color/green_600</item>
+        <item name="colorOnSecondary">@android:color/white</item>
+        <item name="colorSecondaryContainer">@color/green_900</item>
+        <item name="colorOnSecondaryContainer">@android:color/white</item>
+        <item name="colorTertiary">@color/green_600</item>
+        <item name="colorOnTertiary">@android:color/white</item>
+        <item name="colorTertiaryContainer">@color/green_900</item>
+        <item name="colorOnTertiaryContainer">@android:color/white</item>
+
+        <!-- Dark neutral surfaces matching desktop dark theme -->
+        <item name="android:colorBackground">@color/neutral_900</item>
+        <item name="colorSurface">@color/neutral_800</item>
+        <item name="colorSurfaceVariant">@color/neutral_700</item>
+        <item name="colorOnSurface">@color/neutral_100</item>
+        <item name="colorOnSurfaceVariant">@color/neutral_400</item>
+        <item name="colorOutline">@color/neutral_600</item>
+
+        <!-- Inter font family -->
+        <item name="android:fontFamily">@font/inter</item>
+        <item name="fontFamily">@font/inter</item>
+    </style>
+</resources>
