@@ -33,7 +33,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY4Q0E2MDRFM0Y2NEJFNDQKUldSRXZtUS9UbURLK0U5WkZJU3h3SFd1dFgvTURpQXptWFFNSUNKTzJ4Wm1nNjduUHYrM0MzekcK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ5RjQ5MEZDOTJCNzFEQkMKUldTOEhiZVMvSkQwU2FEU2lRUW55enp1ZXNOZUUwamludklYMWRSZ0hTT2ZEc2ExSW1yc1h1bzgK",
       "endpoints": [
         "https://github.com/davidamunga/pesacast/releases/latest/download/latest.json"
       ]
