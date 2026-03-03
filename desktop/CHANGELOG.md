@@ -1,5 +1,11 @@
 # pesacast
 
+## 0.2.4
+
+### Patch Changes
+
+- 742bd39: fix: update banner
+
 ## 0.2.3
 
 ### Patch Changes
