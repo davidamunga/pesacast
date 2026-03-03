@@ -1,5 +1,11 @@
 # pesacast
 
+## 0.2.1
+
+### Patch Changes
+
+- defb3ad: fix: update banner state
+
 ## 0.2.0
 
 ### Minor Changes
