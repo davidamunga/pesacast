@@ -143,6 +143,16 @@ jobs:
             tauri-args: ""
 
     steps:
+      - name: Verify signing key is set
+        shell: bash
+        run: |
+          if [ -z "$TAURI_SIGNING_PRIVATE_KEY" ]; then
+            echo "::error::TAURI_SIGNING_PRIVATE_KEY secret is not set. Go to Settings → Secrets → Actions and add it. Run 'pnpm tauri signer generate' locally to generate a key pair."
+            exit 1
+          fi
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
