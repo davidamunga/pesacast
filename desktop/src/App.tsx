@@ -80,10 +80,8 @@ function App() {
         </TabsPanel>
       </Tabs>
 
-      <UpdateBanner />
-
-      <footer className="shrink-0 border-t border-border px-4 py-2 text-center text-[11px] text-muted-foreground">
-        Made by{" "}
+      <footer className="flex items-center justify-center shrink-0 border-t border-border px-4 py-2 text-center text-[11px] text-muted-foreground">
+        <div >Made by&nbsp;</div>
         <a
           href="https://x.com/davidamunga_"
           target="_blank"
@@ -92,7 +90,7 @@ function App() {
         >
           David Amunga
         </a>
-        {" · "}
+        <div>&nbsp;·&nbsp;</div>
         <a
           href="https://github.com/davidamunga/pesacast"
           target="_blank"
@@ -101,6 +99,7 @@ function App() {
         >
           GitHub
         </a>
+        <UpdateBanner />
       </footer>
     </div>
   );
