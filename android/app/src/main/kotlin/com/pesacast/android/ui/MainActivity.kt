@@ -77,6 +77,9 @@ class MainActivity : AppCompatActivity() {
             vibrate()
             vm.sendTest()
         }
+
+        val versionName = packageManager.getPackageInfo(packageName, 0).versionName
+        binding.tvVersion.text = "v$versionName"
     }
 
     private fun observeState() {

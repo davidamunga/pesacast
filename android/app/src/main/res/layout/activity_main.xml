@@ -298,6 +298,14 @@
                     android:textColor="@color/neutral_500"
                     android:textSize="11sp" />
 
+                <TextView
+                    android:id="@+id/tvVersion"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="@color/neutral_500"
+                    android:textSize="11sp" />
+
             </LinearLayout>
 
         </LinearLayout>

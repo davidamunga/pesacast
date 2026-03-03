@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Moon, Sun } from "lucide-react";
+import packageJson from "../package.json";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTab, TabsPanel } from "@/components/ui/tabs";
@@ -99,6 +100,8 @@ function App() {
         >
           GitHub
         </a>
+        <div>&nbsp;·&nbsp;</div>
+        <span>v{packageJson.version}</span>
         <UpdateBanner />
       </footer>
     </div>

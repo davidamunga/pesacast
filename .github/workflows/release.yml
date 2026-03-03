@@ -68,7 +68,7 @@ jobs:
             echo "**Desktop** — download the installer for your platform below."
             echo "The app will check for future updates automatically."
             echo ""
-            echo "**Android** — download and install \`app-release.apk\`."
+            echo "**Android** — download and install \`pesacast-${VERSION}.apk\`."
           } > /tmp/release_body.md
 
       - name: Create GitHub Release
@@ -115,11 +115,17 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
+      - name: Rename APK
+        run: |
+          VERSION="${{ needs.create-release.outputs.version }}"
+          mv android/app/build/outputs/apk/release/app-release.apk \
+             android/app/build/outputs/apk/release/pesacast-${VERSION}.apk
+
       - name: Upload APK to release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.create-release.outputs.ref }}
-          files: android/app/build/outputs/apk/release/app-release.apk
+          files: android/app/build/outputs/apk/release/pesacast-${{ needs.create-release.outputs.version }}.apk
 
   build-desktop:
     name: Build Desktop (${{ matrix.platform }})
