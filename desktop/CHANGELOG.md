@@ -1,5 +1,11 @@
 # pesacast
 
+## 0.2.3
+
+### Patch Changes
+
+- 1c8afbc: fix: release workflow
+
 ## 0.2.2
 
 ### Patch Changes
