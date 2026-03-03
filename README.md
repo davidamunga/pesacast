@@ -19,22 +19,22 @@
 
 ## How It Works
 
-```
-┌──────────────────────────────┐        BLE        ┌──────────────────────────────┐
-│  Android (PesaCast)          │ ────────────────────────▶ │  Desktop (PesaCast)          │
-│                              │                           │                              │
-│  SMS received from "MPESA"   │                           │  Displays live transactions  │
-│  ──▶ MpesaParser             │                           │  with connection status,     │
-│  ──▶ TransportManager        │                           │  amount, type, balance, etc. │
-│      (BLE GATT notify        │                           │  (Tauri + React)             │
-│       or WebSocket JSON)     │                           │                              │
-└──────────────────────────────┘                           └──────────────────────────────┘
-```
+```mermaid
+sequenceDiagram
+    participant MPESA as Safaricom / M-PESA
+    participant Android as Android App
+    participant BLE as Bluetooth LE
+    participant Desktop as Desktop App (Tauri + React)
 
-1. The Android app runs a persistent background service (`MirrorService`) that listens for incoming SMS from `MPESA`.
-2. Each SMS is parsed into a structured `MpesaTransaction` (type, direction, amount, currency, sender/recipient, reference, timestamp, balance).
-3. The transaction is forwarded via the selected transport — **Bluetooth LE** (GATT characteristic notify) 
-4. The desktop app connects to the Android device, receives the stream, and renders each transaction in a live feed with desktop notifications.
+    MPESA->>Android: SMS — "You have received KES 500..."
+    Android->>Android: SmsReceiver intercepts broadcast
+    Android->>Android: MpesaParser → MpesaTransaction
+    Android->>Android: MirrorService (foreground) picks up transaction
+    Android->>BLE: GATT characteristic notify (JSON payload)
+    BLE->>Desktop: BLE event received
+    Desktop->>Desktop: Decode & store transaction
+    Desktop->>Desktop: Render live feed + desktop notification
+```
 
 ---
 
