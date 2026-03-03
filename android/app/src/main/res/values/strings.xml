@@ -13,6 +13,10 @@
     <string name="status_disconnected">Not connected</string>
     <string name="status_connecting">Connecting…</string>
     <string name="status_connected">Connected</string>
+    <plurals name="status_connected_devices">
+        <item quantity="one">Connected (1 device)</item>
+        <item quantity="other">Connected (%d devices)</item>
+    </plurals>
     <string name="perm_rationale_sms">PesaCast needs SMS permission to detect M-PESA transactions.</string>
     <string name="perm_rationale_bt">PesaCast needs Bluetooth permission to connect to your Mac.</string>
 
@@ -21,10 +25,17 @@
     <string name="notif_channel_desc">Keeps M-PESA mirroring active in the background</string>
     <string name="notif_transport_starting">Starting…</string>
     <string name="notif_status_connected">Connected — mirroring M-PESA SMS</string>
+    <plurals name="notif_status_connected_devices">
+        <item quantity="one">Connected (1 device) — mirroring M-PESA SMS</item>
+        <item quantity="other">Connected (%d devices) — mirroring M-PESA SMS</item>
+    </plurals>
     <string name="notif_status_connecting">Connecting to desktop…</string>
     <string name="notif_status_disconnected">Waiting for connection</string>
     <string name="notif_action_stop">Stop</string>
 
     <string name="ble_status">BLE</string>
     <string name="status_ble_advertising">Advertising…</string>
+
+    <string name="footer_made_by">Made by David Amunga</string>
+    <string name="footer_github">github.com/davidamunga/pesacast</string>
 </resources>

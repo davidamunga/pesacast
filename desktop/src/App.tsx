@@ -10,6 +10,7 @@ import { BluetoothSection } from "@/domains/connection/bluetooth-section";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { useTheme } from "@/hooks/use-theme";
 import { ensureNotificationPermission } from "@/hooks/use-notification-permission";
+import { UpdateBanner } from "@/domains/updater/update-banner";
 
 function App() {
   const { isDark, setIsDark } = useTheme();
@@ -78,6 +79,29 @@ function App() {
           <BluetoothSection {...ble} />
         </TabsPanel>
       </Tabs>
+
+      <UpdateBanner />
+
+      <footer className="shrink-0 border-t border-border px-4 py-2 text-center text-[11px] text-muted-foreground">
+        Made by{" "}
+        <a
+          href="https://x.com/davidamunga_"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-2 hover:text-foreground"
+        >
+          David Amunga
+        </a>
+        {" · "}
+        <a
+          href="https://github.com/davidamunga/pesacast"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline underline-offset-2 hover:text-foreground"
+        >
+          GitHub
+        </a>
+      </footer>
     </div>
   );
 }

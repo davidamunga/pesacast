@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.util.UUID
+import java.util.concurrent.CopyOnWriteArraySet
 
 private const val TAG = "BleTransport"
 
@@ -51,7 +52,7 @@ class BleTransport(private val context: Context) {
     val state: StateFlow<TransportState> = _state.asStateFlow()
 
     private var gattServer: BluetoothGattServer? = null
-    private var connectedDevice: BluetoothDevice? = null
+    private val connectedDevices = CopyOnWriteArraySet<BluetoothDevice>()
     private var txnCharacteristic: BluetoothGattCharacteristic? = null
     private val pendingQueue = ArrayDeque<String>()
 
@@ -75,7 +76,7 @@ class BleTransport(private val context: Context) {
     fun stop() {
         gattServer?.close()
         gattServer = null
-        connectedDevice = null
+        connectedDevices.clear()
         bleManager.adapter.bluetoothLeAdvertiser?.stopAdvertising(advertiseCallback)
         _state.value = TransportState.Disconnected
         Log.i(TAG, "BLE peripheral stopped")
@@ -83,18 +84,21 @@ class BleTransport(private val context: Context) {
 
     fun sendTransaction(txn: MpesaTransaction) {
         val json = gson.toJson(txn)
-        val device = connectedDevice
         val characteristic = txnCharacteristic
         val server = gattServer
+        val devices = connectedDevices.toList()
 
-        if (device == null || characteristic == null || server == null ||
+        if (devices.isEmpty() || characteristic == null || server == null ||
             _state.value !is TransportState.Connected
         ) {
             Log.d(TAG, "BLE not connected — queuing transaction")
             pendingQueue.addLast(json)
             return
         }
-        sendChunked(server, device, characteristic, json)
+        Log.d(TAG, "Broadcasting transaction to ${devices.size} device(s)")
+        for (device in devices) {
+            sendChunked(server, device, characteristic, json)
+        }
     }
 
     // MARK: - GATT server
@@ -130,14 +134,18 @@ class BleTransport(private val context: Context) {
         override fun onConnectionStateChange(device: BluetoothDevice, status: Int, newState: Int) {
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED -> {
-                    Log.i(TAG, "Desktop connected via BLE: ${device.address}")
-                    connectedDevice = device
-                    _state.value = TransportState.Connected
+                    connectedDevices.add(device)
+                    Log.i(TAG, "Desktop connected: ${device.address} (${connectedDevices.size} total)")
+                    _state.value = TransportState.Connected(connectedDevices.size)
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
-                    Log.i(TAG, "Desktop disconnected from BLE")
-                    connectedDevice = null
-                    _state.value = TransportState.Connecting // still advertising
+                    connectedDevices.remove(device)
+                    Log.i(TAG, "Desktop disconnected: ${device.address} (${connectedDevices.size} remaining)")
+                    _state.value = if (connectedDevices.isEmpty()) {
+                        TransportState.Connecting // still advertising
+                    } else {
+                        TransportState.Connected(connectedDevices.size)
+                    }
                 }
             }
         }
@@ -247,11 +255,13 @@ class BleTransport(private val context: Context) {
 
     private fun drainQueue() {
         val server = gattServer ?: return
-        val device = connectedDevice ?: return
+        val devices = connectedDevices.toList().ifEmpty { return }
         val characteristic = txnCharacteristic ?: return
         while (pendingQueue.isNotEmpty()) {
             val json = pendingQueue.removeFirst()
-            sendChunked(server, device, characteristic, json)
+            for (device in devices) {
+                sendChunked(server, device, characteristic, json)
+            }
         }
     }
 

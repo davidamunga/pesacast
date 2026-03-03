@@ -41,6 +41,36 @@ jobs:
           echo "version=${REF#pesacast@}" >> "$GITHUB_OUTPUT"
           echo "ref=${REF}" >> "$GITHUB_OUTPUT"
 
+      - name: Build release body
+        id: body
+        shell: bash
+        run: |
+          VERSION="${{ steps.tag.outputs.version }}"
+          REPO="${{ github.repository }}"
+
+          # Extract the changelog block for this version
+          NOTES=$(awk -v ver="$VERSION" '
+            /^## / { if (found) exit; if (index($0, ver)) found=1; next }
+            found { print }
+          ' desktop/CHANGELOG.md | sed '/^[[:space:]]*$/d')
+
+          {
+            echo "## What's new"
+            echo ""
+            if [ -n "$NOTES" ]; then
+              echo "$NOTES"
+            else
+              echo "See [CHANGELOG.md](https://github.com/${REPO}/blob/main/desktop/CHANGELOG.md) for details."
+            fi
+            echo ""
+            echo "---"
+            echo ""
+            echo "**Desktop** — download the installer for your platform below."
+            echo "The app will check for future updates automatically."
+            echo ""
+            echo "**Android** — download and install \`app-release.apk\`."
+          } > /tmp/release_body.md
+
       - name: Create GitHub Release
         id: release
         uses: softprops/action-gh-release@v2
@@ -50,8 +80,7 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: false
-          body: |
-            See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/desktop/CHANGELOG.md) for release notes.
+          body_path: /tmp/release_body.md
 
   build-android:
     name: Build Android APK
@@ -142,7 +171,13 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # Updater signing — generate with: cargo tauri signer generate
+          # Store private key in TAURI_SIGNING_PRIVATE_KEY GitHub secret
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
           args: ${{ matrix.tauri-args }}
           projectPath: desktop
+          updaterJsonPreferNsis: false
+          includeUpdaterJson: true

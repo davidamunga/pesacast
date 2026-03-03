@@ -1,7 +1,6 @@
 {
   "name": "pesacast-workspace",
   "private": true,
-  "packageManager": "pnpm@10.17.0",
   "scripts": {
     "changeset": "changeset",
     "version-packages": "changeset version && node scripts/sync-android-version.mjs",

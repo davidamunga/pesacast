@@ -91,26 +91,20 @@ class MainActivity : AppCompatActivity() {
     // MARK: - Rendering
 
     private fun renderBleState(state: TransportState) {
-        val (color, label) = stateColors(state)
-        val statusText = when (state) {
-            is TransportState.Connecting -> getString(R.string.status_ble_advertising)
-            else -> label
+        val (color, statusText) = when (state) {
+            is TransportState.Disconnected ->
+                Color.GRAY to getString(R.string.status_disconnected)
+            is TransportState.Connecting ->
+                Color.parseColor("#FFA000") to getString(R.string.status_ble_advertising)
+            is TransportState.Connected ->
+                Color.parseColor("#2E7D32") to resources.getQuantityString(
+                    R.plurals.status_connected_devices, state.deviceCount, state.deviceCount
+                )
         }
         listOf(binding.bleStatusDot, binding.bleCardDot).forEach { dot ->
             (dot.background as? android.graphics.drawable.GradientDrawable)?.setColor(color)
         }
         binding.bleStatusLabel.text = statusText
-    }
-
-    private fun stateColors(state: TransportState): Pair<Int, String> = when (state) {
-        is TransportState.Disconnected ->
-            Color.GRAY to getString(R.string.status_disconnected)
-
-        is TransportState.Connecting ->
-            Color.parseColor("#FFA000") to getString(R.string.status_connecting)
-
-        is TransportState.Connected ->
-            Color.parseColor("#2E7D32") to getString(R.string.status_connected)
     }
 
     private fun renderTransactions(list: List<MpesaTransaction>) {

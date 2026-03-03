@@ -14,7 +14,7 @@ private const val TAG = "TransportManager"
 sealed class TransportState {
     data object Disconnected : TransportState()
     data object Connecting : TransportState()
-    data object Connected : TransportState()
+    data class Connected(val deviceCount: Int = 1) : TransportState()
 }
 
 /**

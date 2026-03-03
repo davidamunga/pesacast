@@ -112,7 +112,9 @@ class MirrorService : Service() {
     }
 
     private fun statusText(state: TransportState) = when (state) {
-        is TransportState.Connected    -> getString(R.string.notif_status_connected)
+        is TransportState.Connected -> resources.getQuantityString(
+            R.plurals.notif_status_connected_devices, state.deviceCount, state.deviceCount
+        )
         is TransportState.Connecting   -> getString(R.string.notif_status_connecting)
         is TransportState.Disconnected -> getString(R.string.notif_status_disconnected)
     }
