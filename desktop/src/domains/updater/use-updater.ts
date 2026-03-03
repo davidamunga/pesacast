@@ -11,14 +11,18 @@ export type UpdaterStatus =
   | "ready"
   | "error";
 
+export type UpdaterError = { message: string };
+
 export function useUpdater() {
   const [update, setUpdate] = useState<Update | null>(null);
   const [status, setStatus] = useState<UpdaterStatus>("idle");
+  const [error, setError] = useState<UpdaterError | null>(null);
   const [dismissed, setDismissed] = useState(false);
   const upToDateTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const runCheck = useCallback(async () => {
     setStatus("checking");
+    setError(null);
     try {
       const u = await check();
       if (u?.available) {
@@ -29,8 +33,10 @@ export function useUpdater() {
         setStatus("up-to-date");
         upToDateTimer.current = setTimeout(() => setStatus("idle"), 4000);
       }
-    } catch {
-      setStatus("idle");
+    } catch (e) {
+      console.error(e);
+      setError({ message: e instanceof Error ? e.message : String(e) });
+      setStatus("error");
     }
   }, []);
 
@@ -49,7 +55,8 @@ export function useUpdater() {
       await update.downloadAndInstall();
       setStatus("ready");
       await relaunch();
-    } catch {
+    } catch (error) {
+      console.error(error);
       setStatus("error");
     }
   }, [update]);
@@ -57,6 +64,7 @@ export function useUpdater() {
   return {
     update,
     status,
+    error,
     dismissed,
     dismiss: () => setDismissed(true),
     checkForUpdates: runCheck,

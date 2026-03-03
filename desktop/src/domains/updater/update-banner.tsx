@@ -1,9 +1,10 @@
-import { Download, X, RefreshCw, Check } from "lucide-react";
+import { Download, X, RefreshCw, Check, AlertCircle } from "lucide-react";
 import { useUpdater } from "./use-updater";
 
 export function UpdateBanner() {
-  const { update, status, dismissed, dismiss, checkForUpdates, install } =
+  const { update, status, error, dismissed, dismiss, checkForUpdates, install } =
     useUpdater();
+
 
   // Hide when an update was found but user dismissed it
   if (status === "available" && dismissed) return null;
@@ -42,7 +43,19 @@ export function UpdateBanner() {
           </>
         )}
 
-        {(status === "idle" || status === "error") && (
+        {status === "error" && (
+          <>
+            <AlertCircle className="size-3.5 shrink-0 text-destructive" />
+            <span
+              className="text-destructive max-w-[200px] truncate"
+              title={error?.message}
+            >
+              {error?.message ?? "Update check failed"}
+            </span>
+          </>
+        )}
+
+        {status === "idle" && (
           <span className="opacity-0 select-none">·</span>
         )}
       </div>
