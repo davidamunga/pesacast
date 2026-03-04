@@ -46,7 +46,9 @@ jobs:
         shell: bash
         run: |
           VERSION="${{ steps.tag.outputs.version }}"
+          TAG="${{ steps.tag.outputs.ref }}"
           REPO="${{ github.repository }}"
+          BASE="https://github.com/${REPO}/releases/download/${TAG}"
 
           # Extract the changelog block for this version
           NOTES=$(awk -v ver="$VERSION" '
@@ -55,7 +57,7 @@ jobs:
           ' desktop/CHANGELOG.md | sed '/^[[:space:]]*$/d')
 
           {
-            echo "## What's new"
+            echo "## What's New"
             echo ""
             if [ -n "$NOTES" ]; then
               echo "$NOTES"
@@ -65,10 +67,23 @@ jobs:
             echo ""
             echo "---"
             echo ""
-            echo "**Desktop** — download the installer for your platform below."
-            echo "The app will check for future updates automatically."
+            echo "## Downloads"
             echo ""
-            echo "**Android** — download and install \`pesacast-${VERSION}.apk\`."
+            echo "### Desktop"
+            echo ""
+            echo "| Platform | Installer |"
+            echo "|----------|-----------|"
+            echo "| macOS (Apple Silicon + Intel Universal) | [pesacast_${VERSION}_universal.dmg](${BASE}/pesacast_${VERSION}_universal.dmg) |"
+            echo "| Windows x64 — Setup wizard | [pesacast_${VERSION}_x64-setup.exe](${BASE}/pesacast_${VERSION}_x64-setup.exe) |"
+            echo "| Windows x64 — MSI | [pesacast_${VERSION}_x64_en-US.msi](${BASE}/pesacast_${VERSION}_x64_en-US.msi) |"
+            echo ""
+            echo "> The app checks for updates automatically. No manual re-installation needed for future releases."
+            echo ""
+            echo "### Android"
+            echo ""
+            echo "| Platform | Package |"
+            echo "|----------|---------|"
+            echo "| Android (APK) | [pesacast-${VERSION}.apk](${BASE}/pesacast-${VERSION}.apk) |"
           } > /tmp/release_body.md
 
       - name: Create GitHub Release
@@ -166,40 +181,100 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build desktop app
-        working-directory: desktop
-        run: pnpm tauri build ${{ matrix.tauri-args }}
+      - name: Build and upload desktop app
+        uses: tauri-apps/tauri-action@v0
         env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-
-      - name: Verify signing artifacts exist
-        shell: bash
-        run: |
-          echo "=== Searching for .sig files ==="
-          find desktop/src-tauri/target -name "*.sig" 2>/dev/null || true
-          SIG_COUNT=$(find desktop/src-tauri/target -name "*.sig" 2>/dev/null | wc -l)
-          echo "Found $SIG_COUNT .sig file(s)"
-          if [ "$SIG_COUNT" -eq 0 ]; then
-            echo "::error::No .sig files produced. Signing did not run. Check TAURI_SIGNING_PRIVATE_KEY format and TAURI_SIGNING_PRIVATE_KEY_PASSWORD."
-            exit 1
-          fi
-
-      - name: Upload desktop artifacts and latest.json
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           releaseId: ${{ needs.create-release.outputs.release_id }}
           args: ${{ matrix.tauri-args }}
           projectPath: desktop
-          updaterJsonPreferNsis: false
-          includeUpdaterJson: true
+          includeUpdaterJson: false
+
+  generate-updater-json:
+    name: Generate Updater JSON
+    needs: [create-release, build-desktop]
+    if: needs.build-desktop.result == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate and upload latest.json
+        run: |
+          VERSION="${{ needs.create-release.outputs.version }}"
+          TAG="${{ needs.create-release.outputs.ref }}"
+          REPO="${{ github.repository }}"
+
+          echo "⏳ Waiting for release assets to be processed..."
+          sleep 15
+
+          # Download signature files
+          mkdir -p signatures
+
+          # macOS universal — both arch slots share the same universal binary
+          gh release download "$TAG" \
+            -p "pesacast.app.tar.gz.sig" \
+            -D signatures \
+            -R "$REPO" 2>/dev/null || echo "⚠️  macOS sig not found"
+
+          # Windows — prefer MSI, fall back to NSIS
+          gh release download "$TAG" \
+            -p "pesacast_${VERSION}_x64_en-US.msi.zip.sig" \
+            -D signatures \
+            -R "$REPO" 2>/dev/null || true
+
+          gh release download "$TAG" \
+            -p "pesacast_${VERSION}_x64-setup.nsis.zip.sig" \
+            -D signatures \
+            -R "$REPO" 2>/dev/null || true
+
+          DARWIN_SIG=$(cat "signatures/pesacast.app.tar.gz.sig" 2>/dev/null || echo "")
+          WINDOWS_MSI_SIG=$(cat "signatures/pesacast_${VERSION}_x64_en-US.msi.zip.sig" 2>/dev/null || echo "")
+          WINDOWS_NSIS_SIG=$(cat "signatures/pesacast_${VERSION}_x64-setup.nsis.zip.sig" 2>/dev/null || echo "")
+
+          # Prefer MSI; fall back to NSIS
+          if [ -n "$WINDOWS_MSI_SIG" ]; then
+            WINDOWS_SIG="$WINDOWS_MSI_SIG"
+            WINDOWS_URL="https://github.com/${REPO}/releases/download/${TAG}/pesacast_${VERSION}_x64_en-US.msi.zip"
+            echo "✅ Using MSI signature for Windows"
+          else
+            WINDOWS_SIG="$WINDOWS_NSIS_SIG"
+            WINDOWS_URL="https://github.com/${REPO}/releases/download/${TAG}/pesacast_${VERSION}_x64-setup.nsis.zip"
+            echo "✅ Using NSIS signature for Windows (MSI not found)"
+          fi
+
+          DARWIN_URL="https://github.com/${REPO}/releases/download/${TAG}/pesacast.app.tar.gz"
+
+          jq -n \
+            --arg version "$VERSION" \
+            --arg notes "PesaCast v${VERSION} — see https://github.com/${REPO}/releases/tag/${TAG} for full release notes." \
+            --arg pub_date "$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")" \
+            --arg darwin_url "$DARWIN_URL" \
+            --arg darwin_sig "$DARWIN_SIG" \
+            --arg windows_url "$WINDOWS_URL" \
+            --arg windows_sig "$WINDOWS_SIG" \
+            '{
+              version: $version,
+              notes: $notes,
+              pub_date: $pub_date,
+              platforms: {
+                "darwin-aarch64": { signature: $darwin_sig, url: $darwin_url },
+                "darwin-x86_64":  { signature: $darwin_sig, url: $darwin_url },
+                "windows-x86_64": { signature: $windows_sig, url: $windows_url }
+              }
+            }' > latest.json
+
+          echo "📄 Generated latest.json:"
+          cat latest.json
+
+          gh release upload "$TAG" latest.json --clobber -R "$REPO"
+          echo "✅ latest.json uploaded to release $TAG"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

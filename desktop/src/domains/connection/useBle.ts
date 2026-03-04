@@ -9,15 +9,10 @@ import {
   checkPermissions,
   BleDevice,
 } from "@mnlphlp/plugin-blec";
-import { MpesaTransaction } from "@/domains/transactions/types";
 import { SERVICE_UUID, CHAR_UUID } from "./constants";
 import { TransportStatus } from "./types";
 
-interface UseBleOptions {
-  onTransaction: (txn: MpesaTransaction) => void;
-}
-
-export function useBle({ onTransaction }: UseBleOptions) {
+export function useBle() {
   const [bleStatus, setBleStatus] = useState<TransportStatus>("disconnected");
   const [bleDevices, setBleDevices] = useState<BleDevice[]>([]);
   const [selectedBleDevice, setSelectedBleDevice] = useState<string | null>(null);
@@ -97,9 +92,7 @@ export function useBle({ onTransaction }: UseBleOptions) {
 
           if (json === null) return;
 
-          const txn: MpesaTransaction = JSON.parse(json);
           await invoke("process_ble_transaction", { txnJson: json });
-          onTransaction(txn);
         } catch (e) {
           console.error("BLE transaction parse error:", e);
         }
@@ -112,7 +105,7 @@ export function useBle({ onTransaction }: UseBleOptions) {
       setBleStatus("error");
       setSelectedBleDevice(null);
     }
-  }, [onTransaction]);
+  }, []);
 
   const disconnectBle = useCallback(async () => {
     setBleStatus("disconnected");
@@ -125,6 +118,7 @@ export function useBle({ onTransaction }: UseBleOptions) {
     }
   }, []);
 
+  
   return {
     bleStatus,
     bleDevices,

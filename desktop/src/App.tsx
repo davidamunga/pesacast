@@ -15,9 +15,8 @@ import { UpdateBanner } from "@/domains/updater/update-banner";
 
 function App() {
   const { isDark, setIsDark } = useTheme();
-  const { transactions, addTransaction } = useMpesaTransactions();
-  const ble = useBle({ onTransaction: addTransaction });
-
+  const { transactions } = useMpesaTransactions();
+  const ble = useBle();
   useEffect(() => {
     ensureNotificationPermission();
   }, []);

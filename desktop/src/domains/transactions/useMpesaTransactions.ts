@@ -12,16 +12,24 @@ export function useMpesaTransactions() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     let unlisten: (() => void) | undefined;
 
     listen<MpesaTransaction>("mpesa-transaction", (event) => {
       addTransaction(event.payload);
     }).then((fn) => {
-      unlisten = fn;
+      if (cancelled) {
+        fn();
+      } else {
+        unlisten = fn;
+      }
     });
 
-    return () => unlisten?.();
+    return () => {
+      cancelled = true;
+      unlisten?.();
+    };
   }, [addTransaction]);
 
-  return { transactions, addTransaction };
+  return { transactions };
 }
