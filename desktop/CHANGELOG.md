@@ -1,5 +1,11 @@
 # pesacast
 
+## 0.2.6
+
+### Patch Changes
+
+- 2a8340a: fix: release updater json
+
 ## 0.2.5
 
 ### Patch Changes
