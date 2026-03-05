@@ -205,30 +205,35 @@ jobs:
         run: |
           TAG="${{ needs.create-release.outputs.ref }}"
           REPO="${{ github.repository }}"
+          VERSION="${{ needs.create-release.outputs.version }}"
 
           sign_and_upload() {
             local file="$1"
+            if [ ! -f "$file" ]; then
+              echo "⚠️  Skipping (not found): $file"
+              return 1
+            fi
             echo "🔏 Signing $file..."
-            pnpm tauri signer sign "$file" \
-              --private-key "$TAURI_SIGNING_PRIVATE_KEY" \
-              --password "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD"
+            SIGN_ARGS=(--private-key "$TAURI_SIGNING_PRIVATE_KEY")
+            [ -n "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" ] && SIGN_ARGS+=(--password "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD")
+            pnpm tauri signer sign "$file" "${SIGN_ARGS[@]}"
             gh release upload "$TAG" "${file}.sig" --clobber -R "$REPO"
             echo "✅ Uploaded $(basename "${file}.sig")"
           }
 
           if [[ "${{ matrix.platform }}" == "macos-latest" ]]; then
             TARBALL="src-tauri/target/universal-apple-darwin/release/bundle/macos/pesacast.app.tar.gz"
-            if [ ! -f "$TARBALL" ]; then
-              echo "❌ macOS tarball not found at $TARBALL" && exit 1
-            fi
-            sign_and_upload "$TARBALL"
+            sign_and_upload "$TARBALL" || { echo "❌ macOS tarball not found" && exit 1; }
 
           elif [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
+            NSIS_ZIP="src-tauri/target/release/bundle/nsis/pesacast_${VERSION}_x64-setup.nsis.zip"
+            MSI_ZIP="src-tauri/target/release/bundle/msi/pesacast_${VERSION}_x64_en-US.msi.zip"
+
             FOUND=0
-            while IFS= read -r zip; do
-              sign_and_upload "$zip"
-              FOUND=1
-            done < <(find src-tauri/target -name "*.nsis.zip" -o -name "*.msi.zip" 2>/dev/null)
+            for zip in "$NSIS_ZIP" "$MSI_ZIP"; do
+              sign_and_upload "$zip" && FOUND=$((FOUND + 1))
+            done
+
             if [ "$FOUND" -eq 0 ]; then
               echo "❌ No Windows updater zip bundles found" && exit 1
             fi
