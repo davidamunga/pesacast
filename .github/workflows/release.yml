@@ -226,16 +226,37 @@ jobs:
             sign_and_upload "$TARBALL" || { echo "❌ macOS tarball not found" && exit 1; }
 
           elif [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
+            NSIS_EXE="src-tauri/target/release/bundle/nsis/pesacast_${VERSION}_x64-setup.exe"
+            MSI_FILE="src-tauri/target/release/bundle/msi/pesacast_${VERSION}_x64_en-US.msi"
             NSIS_ZIP="src-tauri/target/release/bundle/nsis/pesacast_${VERSION}_x64-setup.nsis.zip"
             MSI_ZIP="src-tauri/target/release/bundle/msi/pesacast_${VERSION}_x64_en-US.msi.zip"
 
+            # tauri-action only creates these zip bundles when includeUpdaterJson: true,
+            # so we create them ourselves from the installers.
+            if [ -f "$NSIS_EXE" ]; then
+              (cd "$(dirname "$NSIS_EXE")" && zip "$(basename "$NSIS_ZIP")" "$(basename "$NSIS_EXE")")
+              echo "📦 Created NSIS zip bundle"
+            fi
+            if [ -f "$MSI_FILE" ]; then
+              (cd "$(dirname "$MSI_FILE")" && zip "$(basename "$MSI_ZIP")" "$(basename "$MSI_FILE")")
+              echo "📦 Created MSI zip bundle"
+            fi
+
             FOUND=0
             for zip in "$NSIS_ZIP" "$MSI_ZIP"; do
-              sign_and_upload "$zip" && FOUND=$((FOUND + 1))
+              if [ -f "$zip" ]; then
+                SIGN_ARGS=(--private-key "$TAURI_SIGNING_PRIVATE_KEY")
+                [ -n "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" ] && SIGN_ARGS+=(--password "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD")
+                pnpm tauri signer sign "$zip" "${SIGN_ARGS[@]}"
+                gh release upload "$TAG" "$zip" --clobber -R "$REPO"
+                gh release upload "$TAG" "${zip}.sig" --clobber -R "$REPO"
+                echo "✅ Uploaded $(basename "$zip") + sig"
+                FOUND=$((FOUND + 1))
+              fi
             done
 
             if [ "$FOUND" -eq 0 ]; then
-              echo "❌ No Windows updater zip bundles found" && exit 1
+              echo "❌ No Windows updater zip bundles created" && exit 1
             fi
           fi
         env:
