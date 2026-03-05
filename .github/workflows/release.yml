@@ -199,39 +199,44 @@ jobs:
           projectPath: desktop
           includeUpdaterJson: false
 
-      - name: Upload updater signatures
+      - name: Sign and upload updater bundles
         shell: bash
+        working-directory: desktop
         run: |
           TAG="${{ needs.create-release.outputs.ref }}"
           REPO="${{ github.repository }}"
 
+          sign_and_upload() {
+            local file="$1"
+            echo "🔏 Signing $file..."
+            pnpm tauri signer sign "$file" \
+              --private-key "$TAURI_SIGNING_PRIVATE_KEY" \
+              --password "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD"
+            gh release upload "$TAG" "${file}.sig" --clobber -R "$REPO"
+            echo "✅ Uploaded $(basename "${file}.sig")"
+          }
+
           if [[ "${{ matrix.platform }}" == "macos-latest" ]]; then
-            SIG="desktop/src-tauri/target/universal-apple-darwin/release/bundle/macos/pesacast.app.tar.gz.sig"
-            if [ -f "$SIG" ]; then
-              gh release upload "$TAG" "$SIG" --clobber -R "$REPO"
-              echo "✅ Uploaded macOS sig"
-            else
-              echo "❌ macOS sig not found at $SIG" && exit 1
+            TARBALL="src-tauri/target/universal-apple-darwin/release/bundle/macos/pesacast.app.tar.gz"
+            if [ ! -f "$TARBALL" ]; then
+              echo "❌ macOS tarball not found at $TARBALL" && exit 1
             fi
+            sign_and_upload "$TARBALL"
 
           elif [[ "${{ matrix.platform }}" == "windows-latest" ]]; then
-            NSIS_SIG=$(find desktop/src-tauri/target -name "*.nsis.zip.sig" 2>/dev/null | head -1)
-            MSI_SIG=$(find desktop/src-tauri/target -name "*.msi.zip.sig" 2>/dev/null | head -1)
-
-            if [ -n "$NSIS_SIG" ]; then
-              gh release upload "$TAG" "$NSIS_SIG" --clobber -R "$REPO"
-              echo "✅ Uploaded Windows NSIS sig: $(basename "$NSIS_SIG")"
-            fi
-            if [ -n "$MSI_SIG" ]; then
-              gh release upload "$TAG" "$MSI_SIG" --clobber -R "$REPO"
-              echo "✅ Uploaded Windows MSI sig: $(basename "$MSI_SIG")"
-            fi
-            if [ -z "$NSIS_SIG" ] && [ -z "$MSI_SIG" ]; then
-              echo "❌ No Windows sig files found" && exit 1
+            FOUND=0
+            while IFS= read -r zip; do
+              sign_and_upload "$zip"
+              FOUND=1
+            done < <(find src-tauri/target -name "*.nsis.zip" -o -name "*.msi.zip" 2>/dev/null)
+            if [ "$FOUND" -eq 0 ]; then
+              echo "❌ No Windows updater zip bundles found" && exit 1
             fi
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
   generate-updater-json:
     name: Generate Updater JSON
