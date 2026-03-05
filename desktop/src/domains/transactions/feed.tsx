@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/empty";
 import { MpesaTransaction } from "./types";
 import { formatAmount, formatTime, directionLabel } from "./utils";
+import { ExportTransactions } from "./export-transactions";
+import { WebhookPush } from "./webhook-push";
 
 interface TransactionFeedProps {
   transactions: MpesaTransaction[];
@@ -50,8 +52,8 @@ export function TransactionFeed({ transactions }: TransactionFeedProps) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="px-1 pb-2 pt-1">
-        <div className="relative">
+      <div className="flex items-center gap-2 px-1 pb-2 pt-1">
+        <div className="relative flex-1">
           <Search className="absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="h-8 pl-8 text-xs"
@@ -60,6 +62,14 @@ export function TransactionFeed({ transactions }: TransactionFeedProps) {
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
+        <ExportTransactions
+          transactions={transactions}
+          filteredTransactions={filtered}
+        />
+        <WebhookPush
+          transactions={transactions}
+          filteredTransactions={filtered}
+        />
       </div>
       <ScrollArea className="flex-1">
         {filtered.length === 0 ? (
@@ -79,9 +89,13 @@ export function TransactionFeed({ transactions }: TransactionFeedProps) {
                 <div className="flex items-start justify-between gap-3 px-1 py-3">
                   <div className="flex min-w-0 flex-col gap-1">
                     <div className="flex items-center gap-2">
-                      <span className="truncate text-sm font-medium">{txn.from}</span>
+                      <span className="truncate text-sm font-medium">
+                        {txn.from}
+                      </span>
                       <Badge
-                        variant={txn.direction === "received" ? "success" : "error"}
+                        variant={
+                          txn.direction === "received" ? "success" : "error"
+                        }
                         size="sm"
                       >
                         {directionLabel(txn.direction)}
