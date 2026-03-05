@@ -11,7 +11,8 @@ import {
   PopoverClose,
 } from "@/components/ui/popover";
 import { MpesaTransaction } from "./types";
-import { formatTime, directionLabel } from "./utils";
+import dayjs from "dayjs";
+import { directionLabel } from "./utils";
 
 interface ExportTransactionsProps {
   transactions: MpesaTransaction[];
@@ -20,15 +21,17 @@ interface ExportTransactionsProps {
 
 type ExportScope = "filtered" | "all";
 
+function formatExportTime(iso: string) {
+  return dayjs(iso).format("DD-MM-YYYY hh:mm A");
+}
+
 function buildWorksheet(transactions: MpesaTransaction[]) {
   const rows = transactions.map((txn) => ({
-    Time: formatTime(txn.time),
-    Type: txn.type,
+    Time: formatExportTime(txn.time),
     Direction: directionLabel(txn.direction),
     From: txn.from,
     Reference: txn.ref,
     Amount: txn.amount,
-    Currency: txn.currency,
     Balance: txn.balance,
   }));
 
