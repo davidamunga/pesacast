@@ -232,13 +232,12 @@ jobs:
             MSI_ZIP="src-tauri/target/release/bundle/msi/pesacast_${VERSION}_x64_en-US.msi.zip"
 
             # tauri-action only creates these zip bundles when includeUpdaterJson: true,
-            # so we create them ourselves from the installers.
             if [ -f "$NSIS_EXE" ]; then
-              (cd "$(dirname "$NSIS_EXE")" && zip "$(basename "$NSIS_ZIP")" "$(basename "$NSIS_EXE")")
+              (cd "$(dirname "$NSIS_EXE")" && 7z a "$(basename "$NSIS_ZIP")" "$(basename "$NSIS_EXE")")
               echo "📦 Created NSIS zip bundle"
             fi
             if [ -f "$MSI_FILE" ]; then
-              (cd "$(dirname "$MSI_FILE")" && zip "$(basename "$MSI_ZIP")" "$(basename "$MSI_FILE")")
+              (cd "$(dirname "$MSI_FILE")" && 7z a "$(basename "$MSI_ZIP")" "$(basename "$MSI_FILE")")
               echo "📦 Created MSI zip bundle"
             fi
 
