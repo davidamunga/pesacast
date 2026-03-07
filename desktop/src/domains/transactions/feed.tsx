@@ -94,7 +94,11 @@ export function TransactionFeed({ transactions }: TransactionFeedProps) {
                       </span>
                       <Badge
                         variant={
-                          txn.direction === "received" ? "success" : "error"
+                          txn.direction === "received"
+                            ? "success"
+                            : txn.direction === "fuliza"
+                              ? "warning"
+                              : "error"
                         }
                         size="sm"
                       >
@@ -106,15 +110,28 @@ export function TransactionFeed({ transactions }: TransactionFeedProps) {
                       <span>·</span>
                       <span>{formatTime(txn.time)}</span>
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                      Bal: {formatAmount(txn.currency, txn.balance)}
-                    </span>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <span>
+                        Bal: {formatAmount(txn.currency, txn.balance)}
+                      </span>
+                      {txn.transaction_cost != null && (
+                        <>
+                          <span>·</span>
+                          <span>
+                            Cost:{" "}
+                            {formatAmount(txn.currency, txn.transaction_cost)}
+                          </span>
+                        </>
+                      )}
+                    </div>
                   </div>
                   <span
                     className={`whitespace-nowrap text-sm font-semibold tabular-nums ${
                       txn.direction === "received"
                         ? "text-success-foreground"
-                        : "text-destructive-foreground"
+                        : txn.direction === "fuliza"
+                          ? "text-warning-foreground"
+                          : "text-destructive-foreground"
                     }`}
                   >
                     {txn.direction === "received" ? "+" : "−"}

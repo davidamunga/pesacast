@@ -43,23 +43,23 @@ object MpesaParser {
     )
 
     // ── Pattern 2: Sent money to person ──
-    // "RKA12345XY Confirmed.Ksh500.00 sent to JOHN DOE 0712345678 on 1/1/24 at 10:55 AM  New M-PESA balance is Ksh..."
+    // "RKA12345XY Confirmed.Ksh500.00 sent to JOHN DOE 0712345678 on 1/1/24 at 10:55 AM  New M-PESA balance is Ksh...  Transaction cost, Ksh7.00."
     private val SENT = Regex(
-        """$REF ${CONFIRMED}Ksh$AMOUNT sent to (.+?) \d+ on $DATE at $TIME_$SEP$BAL""",
+        """$REF ${CONFIRMED}Ksh$AMOUNT sent to (.+?) \d+ on $DATE at $TIME_$SEP$BAL(?:[.\s]*Transaction cost,\s*Ksh$AMOUNT)?""",
         RegexOption.IGNORE_CASE
     )
 
     // ── Pattern 3: Buy Goods / Till ──
-    // "RKA12345XY Confirmed.Ksh200.00 paid to SHOPNAME on 1/1/24 at 10:55 AM  New M-PESA balance is Ksh..."
+    // "RKA12345XY Confirmed.Ksh200.00 paid to SHOPNAME on 1/1/24 at 10:55 AM  New M-PESA balance is Ksh...  Transaction cost, Ksh7.00."
     private val BUY_GOODS = Regex(
-        """$REF ${CONFIRMED}Ksh$AMOUNT paid to (.+?) on $DATE at $TIME_$SEP$BAL""",
+        """$REF ${CONFIRMED}Ksh$AMOUNT paid to (.+?) on $DATE at $TIME_$SEP$BAL(?:[.\s]*Transaction cost,\s*Ksh$AMOUNT)?""",
         RegexOption.IGNORE_CASE
     )
 
     // ── Pattern 4: Paybill ──
-    // "RKA12345XY Confirmed.Ksh100.00 sent to PAYNAME for account ACC123 on 1/1/24 at 10:55 AM  New M-PESA balance is Ksh..."
+    // "RKA12345XY Confirmed.Ksh100.00 sent to PAYNAME for account ACC123 on 1/1/24 at 10:55 AM  New M-PESA balance is Ksh...  Transaction cost, Ksh7.00."
     private val PAYBILL = Regex(
-        """$REF ${CONFIRMED}Ksh$AMOUNT sent to (.+?) for account .+? on $DATE at $TIME_$SEP$BAL""",
+        """$REF ${CONFIRMED}Ksh$AMOUNT sent to (.+?) for account .+? on $DATE at $TIME_$SEP$BAL(?:[.\s]*Transaction cost,\s*Ksh$AMOUNT)?""",
         RegexOption.IGNORE_CASE
     )
 
@@ -84,6 +84,14 @@ object MpesaParser {
         RegexOption.IGNORE_CASE
     )
 
+    // ── Pattern 8: Fuliza M-PESA repayment ──
+    // "SGV0I11MXK Confirmed. Ksh 0.59 from your M-PESA has been used to fully pay your outstanding Fuliza M-PESA. Available Fuliza M-PESA limit is Ksh 1500.00. M-PESA balance is Ksh999.41."
+    // Note: no date/time in message; balance field uses "M-PESA balance" not "New M-PESA balance"; Ksh may have a space before the amount.
+    private val FULIZA = Regex(
+        """$REF ${CONFIRMED}Ksh\s*$AMOUNT from your M-PESA has been used to (?:fully|partially) pay your outstanding Fuliza M-PESA\..*?M-PESA balance is Ksh$AMOUNT""",
+        setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)
+    )
+
     fun parse(smsBody: String): MpesaTransaction? {
         val body = smsBody.trim()
 
@@ -92,15 +100,16 @@ object MpesaParser {
         }
 
         SENT.find(body)?.groupValues?.let { g ->
-            return build(g[1], "sent", g[2], g[3].trim(), g[4], g[5], g[6])
+            // Groups: ref, amount, party, date, time, balance, [transaction_cost]
+            return build(g[1], "sent", g[2], g[3].trim(), g[4], g[5], g[6], g[7].ifEmpty { null })
         }
 
         PAYBILL.find(body)?.groupValues?.let { g ->
-            return build(g[1], "paid", g[2], g[3].trim(), g[4], g[5], g[6])
+            return build(g[1], "paid", g[2], g[3].trim(), g[4], g[5], g[6], g[7].ifEmpty { null })
         }
 
         BUY_GOODS.find(body)?.groupValues?.let { g ->
-            return build(g[1], "paid", g[2], g[3].trim(), g[4], g[5], g[6])
+            return build(g[1], "paid", g[2], g[3].trim(), g[4], g[5], g[6], g[7].ifEmpty { null })
         }
 
         WITHDRAW.find(body)?.groupValues?.let { g ->
@@ -116,6 +125,20 @@ object MpesaParser {
             return build(g[1], "received", g[2], g[3].trim(), g[4], g[5], g[6])
         }
 
+        FULIZA.find(body)?.groupValues?.let { g ->
+            // Groups: ref, repayment_amount, balance (no date/time — use current instant)
+            val amount  = g[2].replace(",", "").toDoubleOrNull() ?: return@let
+            val balance = g[3].replace(",", "").toDoubleOrNull() ?: return@let
+            return MpesaTransaction(
+                direction = "fuliza",
+                amount    = amount,
+                from      = "Fuliza M-PESA",
+                ref       = g[1],
+                time      = java.time.Instant.now().toString(),
+                balance   = balance
+            )
+        }
+
         Log.d(TAG, "No pattern matched SMS: ${body.take(200)}")
         return null
     }
@@ -127,18 +150,21 @@ object MpesaParser {
         party: String,
         date: String,
         time: String,
-        rawBalance: String
+        rawBalance: String,
+        rawTransactionCost: String? = null
     ): MpesaTransaction? {
-        val amount  = rawAmount.replace(",", "").toDoubleOrNull()  ?: return null
-        val balance = rawBalance.replace(",", "").toDoubleOrNull() ?: return null
-        val iso     = parseDateTime(date, time)
+        val amount          = rawAmount.replace(",", "").toDoubleOrNull()          ?: return null
+        val balance         = rawBalance.replace(",", "").toDoubleOrNull()         ?: return null
+        val transactionCost = rawTransactionCost?.replace(",", "")?.toDoubleOrNull()
+        val iso             = parseDateTime(date, time)
         return MpesaTransaction(
-            direction = direction,
-            amount    = amount,
-            from      = party,
-            ref       = ref,
-            time      = iso,
-            balance   = balance
+            direction       = direction,
+            amount          = amount,
+            from            = party,
+            ref             = ref,
+            time            = iso,
+            balance         = balance,
+            transactionCost = transactionCost
         )
     }
 

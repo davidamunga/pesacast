@@ -12,6 +12,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { useTheme } from "@/hooks/use-theme";
 import { ensureNotificationPermission } from "@/hooks/use-notification-permission";
 import { UpdateBanner } from "@/domains/updater/update-banner";
+import { PersistenceSettings } from "@/domains/persistence/persistence-settings";
 
 function App() {
   const { isDark, setIsDark } = useTheme();
@@ -38,6 +39,7 @@ function App() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <PersistenceSettings />
           <StatusBadge
             status={ble.bleStatus}
             label={ble.bleStatus === "connected" ? "BLE" : "BLE off"}
@@ -81,7 +83,7 @@ function App() {
       </Tabs>
 
       <footer className="flex items-center justify-center shrink-0 border-t border-border px-4 py-2 text-center text-[11px] text-muted-foreground">
-        <div >Made by&nbsp;</div>
+        <div>Made by&nbsp;</div>
         <a
           href="https://x.com/davidamunga_"
           target="_blank"

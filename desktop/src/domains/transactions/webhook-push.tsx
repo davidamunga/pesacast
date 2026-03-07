@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { fetch } from "@tauri-apps/plugin-http";
 import { Send, CheckCircle2, AlertCircle, Loader2, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,8 +13,12 @@ import {
 } from "@/components/ui/popover";
 import { MpesaTransaction } from "./types";
 
-const STORAGE_KEY_URL = "pesacast:webhook-push-url";
-const STORAGE_KEY_TOKEN = "pesacast:webhook-push-token";
+export const WEBHOOK_STORAGE_KEY_URL = "pesacast:webhook-push-url";
+export const WEBHOOK_STORAGE_KEY_TOKEN = "pesacast:webhook-push-token";
+export const WEBHOOK_STORAGE_KEY_AUTO_PUSH = "pesacast:webhook-auto-push";
+
+const STORAGE_KEY_URL = WEBHOOK_STORAGE_KEY_URL;
+const STORAGE_KEY_TOKEN = WEBHOOK_STORAGE_KEY_TOKEN;
 
 type PushStatus = "idle" | "loading" | "success" | "error";
 
@@ -32,6 +37,9 @@ export function WebhookPush({
   const [token, setToken] = useState(
     () => localStorage.getItem(STORAGE_KEY_TOKEN) ?? "",
   );
+  const [autoPush, setAutoPush] = useState(
+    () => localStorage.getItem(WEBHOOK_STORAGE_KEY_AUTO_PUSH) === "true",
+  );
   const [scope, setScope] = useState<"filtered" | "all">("filtered");
   const [status, setStatus] = useState<PushStatus>("idle");
   const [errorMessage, setErrorMessage] = useState("");
@@ -48,6 +56,10 @@ export function WebhookPush({
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_TOKEN, token);
   }, [token]);
+
+  useEffect(() => {
+    localStorage.setItem(WEBHOOK_STORAGE_KEY_AUTO_PUSH, String(autoPush));
+  }, [autoPush]);
 
   async function handlePush() {
     const trimmedUrl = url.trim();
@@ -88,7 +100,7 @@ export function WebhookPush({
       }
     } catch (err) {
       setStatus("error");
-      setErrorMessage(err instanceof Error ? err.message : "Request failed");
+      setErrorMessage(err instanceof Error ? err.message : String(err));
     }
   }
 
@@ -139,6 +151,22 @@ export function WebhookPush({
               onChange={(e) => setToken((e.target as HTMLInputElement).value)}
               className="text-xs"
             />
+          </div>
+
+          <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2">
+            <input
+              id="auto-push"
+              type="checkbox"
+              checked={autoPush}
+              onChange={(e) => setAutoPush((e.target as HTMLInputElement).checked)}
+              className="accent-primary"
+            />
+            <label
+              htmlFor="auto-push"
+              className="cursor-pointer text-xs font-medium leading-none"
+            >
+              Auto-push on new transaction
+            </label>
           </div>
 
           <div className="flex flex-col gap-1.5">

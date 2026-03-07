@@ -33,6 +33,7 @@ function buildWorksheet(transactions: MpesaTransaction[]) {
     Reference: txn.ref,
     Amount: txn.amount,
     Balance: txn.balance,
+    "Transaction Cost": txn.transaction_cost ?? "",
   }));
 
   return XLSX.utils.json_to_sheet(rows);

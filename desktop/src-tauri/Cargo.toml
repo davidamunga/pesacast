@@ -23,11 +23,14 @@ tauri-plugin-opener = "2"
 tauri-plugin-notification = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-http = "2"
 notify-rust = "4"
 tauri-plugin-blec = "0.8"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
 
 [patch.crates-io]
 btleplug = { path = "vendor/btleplug" }

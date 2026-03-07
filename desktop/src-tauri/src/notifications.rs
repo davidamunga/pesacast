@@ -9,13 +9,21 @@ pub fn show_notification(app: &AppHandle, txn: &MpesaTransaction) {
         "paid"     => format!("M-PESA Payment {} {:.2}", txn.currency, txn.amount),
         "withdrawn"=> format!("M-PESA Withdrawal {} {:.2}", txn.currency, txn.amount),
         "airtime"  => format!("Airtime {} {:.2}", txn.currency, txn.amount),
+        "fuliza"   => format!("Fuliza Repayment {} {:.2}", txn.currency, txn.amount),
         _          => format!("M-PESA Transaction {} {:.2}", txn.currency, txn.amount),
     };
 
-    let body = format!(
-        "{} • Ref: {} • Bal: {} {:.2}",
-        txn.from, txn.reference, txn.currency, txn.balance
-    );
+    let body = if let Some(cost) = txn.transaction_cost {
+        format!(
+            "{} • Ref: {} • Bal: {} {:.2} • Cost: {} {:.2}",
+            txn.from, txn.reference, txn.currency, txn.balance, txn.currency, cost
+        )
+    } else {
+        format!(
+            "{} • Ref: {} • Bal: {} {:.2}",
+            txn.from, txn.reference, txn.currency, txn.balance
+        )
+    };
 
     let identifier = app.config().identifier.clone();
 

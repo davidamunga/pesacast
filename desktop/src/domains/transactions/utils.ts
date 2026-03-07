@@ -25,6 +25,7 @@ export function directionLabel(d: string) {
     case "paid":      return "Paid";
     case "withdrawn": return "Withdrawn";
     case "airtime":   return "Airtime";
+    case "fuliza":    return "Fuliza Repayment";
     default:          return d;
   }
 }

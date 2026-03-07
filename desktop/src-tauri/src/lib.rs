@@ -1,4 +1,5 @@
 mod ble;
+mod db;
 mod model;
 mod notifications;
 
@@ -10,10 +11,17 @@ pub fn run() {
         .plugin(tauri_plugin_blec::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_http::init())
         .setup(|_app| {
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![ble::process_ble_transaction,])
+        .invoke_handler(tauri::generate_handler![
+            ble::process_ble_transaction,
+            db::db_init,
+            db::db_save_transaction,
+            db::db_load_transactions,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

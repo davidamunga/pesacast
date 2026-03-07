@@ -9,6 +9,20 @@
     "notification:default",
     "blec:default",
     "updater:default",
-    "process:default"
+    "process:default",
+    "dialog:default",
+    "http:default",
+    "http:allow-fetch",
+    {
+      "identifier": "http:allow-fetch",
+      "allow": [
+        { "url": "http://**/**" },
+        { "url": "https://**/**" },
+        { "url": "http://localhost" },
+        { "url": "http://localhost/**" },
+        { "url": "http://localhost:*" },
+        { "url": "http://localhost:*/**" }
+      ]
+    }
   ]
 }

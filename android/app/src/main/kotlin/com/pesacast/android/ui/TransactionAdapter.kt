@@ -50,21 +50,31 @@ class TransactionAdapter :
             "paid"      -> "Paid"
             "withdrawn" -> "Withdrawn"
             "airtime"   -> "Airtime"
+            "fuliza"    -> "Fuliza Repayment"
             else        -> txn.direction.replaceFirstChar { it.uppercase() }
         }
         holder.direction.text = dirLabel
 
-        // Badge: green tint for received, red tint for outgoing
-        if (txn.isReceived) {
-            holder.direction.setTextColor(Color.parseColor("#4ADE80"))
-            holder.direction.setBackgroundResource(R.drawable.bg_badge_received)
-            holder.amount.text = "+${txn.formattedAmount}"
-            holder.amount.setTextColor(Color.parseColor("#4ADE80"))
-        } else {
-            holder.direction.setTextColor(Color.parseColor("#FCA5A5"))
-            holder.direction.setBackgroundResource(R.drawable.bg_badge_sent)
-            holder.amount.text = "−${txn.formattedAmount}"
-            holder.amount.setTextColor(Color.parseColor("#FCA5A5"))
+        // Badge: green for received, amber for fuliza repayment, red for all other outgoing
+        when {
+            txn.isReceived -> {
+                holder.direction.setTextColor(Color.parseColor("#4ADE80"))
+                holder.direction.setBackgroundResource(R.drawable.bg_badge_received)
+                holder.amount.text = "+${txn.formattedAmount}"
+                holder.amount.setTextColor(Color.parseColor("#4ADE80"))
+            }
+            txn.direction == "fuliza" -> {
+                holder.direction.setTextColor(Color.parseColor("#FCD34D"))
+                holder.direction.setBackgroundResource(R.drawable.bg_badge_sent)
+                holder.amount.text = "−${txn.formattedAmount}"
+                holder.amount.setTextColor(Color.parseColor("#FCD34D"))
+            }
+            else -> {
+                holder.direction.setTextColor(Color.parseColor("#FCA5A5"))
+                holder.direction.setBackgroundResource(R.drawable.bg_badge_sent)
+                holder.amount.text = "−${txn.formattedAmount}"
+                holder.amount.setTextColor(Color.parseColor("#FCA5A5"))
+            }
         }
 
         holder.ref.text = "Ref: ${txn.ref}"

@@ -7,4 +7,5 @@ export interface MpesaTransaction {
   ref: string;
   time: string;
   balance: number;
+  transaction_cost?: number;
 }
