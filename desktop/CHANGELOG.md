@@ -1,5 +1,18 @@
 # pesacast
 
+## 0.4.0
+
+### Minor Changes
+
+- 79d018d: feat: add auto export to api option
+- 79d018d: add fuliza attribution
+- 79d018d: feat: add transaction cost column and exports
+- 79d018d: feat: add db(sqlite) persistence option
+
+### Patch Changes
+
+- 79d018d: fix: webhook push tauri permissions
+
 ## 0.3.0
 
 ### Minor Changes
