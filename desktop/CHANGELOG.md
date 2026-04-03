@@ -1,5 +1,11 @@
 # pesacast
 
+## 0.5.0
+
+### Minor Changes
+
+- feat: add websocket broadcast option
+
 ## 0.4.0
 
 ### Minor Changes

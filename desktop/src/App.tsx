@@ -13,6 +13,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { ensureNotificationPermission } from "@/hooks/use-notification-permission";
 import { UpdateBanner } from "@/domains/updater/update-banner";
 import { PersistenceSettings } from "@/domains/persistence/persistence-settings";
+import { WsServerInfo } from "@/domains/ws-server/ws-server-info";
 
 function App() {
   const { isDark, setIsDark } = useTheme();
@@ -39,6 +40,7 @@ function App() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <WsServerInfo />
           <PersistenceSettings />
           <StatusBadge
             status={ble.bleStatus}
