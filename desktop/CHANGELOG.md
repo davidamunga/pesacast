@@ -1,5 +1,11 @@
 # pesacast
 
+## 0.5.1
+
+### Patch Changes
+
+- fix: ble transport reliability
+
 ## 0.5.0
 
 ### Minor Changes

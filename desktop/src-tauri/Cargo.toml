@@ -1,6 +1,6 @@
 [package]
 name = "pesacast"
-version = "0.5.0"
+version = "0.5.1"
 description = "M-PESA Notifications on PC"
 authors = ["David Amunga <david@davidamunga.com>"]
 edition = "2021"
