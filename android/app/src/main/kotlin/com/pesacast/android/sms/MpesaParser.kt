@@ -141,7 +141,7 @@ object MpesaParser {
             )
         }
 
-        Log.d(TAG, "No pattern matched SMS: ${body.take(200)}")
+        Log.d(TAG, "No pattern matched an SMS of ${body.length} chars")
         return null
     }
 
@@ -185,7 +185,7 @@ object MpesaParser {
             val zdt = ldt.atZone(java.time.ZoneId.of("Africa/Nairobi"))
             DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(zdt)
         } catch (e: Exception) {
-            Log.w(TAG, "Date parse failed for '$date $time': ${e.message}")
+            Log.w(TAG, "Date parse failed (${e.javaClass.simpleName}); using the current time")
             java.time.Instant.now().toString()
         }
     }
