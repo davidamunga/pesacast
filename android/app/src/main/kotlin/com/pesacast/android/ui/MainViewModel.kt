@@ -31,6 +31,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     val wifiState: StateFlow<TransportState> = transport.wifi.state
         .stateIn(viewModelScope, SharingStarted.Eagerly, TransportState.Disconnected)
 
+    val wifiError: StateFlow<String?> = transport.wifi.error
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
     /** Merged BLE + WiFi state — drives the app-bar summary badge. */
     val combinedState: StateFlow<TransportState> = transport.combinedState
         .stateIn(viewModelScope, SharingStarted.Eagerly, TransportState.Disconnected)

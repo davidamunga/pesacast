@@ -42,6 +42,7 @@
     <string name="wifi_enable">Enable WiFi</string>
     <string name="wifi_status">WiFi</string>
     <string name="status_wifi_listening">Listening…</string>
+    <string name="status_wifi_error">Couldn\'t start — port in use?</string>
     <string name="pairing_token">Pairing Token</string>
     <string name="pairing_token_hint">Share this with the desktop app to pair</string>
     <string name="copy_token">Copy</string>

@@ -168,6 +168,7 @@ class MainActivity : AppCompatActivity() {
                 launch { vm.combinedState.collect(::renderBadgeAndBanner) }
                 launch { vm.bleState.collect(::renderBleState) }
                 launch { vm.wifiState.collect(::renderWifiState) }
+                launch { vm.wifiError.collect(::renderWifiError) }
                 launch { vm.transactions.collect(::renderTransactions) }
                 launch { vm.wifiToken.collect { token -> binding.tvWifiToken.text = token } }
                 launch {
@@ -232,6 +233,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun renderWifiState(state: TransportState) {
+        if (state is TransportState.Disconnected && vm.wifiError.value != null) return
         val (color, statusText) = when (state) {
             is TransportState.Disconnected ->
                 Color.GRAY to getString(R.string.status_disconnected)
@@ -244,6 +246,16 @@ class MainActivity : AppCompatActivity() {
         }
         (binding.wifiStatusDot.background as? android.graphics.drawable.GradientDrawable)?.setColor(color)
         binding.wifiStatusLabel.text = statusText
+    }
+
+    private fun renderWifiError(error: String?) {
+        if (error == null) {
+            renderWifiState(vm.wifiState.value)
+            return
+        }
+        (binding.wifiStatusDot.background as? android.graphics.drawable.GradientDrawable)
+            ?.setColor(Color.parseColor("#C62828"))
+        binding.wifiStatusLabel.text = getString(R.string.status_wifi_error)
     }
 
     private fun renderTransactions(list: List<MpesaTransaction>) {

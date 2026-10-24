@@ -32,6 +32,10 @@ class WifiTransport(private val context: Context) {
     private val _state = MutableStateFlow<TransportState>(TransportState.Disconnected)
     val state: StateFlow<TransportState> = _state.asStateFlow()
 
+    /** Set when the server could not start (e.g. port already in use); cleared on next start/stop. */
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
     private var server: PesaCastWsServer? = null
     private var nsdManager: NsdManager? = null
     private var nsdListener: NsdManager.RegistrationListener? = null
@@ -44,6 +48,7 @@ class WifiTransport(private val context: Context) {
 
     fun start(token: String, port: Int = WIFI_DEFAULT_PORT) {
         stop()
+        _error.value = null
         try {
             val srv = PesaCastWsServer(
                 port = port,
@@ -56,6 +61,12 @@ class WifiTransport(private val context: Context) {
                 onClientDisconnected = { count ->
                     _state.value = if (count > 0) TransportState.Connected(count)
                                    else TransportState.Connecting
+                },
+                onServerError = { ex ->
+                    // Bind failures arrive asynchronously via onError, not from start().
+                    Log.e(TAG, "WiFi server failed: ${ex.message}")
+                    _error.value = ex.message ?: "WiFi server failed"
+                    _state.value = TransportState.Disconnected
                 }
             )
             srv.start()
@@ -65,6 +76,7 @@ class WifiTransport(private val context: Context) {
             registerNsd(port)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start WiFi transport: ${e.message}")
+            _error.value = e.message ?: "Failed to start WiFi transport"
             _state.value = TransportState.Disconnected
         }
     }
@@ -79,6 +91,7 @@ class WifiTransport(private val context: Context) {
         server = null
         authenticatedClients.clear()
         synchronized(queueLock) { pendingQueue.clear() }
+        _error.value = null
         _state.value = TransportState.Disconnected
         Log.i(TAG, "WiFi transport stopped")
     }
@@ -179,6 +192,7 @@ private class PesaCastWsServer(
     private val authenticatedClients: CopyOnWriteArraySet<WebSocket>,
     private val onClientAuthenticated: (count: Int) -> Unit,
     private val onClientDisconnected: (count: Int) -> Unit,
+    private val onServerError: (Exception) -> Unit,
 ) : WebSocketServer(InetSocketAddress(port)) {
 
     init {
@@ -228,6 +242,8 @@ private class PesaCastWsServer(
 
     override fun onError(conn: WebSocket?, ex: Exception) {
         Log.e(TAG, "WebSocket error for ${conn?.remoteSocketAddress}: ${ex.message}")
+        // conn == null means a server-level failure (typically BindException).
+        if (conn == null) onServerError(ex)
     }
 
     override fun onStart() {
