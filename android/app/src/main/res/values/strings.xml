@@ -81,6 +81,8 @@
     <string name="webhook_testing">Sending test…</string>
     <string name="webhook_test_ok">Test succeeded (HTTP %1$d). You can turn the webhook on.</string>
     <string name="webhook_needs_test">Press “Save &amp; send test” first. The switch turns on only after a test succeeds with these exact values.</string>
+    <string name="webhook_credentials_unreadable">The saved webhook token or secret could not be read (Android reset its secure storage), so the webhook is off. Enter them again and press “Save &amp; send test”.</string>
+    <string name="wifi_token_reset_notice">The WiFi pairing token had to be replaced because Android reset its secure storage. Pair the desktop app again with the new token.</string>
     <string name="webhook_needs_url">Enter an https:// URL, then press “Save &amp; send test”.</string>
     <string name="webhook_status_off">Off</string>
     <string name="webhook_status_idle">Ready</string>

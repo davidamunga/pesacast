@@ -145,7 +145,7 @@ class MainActivity : AppCompatActivity() {
         }
         binding.btnCopyToken.setOnClickListener {
             val token = vm.wifiToken.value
-            if (token.isNotEmpty()) copyToClipboard(token)
+            if (token.isNotEmpty()) copyToClipboard(token, sensitive = true)
         }
         binding.btnShareToken.setOnClickListener {
             val token = vm.wifiToken.value
@@ -166,6 +166,7 @@ class MainActivity : AppCompatActivity() {
         binding.etWebhookToken.setText(settings.token)
         binding.etWebhookSecret.setText(settings.secret)
 
+        if (settings.credentialsUnreadable()) showWebhookMessage(getString(R.string.webhook_credentials_unreadable))
         binding.switchWebhook.isChecked = vm.webhookEnabled.value
         binding.switchWebhook.setOnCheckedChangeListener { _, checked ->
             if (!vm.setWebhookEnabled(checked)) {
@@ -341,9 +342,17 @@ class MainActivity : AppCompatActivity() {
 
     // MARK: - Clipboard & Share
 
-    private fun copyToClipboard(text: String) {
+    /** [sensitive] hides the copied text from the clipboard preview and from keyboards' suggestions. */
+    private fun copyToClipboard(text: String, sensitive: Boolean = false) {
         val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        cm.setPrimaryClip(ClipData.newPlainText("PesaCast", text))
+        val clip = ClipData.newPlainText("PesaCast", text)
+        if (sensitive) {
+            clip.description.extras = android.os.PersistableBundle().apply {
+                // ClipDescription.EXTRA_IS_SENSITIVE on Android 13+; the same key is read on 12 by some keyboards.
+                putBoolean("android.content.extra.IS_SENSITIVE", true)
+            }
+        }
+        cm.setPrimaryClip(clip)
         Toast.makeText(this, R.string.toast_copied, Toast.LENGTH_SHORT).show()
     }
 
@@ -392,6 +401,9 @@ class MainActivity : AppCompatActivity() {
 
     // MARK: - Permissions
 
+    private val hasBluetooth: Boolean
+        get() = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)
+
     private fun grantedPermissions(): Set<String> =
         (PermissionPlan.smsPermissions() + PermissionPlan.bluetoothPermissions(Build.VERSION.SDK_INT) +
             PermissionPlan.notificationPermissions(Build.VERSION.SDK_INT))
@@ -399,12 +411,12 @@ class MainActivity : AppCompatActivity() {
 
     /** Asks for whatever is still missing in one prompt; each denial is handled on its own afterwards. */
     private fun requestAllPermissions() {
-        val needed = PermissionPlan.toRequest(grantedPermissions(), Build.VERSION.SDK_INT)
+        val needed = PermissionPlan.toRequest(grantedPermissions(), Build.VERSION.SDK_INT, hasBluetooth)
         if (needed.isEmpty()) onPermissionsGranted() else permLauncher.launch(needed.toTypedArray())
     }
 
     private fun handlePermissionResult() {
-        val state = PermissionPlan.evaluate(grantedPermissions(), Build.VERSION.SDK_INT)
+        val state = PermissionPlan.evaluate(grantedPermissions(), Build.VERSION.SDK_INT, hasBluetooth)
         // SMS alone is enough to run the service: webhook and WiFi delivery must not depend on Bluetooth.
         if (state.canRunService) onPermissionsGranted()
 
@@ -443,8 +455,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (vm.prefs.consumeWifiTokenResetNotice()) {
+            Toast.makeText(this, R.string.wifi_token_reset_notice, Toast.LENGTH_LONG).show()
+            vm.refreshWifiToken()
+        }
         // The user may have granted a permission in Settings while the app was in the background.
-        if (PermissionPlan.evaluate(grantedPermissions(), Build.VERSION.SDK_INT).canRunService) onPermissionsGranted()
+        if (PermissionPlan.evaluate(grantedPermissions(), Build.VERSION.SDK_INT, hasBluetooth).canRunService) onPermissionsGranted()
     }
 
     private fun onPermissionsGranted() {
