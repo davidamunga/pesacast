@@ -36,14 +36,16 @@ jobs:
         run: echo "$PR_TITLE" | pnpm exec commitlint --verbose
 
   scripts:
-    name: Scripts (tests)
-    runs-on: ubuntu-latest
+    name: Scripts (tests, ${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # macOS ships bash 3.2, which differs from bash 5 in ways that have broken this script before.
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - run: node --test scripts/
+      - run: bash scripts/test-setup-phone.sh
   desktop-frontend:
     name: Desktop (lint + types)
     runs-on: ubuntu-latest

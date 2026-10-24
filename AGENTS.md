@@ -25,7 +25,7 @@ pnpm lint                                      # eslint + tsc + rustfmt + clippy
 cd android && ./gradlew :app:lintDebug         # Android lint
 cd android && ./gradlew :app:testDebugUnitTest # Android unit tests (parser, BLE framing, WiFi auth)
 cd desktop && pnpm tauri dev                   # run desktop app
-pnpm test:scripts                              # node --test scripts/ (setup script; fake adb, no phone)
+pnpm test:scripts                              # tests for scripts/setup-phone.sh (fake adb and curl, no phone)
 ```
 
 Run the commands for every side you touched before saying work is done. Say plainly what you did not run.

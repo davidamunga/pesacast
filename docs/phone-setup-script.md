@@ -1,13 +1,13 @@
 # Phone setup script
 
-`scripts/setup-phone.mjs` runs the manual steps from [phone-setup.md](phone-setup.md) for you: it downloads the release APK, verifies its SHA-256, installs it over USB with `adb`, grants what a computer can grant, excludes the app from battery saving, optionally sends the webhook settings to the phone's confirmation screen, and checks the result. Design: [ADR-0015](adr/0015-setup-checklist-and-provisioning.md).
+`scripts/setup-phone.sh` runs the manual steps from [phone-setup.md](phone-setup.md) for you: it downloads the release APK, verifies its SHA-256, installs it over USB with `adb`, grants what a computer can grant, excludes the app from battery saving, optionally sends the webhook settings to the phone's confirmation screen, and checks the result. Design: [ADR-0015](adr/0015-setup-checklist-and-provisioning.md).
 
-**Needs:** Node 20 or newer and `adb` (Android platform-tools) on the computer; on the phone, Developer options with USB debugging on. No packages to install. Works on macOS, Linux and Windows.
+**Needs:** `bash`, `curl`, `adb` (Android platform-tools) and `shasum` or `sha256sum`. That is already what macOS and most Linux systems have, apart from `adb`. It works with the old bash 3.2 that macOS ships. On Windows, run it from Git Bash (with `adb.exe` on the `PATH`) or WSL. On the phone, turn on Developer options and USB debugging. There is nothing to install.
 
 ## See what it would do first
 
 ```bash
-node scripts/setup-phone.mjs --dry-run
+scripts/setup-phone.sh --dry-run
 ```
 
 A dry run prints every step and command, with webhook credentials hidden, and contacts nothing: no download, no `adb`, no changes.
@@ -15,13 +15,13 @@ A dry run prints every step and command, with webhook credentials hidden, and co
 ## Run it
 
 ```bash
-node scripts/setup-phone.mjs
+scripts/setup-phone.sh
 ```
 
 With the webhook settings (token and secret go in environment variables so they do not appear in the process list):
 
 ```bash
-PESACAST_WEBHOOK_TOKEN='...' PESACAST_WEBHOOK_SECRET='...' node scripts/setup-phone.mjs --webhook-url https://example.com/pesacast
+PESACAST_WEBHOOK_TOKEN='...' PESACAST_WEBHOOK_SECRET='...' scripts/setup-phone.sh --webhook-url https://example.com/pesacast
 ```
 
 The phone then shows the destination host and waits for you to tap **Save and test**. Nothing is applied before that.
@@ -31,7 +31,7 @@ The phone then shows the destination host and waits for you to tap **Save and te
 | `--version 0.9.0` | A specific release (default: latest) |
 | `--apk file.apk` | A local APK; needs `file.apk.sha256` beside it, or `--sha256 <hex>` |
 | `--serial <id>` | Which phone, if several are connected |
-| `--adb <path>` | Where `adb` is, if it is not on `PATH` |
+| `--adb <path>` | Where `adb` is, if it is not on `PATH` (also looks in `$ANDROID_HOME/platform-tools`) |
 | `--keep-download` | Keep the downloaded APK |
 | `--uninstall --yes` | Remove PesaCast and undo the settings the script changed |
 
@@ -65,7 +65,7 @@ Open **Connect, Setup checklist** on the phone to finish.
 ## Tests
 
 ```bash
-node --test scripts/
+bash scripts/test-setup-phone.sh
 ```
 
-These use a fake `adb` and fake downloads, and never touch a real phone or the network. They cover the dry run, the checksum rules, device selection, the order of the steps, permission gating by Android version, shell quoting, credential hiding, and the uninstall path.
+They put a fake `adb` and a fake `curl` first on the `PATH` (and refuse to run if the real `adb` would be reachable), so they never touch a real phone or the network. CI runs them on Linux and on macOS (bash 3.2). They cover the dry run, the checksum rules and GitHub-digest fallback, device selection, the order of the steps, permission gating by Android version, shell quoting, credential hiding, and the uninstall path.
