@@ -11,6 +11,7 @@ import {
 } from "@mnlphlp/plugin-blec";
 import { SERVICE_UUID, CHAR_UUID } from "./constants";
 import { TransportStatus } from "./types";
+import { FrameReassembler } from "./ble-framing";
 
 export function useBle() {
   const [bleStatus, setBleStatus] = useState<TransportStatus>("disconnected");
@@ -19,8 +20,8 @@ export function useBle() {
   const [isScanning, setIsScanning] = useState(false);
 
   const bleConnectedRef = useRef(false);
-  // Reassembly buffer for multi-chunk BLE frames ("NNNN:" length-prefix framing)
-  const bleBufferRef = useRef<{ expected: number; data: string } | null>(null);
+  // Reassembles multi-chunk BLE frames ("NNNN:" length-prefix framing)
+  const reassemblerRef = useRef(new FrameReassembler());
 
   useEffect(() => {
     getConnectionUpdates((connected) => {
@@ -64,32 +65,10 @@ export function useBle() {
         bleConnectedRef.current = false;
       });
 
-      bleBufferRef.current = null;
+      reassemblerRef.current.reset();
       await subscribeString(CHAR_UUID, async (chunk) => {
         try {
-          let json: string | null = null;
-
-          const colonIdx = chunk.indexOf(":");
-          const maybeLen = colonIdx > 0 ? parseInt(chunk.slice(0, colonIdx), 10) : NaN;
-
-          if (!isNaN(maybeLen)) {
-            const payload = chunk.slice(colonIdx + 1);
-            if (payload.length >= maybeLen) {
-              json = payload.slice(0, maybeLen);
-              bleBufferRef.current = null;
-            } else {
-              bleBufferRef.current = { expected: maybeLen, data: payload };
-            }
-          } else if (bleBufferRef.current) {
-            bleBufferRef.current.data += chunk;
-            if (bleBufferRef.current.data.length >= bleBufferRef.current.expected) {
-              json = bleBufferRef.current.data.slice(0, bleBufferRef.current.expected);
-              bleBufferRef.current = null;
-            }
-          } else {
-            json = chunk;
-          }
-
+          const json = reassemblerRef.current.push(chunk);
           if (json === null) return;
 
           await invoke("process_ble_transaction", { txnJson: json });
