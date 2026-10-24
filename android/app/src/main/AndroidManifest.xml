@@ -74,6 +74,11 @@
             </intent-filter>
         </receiver>
 
+        <activity
+            android:name=".setup.SetupActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity" />
+
         <!-- Foreground service — keeps BLE + WiFi transport alive in the background -->
         <service
             android:name=".service.MirrorService"
