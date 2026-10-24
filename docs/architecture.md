@@ -50,7 +50,7 @@ flowchart LR
 
 - **SMS → app:** only M-PESA formats are parsed; the SMS body is never sent as-is.
 - **Phone ↔ desktop (BLE):** relies on OS-level BLE proximity; no application-level authentication.
-- **Phone ↔ desktop (WiFi):** private-network peers only; encrypted channel (ECDH + AES-GCM) authenticated by the pairing token. Legacy unencrypted clients are accepted only while "Allow unencrypted connections" is on. See [ADR-0003](adr/0003-wifi-transport-token-websocket.md) and [ADR-0011](adr/0011-encrypt-wifi-transport.md).
+- **Phone ↔ desktop (WiFi):** private-network peers only; encrypted channel (ECDH + AES-GCM) authenticated by the pairing token. There is no plaintext mode. See [ADR-0003](adr/0003-wifi-transport-token-websocket.md), [ADR-0011](adr/0011-encrypt-wifi-transport.md) and [ADR-0012](adr/0012-remove-wifi-v1-plaintext.md).
 - **Desktop → local tools:** loopback only, browser origins refused. See [ADR-0006](adr/0006-local-broadcast-rejects-browser-origins.md).
 - **Desktop → webhook:** user-configured URL and bearer token; sends transactions off-device by the user's choice.
 

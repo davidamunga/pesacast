@@ -33,16 +33,16 @@ Defined in: `android/.../model/MpesaTransaction.kt`, `desktop/src-tauri/src/mode
 
 ## WiFi
 
-Transport: WebSocket on `<phone-ip>:<port>`, default port `7877`. Two protocol versions exist during the migration described in [ADR-0011](adr/0011-encrypt-wifi-transport.md). The server chooses by the first text message.
+Transport: WebSocket on `<phone-ip>:<port>`, default port `7877`, with the encrypted channel below ([ADR-0011](adr/0011-encrypt-wifi-transport.md)).
 
-Common to both versions:
+Common rules:
 
 - Transactions generated while no client is authenticated are queued (max 50, in memory) and delivered on the next authenticated connection.
 - Peers outside loopback, private IPv4 (10/8, 172.16/12, 192.168/16), IPv6 link-local and IPv6 ULA are refused. 5 failed attempts in 60 s blocks the source IP.
 - An unauthenticated socket is closed (`1008`) after 5 s.
 - Discovery: the phone registers mDNS service `_pesacast._tcp.` (service name `PesaCast`, port = the WebSocket port). The desktop browses for it with the `discover_wifi_devices` command and fills in IP and port. The advertisement carries no secret; the pairing token is always entered by the user.
 
-### WiFi v2 (encrypted)
+### Secure channel (v2)
 
 Preferred. The pairing token is the pre-shared key; it is never sent.
 
@@ -66,9 +66,9 @@ Preferred. The pairing token is the pre-shared key; it is never sent.
 
 Test vectors: [wifi-crypto-vectors.json](wifi-crypto-vectors.json).
 
-### WiFi v1 (legacy, unencrypted)
+### Older clients
 
-`ws://`, plaintext. The first client message is `{"auth":"<token>"}`; the server replies `{"status":"ok"}`, then sends one text message per transaction. Accepted only while "Allow unencrypted connections" is enabled on the phone. It is **off by default**; the user must turn it on to use an older desktop (see ADR-0011 for the removal timeline). A v2 phone that sees this message treats the client as legacy.
+Earlier releases used an unencrypted protocol (first message `{"auth":"<token>"}`). It is no longer supported ([ADR-0012](adr/0012-remove-wifi-v1-plaintext.md)): the server closes such a connection with `1008 Bad request`, and the desktop reports that the phone must be updated.
 
 ## Local broadcast (desktop, optional)
 
