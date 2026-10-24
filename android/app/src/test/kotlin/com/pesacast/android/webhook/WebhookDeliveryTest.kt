@@ -217,6 +217,27 @@ class WebhookDeliveryTest {
     }
 
     @Test
+    fun `send test reports a 403 as a refusal, not bad credentials, with the response hint`() {
+        server.responseBody = "Blocked request. This host is not allowed.\nMore detail on line two."
+        respondWith(403)
+        val result = delivery().sendTest(cfg) as TestResult.Failure
+        assertTrue(result.message, result.message.startsWith("The server refused the request (HTTP 403)"))
+        assertTrue(result.message.contains("Blocked request. This host is not allowed."))
+        assertFalse(result.message.contains("credentials"))
+        assertFalse("only the first line", result.message.contains("line two"))
+    }
+
+    @Test
+    fun `a 403 while delivering pauses with the refusal wording`() {
+        respondWith(403)
+        val d = delivery()
+        d.enqueue(txn)
+        eventually("paused") { d.status.value.paused }
+        assertTrue(d.status.value.lastError!!.startsWith("The server refused the request (HTTP 403)"))
+        assertEquals(1, queue.size())
+    }
+
+    @Test
     fun `send test refuses a non https url with the real policy`() {
         val d = WebhookDelivery(queue, { cfg }, UrlConnectionPoster(), scope)
         val result = d.sendTest(cfg)

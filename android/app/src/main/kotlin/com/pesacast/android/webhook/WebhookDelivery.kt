@@ -85,8 +85,9 @@ class WebhookDelivery(
         validateUrl(cfg.url)?.let { return TestResult.Failure(it) }
         val body = WebhookPayload.test()
         return try {
-            val code = poster.post(cfg.url.trim(), headers(cfg, "test-${clock()}", body), body)
-            if (code in 200..299) TestResult.Success(code) else TestResult.Failure(describe(code))
+            val response = poster.post(cfg.url.trim(), headers(cfg, "test-${clock()}", body), body)
+            if (response.code in 200..299) TestResult.Success(response.code)
+            else TestResult.Failure(describe(response))
         } catch (e: IOException) {
             TestResult.Failure("Could not reach the server: ${e.javaClass.simpleName}")
         }
@@ -145,12 +146,13 @@ class WebhookDelivery(
             return Outcome.Drop("Unreadable queued transaction")
         }
         return try {
-            when (val code = poster.post(url, headers(cfg, item.key, body), body)) {
+            val response = poster.post(url, headers(cfg, item.key, body), body)
+            when (val code = response.code) {
                 in 200..299 -> Outcome.Delivered
-                401, 403 -> Outcome.Pause(describe(code))
-                408, 429, in 500..599 -> Outcome.Retry(describe(code))
+                401, 403 -> Outcome.Pause(describe(response))
+                408, 429, in 500..599 -> Outcome.Retry(describe(response))
                 in 300..399 -> Outcome.Drop("The server redirected (HTTP $code); redirects are not followed")
-                else -> Outcome.Drop(describe(code))
+                else -> Outcome.Drop(describe(response))
             }
         } catch (e: IOException) {
             Outcome.Retry("Could not reach the server: ${e.javaClass.simpleName}")
@@ -172,9 +174,14 @@ class WebhookDelivery(
         return headers
     }
 
-    private fun describe(code: Int) = when (code) {
-        401, 403 -> "The server rejected the credentials (HTTP $code)"
-        else -> "The server answered HTTP $code"
+    /** What to tell the user. 401 means bad credentials; 403 is a refusal, which may come from a proxy. */
+    private fun describe(response: HttpResponse): String {
+        val base = when (response.code) {
+            401 -> "The server rejected the credentials (HTTP 401)"
+            403 -> "The server refused the request (HTTP 403)"
+            else -> "The server answered HTTP ${response.code}"
+        }
+        return if (response.snippet.isBlank()) base else "$base: ${response.snippet}"
     }
 
     private fun publish(paused: Boolean = _status.value.paused) {

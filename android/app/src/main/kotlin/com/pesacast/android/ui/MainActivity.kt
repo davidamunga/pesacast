@@ -168,7 +168,10 @@ class MainActivity : AppCompatActivity() {
         binding.switchWebhook.setOnCheckedChangeListener { _, checked ->
             if (!vm.setWebhookEnabled(checked)) {
                 binding.switchWebhook.isChecked = false
-                if (checked) showWebhookMessage(getString(R.string.webhook_needs_test))
+                if (checked) {
+                    val noUrl = binding.etWebhookUrl.text.isNullOrBlank()
+                    showWebhookMessage(getString(if (noUrl) R.string.webhook_needs_url else R.string.webhook_needs_test))
+                }
             }
         }
         binding.btnWebhookTest.setOnClickListener {

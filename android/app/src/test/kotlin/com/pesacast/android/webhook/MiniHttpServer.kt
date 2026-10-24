@@ -15,6 +15,7 @@ import kotlin.concurrent.thread
 class MiniHttpServer(private val handler: (path: String, headers: Map<String, String>, body: ByteArray) -> Int) {
     private val socket = ServerSocket(0, 50, InetAddress.getByName("127.0.0.1"))
     @Volatile private var running = true
+    @Volatile var responseBody: String = ""
     val port: Int get() = socket.localPort
 
     init {
@@ -55,7 +56,9 @@ class MiniHttpServer(private val handler: (path: String, headers: Map<String, St
             val code = handler(path, headers, body)
             val location = if (code in 300..399) "Location: http://127.0.0.1/elsewhere\r\n" else ""
             client.getOutputStream().apply {
-                write("HTTP/1.1 $code X\r\n${location}Content-Length: 0\r\nConnection: close\r\n\r\n".toByteArray())
+                val payload = responseBody.toByteArray()
+                write("HTTP/1.1 $code X\r\n${location}Content-Length: ${payload.size}\r\nConnection: close\r\n\r\n".toByteArray())
+                write(payload)
                 flush()
             }
         } catch (_: Exception) {

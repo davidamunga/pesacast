@@ -141,6 +141,27 @@ class WebhookQueueTest {
     }
 }
 
+class WebhookSnippetTest {
+    @Test
+    fun `takes the first non-empty line`() {
+        assertEquals("Blocked request", snippetOf("\n\n  Blocked request  \nsecond".toByteArray()))
+    }
+
+    @Test
+    fun `truncates long text and removes control characters`() {
+        val long = snippetOf(("a".repeat(300)).toByteArray())
+        assertEquals(100, long.length)
+        assertTrue(long.endsWith("…"))
+        assertEquals("abc", snippetOf("a\u0000b\u001bc".toByteArray()))
+    }
+
+    @Test
+    fun `empty or binary-ish input gives an empty hint`() {
+        assertEquals("", snippetOf(ByteArray(0)))
+        assertEquals("", snippetOf("\n \n".toByteArray()))
+    }
+}
+
 class WebhookBackoffTest {
     @Test
     fun `backoff doubles from 5s and caps at 15 minutes`() {
