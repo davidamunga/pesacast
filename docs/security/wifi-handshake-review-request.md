@@ -52,4 +52,4 @@ Out of scope: an attacker who knows the token or controls either endpoint; traff
 
 ## How to respond
 
-Open a private security advisory on the repository, or email the maintainer (see the repository profile), with findings ordered by severity. Please do not include real transaction data or tokens in reports; the test vectors use a fixed fake token. We will credit reviewers who want it.
+Report findings privately as described in [SECURITY.md](../../SECURITY.md) (GitHub private vulnerability reporting), ordered by severity. Please do not include real transaction data or tokens; the test vectors use a fixed fake token. We will credit reviewers who want it.
