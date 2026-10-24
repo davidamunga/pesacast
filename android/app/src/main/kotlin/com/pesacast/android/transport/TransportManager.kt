@@ -92,7 +92,7 @@ class TransportManager(private val context: Context) {
     /** Starts or stops only the WiFi transport to match preferences; BLE is left untouched. */
     fun applyWifiSettings() {
         if (prefs.wifiEnabled) {
-            val token = prefs.wifiToken ?: WifiTransport.generateToken().also { prefs.wifiToken = it }
+            val token = prefs.wifiTokenOrRegenerate(WifiTransport::generateToken)
             Log.i(TAG, "Starting WiFi transport on port ${prefs.wifiPort}")
             wifi.start(token, prefs.wifiPort)
         } else {

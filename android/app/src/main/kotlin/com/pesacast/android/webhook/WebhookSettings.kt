@@ -3,6 +3,7 @@ package com.pesacast.android.webhook
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.pesacast.android.util.MigratingSecret
 import java.security.MessageDigest
 
 /**
@@ -17,8 +18,25 @@ class WebhookSettings(context: Context, private val cipher: SecretCipher = Keyst
     private val prefs: SharedPreferences =
         context.getSharedPreferences("pesacast_webhook", Context.MODE_PRIVATE)
 
+    private fun secret(key: String) = MigratingSecret(
+        cipher = cipher,
+        get = { prefs.getString(it, null) },
+        put = { k, v -> prefs.edit { if (v == null) remove(k) else putString(k, v) } },
+        encryptedKey = key,
+    )
+
+    private val tokenSecret = secret(KEY_TOKEN)
+    private val signingSecret = secret(KEY_SECRET)
+
+    /**
+     * True if a saved token or signing secret exists but can no longer be decrypted (Android reset
+     * its secure storage). Delivery is held off rather than sent without credentials; saving new
+     * values fixes it, and it clears by itself if the key comes back.
+     */
+    fun credentialsUnreadable(): Boolean = tokenSecret.hasUnreadableValue() || signingSecret.hasUnreadableValue()
+
     var enabled: Boolean
-        get() = prefs.getBoolean(KEY_ENABLED, false)
+        get() = prefs.getBoolean(KEY_ENABLED, false) && !credentialsUnreadable()
         set(value) = prefs.edit { putBoolean(KEY_ENABLED, value) }
 
     var url: String
@@ -26,12 +44,12 @@ class WebhookSettings(context: Context, private val cipher: SecretCipher = Keyst
         set(value) = prefs.edit { putString(KEY_URL, value.trim()) }
 
     var token: String
-        get() = decrypt(KEY_TOKEN)
-        set(value) = store(KEY_TOKEN, value)
+        get() = tokenSecret.read().orEmpty()
+        set(value) = tokenSecret.write(value)
 
     var secret: String
-        get() = decrypt(KEY_SECRET)
-        set(value) = store(KEY_SECRET, value)
+        get() = signingSecret.read().orEmpty()
+        set(value) = signingSecret.write(value)
 
     /** Current configuration, or null if there is no URL yet. */
     fun config(): WebhookConfig? {
@@ -48,12 +66,6 @@ class WebhookSettings(context: Context, private val cipher: SecretCipher = Keyst
         MessageDigest.getInstance("SHA-256")
             .digest("$url|$token|$secret".toByteArray(Charsets.UTF_8))
             .joinToString("") { "%02x".format(it) }
-
-    private fun store(key: String, value: String) =
-        prefs.edit { if (value.isBlank()) remove(key) else putString(key, cipher.encrypt(value)) }
-
-    private fun decrypt(key: String): String =
-        prefs.getString(key, null)?.let(cipher::decrypt).orEmpty()
 
     private companion object {
         const val KEY_ENABLED = "enabled"

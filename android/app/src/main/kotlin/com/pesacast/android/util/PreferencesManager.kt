@@ -16,12 +16,16 @@ class PreferencesManager(
 
     // The WiFi pairing token is the key to the encrypted channel, so it is stored encrypted. Older
     // versions kept it in plain text under "wifi_token"; MigratingSecret upgrades it on first read.
-    private val wifiTokenSecret = MigratingSecret(
-        cipher = cipher,
-        get = { key -> prefs.getString(key, null) },
-        put = { key, value -> prefs.edit { if (value == null) remove(key) else putString(key, value) } },
-        encryptedKey = KEY_WIFI_TOKEN_ENC,
-        legacyPlaintextKey = KEY_WIFI_TOKEN,
+    private val wifiTokenKeeper = WifiTokenKeeper(
+        secret = MigratingSecret(
+            cipher = cipher,
+            get = { key -> prefs.getString(key, null) },
+            put = { key, value -> prefs.edit { if (value == null) remove(key) else putString(key, value) } },
+            encryptedKey = KEY_WIFI_TOKEN_ENC,
+            legacyPlaintextKey = KEY_WIFI_TOKEN,
+        ),
+        getFlag = { prefs.getBoolean(KEY_WIFI_TOKEN_RESET, false) },
+        setFlag = { prefs.edit { putBoolean(KEY_WIFI_TOKEN_RESET, it) } },
     )
 
     var mirroringEnabled: Boolean
@@ -34,8 +38,14 @@ class PreferencesManager(
         set(value) = prefs.edit { putBoolean(KEY_WIFI_ENABLED, value) }
 
     var wifiToken: String?
-        get() = wifiTokenSecret.read()
-        set(value) = wifiTokenSecret.write(value)
+        get() = wifiTokenKeeper.current()
+        set(value) = wifiTokenKeeper.write(value)
+
+    /** The stored token, or a fresh one. Notes a reset if the stored token could not be read. */
+    fun wifiTokenOrRegenerate(generate: () -> String): String = wifiTokenKeeper.tokenOrRegenerate(generate)
+
+    /** True once if the WiFi token was replaced because Android reset secure storage. */
+    fun consumeWifiTokenResetNotice(): Boolean = wifiTokenKeeper.consumeResetNotice()
 
     var wifiPort: Int
         get() = prefs.getInt(KEY_WIFI_PORT, 7877)
@@ -57,6 +67,7 @@ class PreferencesManager(
         private const val KEY_WIFI_ENABLED = "wifi_enabled"
         private const val KEY_WIFI_TOKEN   = "wifi_token"          // legacy plaintext, migrated away
         private const val KEY_WIFI_TOKEN_ENC = "wifi_token_enc"
+        private const val KEY_WIFI_TOKEN_RESET = "wifi_token_reset_notice"
         private const val KEY_WIFI_PORT    = "wifi_port"
 
         // Legacy keys — not removed to avoid data loss on upgrade
