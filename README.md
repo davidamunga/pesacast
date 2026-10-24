@@ -181,6 +181,12 @@ Each M-PESA SMS is parsed into the following structure:
 
 ---
 
+## Security
+
+Please report vulnerabilities privately; see [SECURITY.md](SECURITY.md). The design of the encrypted WiFi channel and the reasoning behind other security choices are in [docs/adr](docs/adr/README.md).
+
+---
+
 ## License
 
 [MIT](./LICENSE) © 2026 David Amunga
