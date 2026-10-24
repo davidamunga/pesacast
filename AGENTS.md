@@ -23,7 +23,7 @@ cd desktop/src-tauri && cargo check            # fast compile check
 cd android && ./gradlew :app:compileDebugKotlin   # compile Android
 pnpm lint                                      # eslint + tsc + rustfmt + clippy
 cd android && ./gradlew :app:lintDebug         # Android lint
-cd android && ./gradlew :app:testDebugUnitTest # Android unit tests (MpesaParser, BleFraming)
+cd android && ./gradlew :app:testDebugUnitTest # Android unit tests (parser, BLE framing, WiFi auth)
 cd desktop && pnpm tauri dev                   # run desktop app
 ```
 
