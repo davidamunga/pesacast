@@ -14,6 +14,7 @@ import com.pesacast.android.util.PreferencesManager
 import com.pesacast.android.webhook.DeviceId
 import com.pesacast.android.webhook.TestResult
 import com.pesacast.android.webhook.UrlConnectionPoster
+import com.pesacast.android.webhook.WebhookConfig
 import com.pesacast.android.webhook.WebhookDelivery
 import com.pesacast.android.webhook.WebhookQueue
 import com.pesacast.android.webhook.WebhookSettings
@@ -145,6 +146,9 @@ class TransportManager(private val context: Context) {
             prefs.setupLastTestPassed = it.passed
         }
     }
+
+    /** Sends the webhook connectivity check for a configuration that may not be saved yet. Blocking. */
+    fun sendWebhookTest(config: WebhookConfig): TestResult = webhook.sendTest(config)
 
     // MARK: - Sending
 

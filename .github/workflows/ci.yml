@@ -35,6 +35,17 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
         run: echo "$PR_TITLE" | pnpm exec commitlint --verbose
 
+  scripts:
+    name: Scripts (tests, ${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # macOS ships bash 3.2, which differs from bash 5 in ways that have broken this script before.
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/test-setup-phone.sh
   desktop-frontend:
     name: Desktop (lint + types)
     runs-on: ubuntu-latest
