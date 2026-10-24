@@ -23,7 +23,10 @@ data class WebhookConfig(
     val secret: String? = null,
     /** Per-install identifier sent as `device_id` (see [DeviceId]). */
     val deviceId: String = "",
-)
+) {
+    /** The same configuration with [id] as the device id, unless it already has one. */
+    fun withDeviceIdIfMissing(id: String): WebhookConfig = if (deviceId.isBlank()) copy(deviceId = id) else this
+}
 
 data class WebhookStatus(
     val pending: Int = 0,
