@@ -16,7 +16,7 @@ Run the checks listed in [AGENTS.md](AGENTS.md#commands) for every part you chan
 2. Make small, focused commits using Conventional Commits. A Husky `commit-msg` hook runs commitlint (installed by `pnpm install`); see `commitlint.config.mjs` for allowed scopes. CI checks every commit and the PR title.
 3. If the change is user-visible, run `pnpm changeset` and commit the generated file.
 4. If you made or reversed a design decision, add an ADR (below).
-5. Open a PR. Describe what changed, what you verified, and what you did not.
+5. Open a PR. A template (`.github/pull_request_template.md`) is filled in for you: describe what changed, what you verified, and what you did not. When opening one with `gh pr create`, use `--body-file` with the template filled in rather than a free-form body.
 
 ## Architecture decision records
 

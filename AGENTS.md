@@ -43,6 +43,10 @@ Run the commands for every side you touched before saying work is done. Say plai
 - **Do not edit `desktop/src-tauri/vendor/`** without an ADR update; see [ADR-0007](docs/adr/0007-vendor-btleplug.md).
 - Security-sensitive defaults stay conservative: local broadcast server is off by default and refuses browser origins.
 
+## Pull requests
+
+Fill in every section of `.github/pull_request_template.md`; do not replace it with a free-form body. Tick only checks you actually ran, and list what you did not verify under Risks / follow-ups.
+
 ## ADRs
 
 Decisions live in `docs/adr/NNNN-title.md` using [the template](docs/adr/0000-template.md). ADRs are immutable once accepted: to change one, add a new ADR that supersedes it and update the old one's status. Add an ADR when you pick between real alternatives, accept a trade-off a future reader would question, or reverse an earlier ADR.
