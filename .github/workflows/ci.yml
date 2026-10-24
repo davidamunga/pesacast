@@ -60,6 +60,13 @@ jobs:
       - run: pnpm lint:desktop
       - run: pnpm --filter pesacast test
 
+  site:
+    name: Site (checks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 site/check.py
+
   desktop-rust:
     name: Desktop (rustfmt, clippy, test)
     runs-on: macos-latest

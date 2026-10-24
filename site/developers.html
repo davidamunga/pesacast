@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The PesaCast webhook</title>
+<meta name="description" content="The request, the signature, the retry rules, the schema and a reference receiver for building on PesaCast.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:title" content="The PesaCast webhook">
+<meta property="og:description" content="The request, the signature, the retry rules, the schema and a reference receiver for building on PesaCast.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="preload" href="assets/fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="assets/logo.png" alt="" width="32" height="32">PesaCast</a>
+    <nav class="site-nav" aria-label="Main"><a href="start.html">Set up</a><a href="phones.html">Phones</a><a href="faq.html">Questions</a><a href="developers.html" aria-current="page">Developers</a><a href="security.html">Security</a><a href="https://github.com/davidamunga/pesacast">GitHub</a></nav>
+  </div>
+</header>
+<main id="main">
+
+<div class="wrap">
+  <div class="page-head">
+    <p class="eyebrow">Developers</p>
+    <h1>Build on the webhook.</h1>
+    <p class="lede">The phone posts each payment to an HTTPS address you control. Signed, retried, and the same format every time.</p>
+  </div>
+  <div class="prose">
+    <div class="note"><p><strong>Read this first.</strong> A payment SMS is not proof of payment. It can be faked or delayed. Treat these requests as notifications, and confirm money-moving events through Safaricom&rsquo;s Daraja callbacks.</p></div>
+
+    <h2>The request</h2>
+<pre><code>POST https://your.server/pesacast
+Content-Type: application/json
+Idempotency-Key: ABC123XYZ@2026-10-24T10:00:00+03:00
+X-PesaCast-Device-Id: 5b0f6c1e-6a9a-4f4f-9e0e-2c5d7c0a9d11
+X-PesaCast-Timestamp: 1761292801
+X-PesaCast-Signature: v1=&lt;hex&gt;      (only if you set a signing secret)
+Authorization: Bearer &lt;token&gt;       (only if you set a token)</code></pre>
+<pre><code>{
+  "schema_version": 1,
+  "source": "android",
+  "device_id": "5b0f6c1e-6a9a-4f4f-9e0e-2c5d7c0a9d11",
+  "exported_at": "2026-10-24T10:00:01.234Z",
+  "count": 1,
+  "transactions": [{
+    "type": "mpesa_txn",
+    "direction": "received",
+    "amount": 500.0,
+    "currency": "KES",
+    "from": "JANE DOE",
+    "ref": "ABC123XYZ",
+    "time": "2026-10-24T10:00:00+03:00",
+    "balance": 1500.0
+  }]
+}</code></pre>
+    <p>The desktop app can post the same envelope, with <code>"source": "desktop"</code>. Ignore fields you do not know; new optional fields can appear without changing <code>schema_version</code>.</p>
+
+    <h2>What your server should do</h2>
+    <ol>
+      <li><strong>Check the signature.</strong> <code>v1=</code> plus the hex HMAC-SHA256 of the text <code>&lt;timestamp&gt;.</code> followed by the raw body, keyed with your secret. Compare in constant time. Reject timestamps more than a few minutes old.</li>
+      <li><strong>Ignore test pings.</strong> The &ldquo;Save and test&rdquo; button sends <code>"test": true</code> with no transactions. Answer 2xx and record nothing.</li>
+      <li><strong>De-duplicate.</strong> Delivery is at-least-once. Use <code>Idempotency-Key</code>, or a unique constraint on <code>ref</code> plus <code>time</code>. The phone and the desktop use the same key.</li>
+      <li><strong>Answer quickly.</strong> Store, reply, process later.</li>
+    </ol>
+
+    <h2>What the phone does with your answer</h2>
+    <div class="table-scroll"><table>
+      <thead><tr><th>You answer</th><th>The phone</th></tr></thead>
+      <tbody>
+        <tr><td>2xx</td><td>Done. Removes it from its queue.</td></tr>
+        <tr><td>408, 429, 5xx, or no answer</td><td>Retries with backoff (5 seconds, doubling, up to 15 minutes), same key.</td></tr>
+        <tr><td>401, 403</td><td>Pauses and keeps the queue until the settings change. Nothing is lost.</td></tr>
+        <tr><td>Redirects, other 4xx</td><td><strong>Drops that transaction</strong> and shows the error. Do not use 4xx for something you could process later.</td></tr>
+      </tbody>
+    </table></div>
+    <p>The queue holds up to 500 transactions for up to seven days. Requests must be HTTPS, redirects are not followed, and there is a ten-second timeout.</p>
+
+    <h2>Verify a signature (Node)</h2>
+<pre><code>import crypto from "node:crypto";
+
+function verify(secret, timestamp, rawBody, header) {
+  const expected = "v1=" + crypto.createHmac("sha256", secret)
+    .update(`${timestamp}.`).update(rawBody).digest("hex");
+  return header.length === expected.length &&
+    crypto.timingSafeEqual(Buffer.from(header), Buffer.from(expected)) &&
+    Math.abs(Date.now() / 1000 - Number(timestamp)) &lt; 300;
+}</code></pre>
+
+    <h2>Everything else</h2>
+    <ul>
+      <li><a href="https://github.com/davidamunga/pesacast/blob/main/docs/webhook-payload.schema.json">JSON Schema</a> of the body, and the <a href="https://github.com/davidamunga/pesacast/blob/main/docs/openapi/pesacast-webhook.yaml">OpenAPI description</a> of the endpoint you implement. Tests check the apps against both.</li>
+      <li><a href="https://github.com/davidamunga/pesacast/tree/main/examples/webhook-receiver">A reference receiver</a> in Python with SQLite: signature check, test pings, de-duplication, raw event storage.</li>
+      <li><a href="https://github.com/davidamunga/pesacast/blob/main/docs/webhooks.md">The full guide</a>, including a test receiver you can run in one command and expose through a tunnel.</li>
+      <li>Send the address and credentials from your computer instead of typing them on the phone: <a href="https://github.com/davidamunga/pesacast/blob/main/docs/phone-setup.md">phone setup</a>.</li>
+    </ul>
+  </div>
+</div>
+
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <p>PesaCast is free software under the MIT licence. It is not made by, affiliated with or endorsed by Safaricom. M-PESA is a trademark of Safaricom PLC.</p>
+      <p>This site has no cookies, no analytics, no scripts, and loads nothing from other websites.</p>
+    </div>
+    <ul>
+      <li><a href="https://github.com/davidamunga/pesacast">Source code</a></li>
+      <li><a href="https://github.com/davidamunga/pesacast/releases">Downloads</a></li>
+      <li><a href="https://github.com/davidamunga/pesacast/issues/new/choose">Report a problem</a></li>
+      <li><a href="security.html">Security</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>

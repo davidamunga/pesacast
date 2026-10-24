@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Set up PesaCast in fifteen minutes</title>
+<meta name="description" content="Put PesaCast on a spare Android phone, check the download, work down the setup checklist, and choose where payments go.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:title" content="Set up PesaCast in fifteen minutes">
+<meta property="og:description" content="Put PesaCast on a spare Android phone, check the download, work down the setup checklist, and choose where payments go.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="preload" href="assets/fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="assets/logo.png" alt="" width="32" height="32">PesaCast</a>
+    <nav class="site-nav" aria-label="Main"><a href="start.html" aria-current="page">Set up</a><a href="phones.html">Phones</a><a href="faq.html">Questions</a><a href="developers.html">Developers</a><a href="security.html">Security</a><a href="https://github.com/davidamunga/pesacast">GitHub</a></nav>
+  </div>
+</header>
+<main id="main">
+
+<div class="wrap">
+  <div class="page-head">
+    <p class="eyebrow">Set up</p>
+    <h1>Set up PesaCast in about fifteen minutes.</h1>
+    <p class="lede">One Android phone that receives your <span class="nb">M-PESA</span> messages. Optionally, a computer to show them on.</p>
+  </div>
+  <div class="prose">
+    <div class="note"><p><strong>Version note.</strong> The setup script, the setup checklist on the phone and the webhook are in releases newer than 0.8. If the latest download on the <a href="https://github.com/davidamunga/pesacast/releases">releases page</a> is 0.8 or older, the steps below that mention them will not match yet.</p></div>
+
+    <h2>What you need</h2>
+    <ul>
+      <li>An Android phone, version 8 or newer, with the SIM that receives the <span class="nb">M-PESA</span> messages. A spare one that stays plugged in is best.</li>
+      <li>A Mac or Windows computer, if you want payments on a desktop. Skip this if you only want the webhook.</li>
+      <li>For the one-command route: a USB cable and a computer with <code>adb</code> (Android platform-tools) and <code>bash</code>. On Windows, use Git Bash or WSL.</li>
+    </ul>
+
+    <h2>The steps</h2>
+    <ol class="ledger">
+      <li><div>
+        <h3>Put the desktop app on the computer</h3>
+        <p>Download it from the <a href="https://github.com/davidamunga/pesacast/releases">releases page</a>: the <code>.dmg</code> for Mac, the <code>.exe</code> or <code>.msi</code> for Windows. Skip this step for webhook-only setups.</p>
+      </div></li>
+      <li><div>
+        <h3>Turn on USB debugging on the phone</h3>
+        <p>Settings, About phone, tap Build number seven times. Then Developer options, USB debugging on. Plug the phone in and tap Allow on the prompt.</p>
+      </div></li>
+      <li><div>
+        <h3>Install PesaCast on the phone</h3>
+        <p>With the script, which downloads the app, checks it against its published checksum, installs it, grants the permissions a computer can grant, and checks the result:</p>
+<pre><code>git clone https://github.com/davidamunga/pesacast
+cd pesacast
+scripts/setup-phone.sh --dry-run</code></pre>
+        <p class="small">No git? Download the repository as a zip from GitHub and run the same commands in that folder.</p>
+        <p>The dry run only prints what it would do. When it looks right:</p>
+<pre><code>scripts/setup-phone.sh</code></pre>
+        <p>Prefer to do it by hand? The <a href="https://github.com/davidamunga/pesacast/blob/main/docs/phone-setup.md">manual steps</a> are the same commands, one at a time.</p>
+      </div></li>
+      <li><div>
+        <h3>Work down the setup checklist</h3>
+        <p>On the phone: Connect, then Setup checklist. It shows what is still missing, in order, and each item opens the right settings screen. The ones no computer can do for you are the SMS permission on some Android versions, battery saving, and your phone maker&rsquo;s auto-start menu.</p>
+      </div></li>
+      <li><div>
+        <h3>Choose where payments go</h3>
+        <p><strong>To the desktop:</strong> open the desktop app, Connect. For Wi-Fi, press &ldquo;Find my phone&rdquo;, then paste the pairing token shown on the phone. Bluetooth finds the phone on its own.</p>
+        <p><strong>To your server:</strong> follow the <a href="developers.html">webhook guide</a>. You can send the address and credentials from the computer instead of typing them on the phone.</p>
+      </div></li>
+      <li><div>
+        <h3>Run the test</h3>
+        <p>In the setup checklist, run the end-to-end test. It sends a clearly labelled test to everything that is switched on and tells you what worked. The desktop shows a fake test payment; the webhook gets a request marked as a test.</p>
+      </div></li>
+    </ol>
+
+    <h2>When it does not work</h2>
+    <ul>
+      <li><strong>Payments arrive late, or stop after a while.</strong> The phone is putting PesaCast to sleep. Finish the battery and auto-start items in the checklist. See <a href="phones.html">phones</a>.</li>
+      <li><strong>The SMS permission cannot be granted.</strong> On Android 13 and newer, open the app&rsquo;s info screen, tap the three dots, and choose &ldquo;Allow restricted settings&rdquo;. Then allow SMS.</li>
+      <li><strong>Play Protect asks about the app.</strong> It has not seen it before and it was not installed from a store. Choose the option that lets you continue. Do not turn Play Protect off.</li>
+      <li><strong>The script says the checksum does not match.</strong> Do not install the file. Download again, or ask in an <a href="https://github.com/davidamunga/pesacast/issues/new/choose">issue</a>.</li>
+    </ul>
+
+    <h2>Undo it</h2>
+<pre><code>scripts/setup-phone.sh --uninstall --yes</code></pre>
+    <p>That removes the app and the settings the script changed.</p>
+  </div>
+</div>
+
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <p>PesaCast is free software under the MIT licence. It is not made by, affiliated with or endorsed by Safaricom. M-PESA is a trademark of Safaricom PLC.</p>
+      <p>This site has no cookies, no analytics, no scripts, and loads nothing from other websites.</p>
+    </div>
+    <ul>
+      <li><a href="https://github.com/davidamunga/pesacast">Source code</a></li>
+      <li><a href="https://github.com/davidamunga/pesacast/releases">Downloads</a></li>
+      <li><a href="https://github.com/davidamunga/pesacast/issues/new/choose">Report a problem</a></li>
+      <li><a href="security.html">Security</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>

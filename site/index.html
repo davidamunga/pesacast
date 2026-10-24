@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PesaCast: M-PESA payments on your screen, the second they land</title>
+<meta name="description" content="A phone reads the M-PESA message. PesaCast shows it on your computer or posts it to your own server. Free, open source, no accounts, no cloud.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:title" content="PesaCast: M-PESA payments on your screen, the second they land">
+<meta property="og:description" content="A phone reads the M-PESA message. PesaCast shows it on your computer or posts it to your own server. Free, open source, no accounts, no cloud.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="preload" href="assets/fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="assets/logo.png" alt="" width="32" height="32">PesaCast</a>
+    <nav class="site-nav" aria-label="Main"><a href="start.html">Set up</a><a href="phones.html">Phones</a><a href="faq.html">Questions</a><a href="developers.html">Developers</a><a href="security.html">Security</a><a href="https://github.com/davidamunga/pesacast">GitHub</a></nav>
+  </div>
+</header>
+<main id="main">
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow"><span class="nb">M-PESA</span>, mirrored</p>
+      <h1>Every payment, on your screen the second it lands.</h1>
+      <p class="lede">A phone receives the <span class="nb">M-PESA</span> message. PesaCast reads it and shows it on your computer, or posts it to your own server. That is all it does.</p>
+      <div class="actions">
+        <a class="btn" href="start.html">Set up a phone</a>
+        <a class="link-quiet" href="developers.html">Build on the webhook</a>
+      </div>
+      <p class="small meta">Free and open source. Android phone, plus a Mac or Windows computer if you want the desktop view.</p>
+    </div>
+    <div class="slip" role="img" aria-label="An example payment as it appears in PesaCast: received KES 500.00 from Jane Doe, balance KES 1,500.00">
+      <header><strong>PesaCast</strong><span>Payment received</span></header>
+      <div class="amount"><span>KES 500.00</span><small>Received</small></div>
+      <div class="row"><span>From</span><span>Jane Doe</span></div>
+      <div class="row"><span>Reference</span><span>ABC123XYZ</span></div>
+      <div class="row"><span>Balance</span><span>KES 1,500.00</span></div>
+      <footer>Sample data</footer>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <h2>What it does</h2>
+      <p>Three steps, none of them clever.</p>
+    </div>
+    <ol class="ledger">
+      <li>
+        <div>
+          <h3>The phone reads the message.</h3>
+          <p>Safaricom texts the phone for every payment. PesaCast, running on that phone, picks up messages from MPESA and turns each into an amount, a name, a reference and a balance.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h3>It sends it where you point it.</h3>
+          <p>To your computer over Bluetooth or your own Wi-Fi. Or to a web address you control, called a webhook. Or both. Nothing goes through a server of ours, because there is not one.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h3>Your screen shows it.</h3>
+          <p>A notification, and a live list on the desktop app. Nothing to refresh. Export the list to Excel when you need it.</p>
+        </div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <h2>What it does not do</h2>
+      <p>Said up front, because it matters more than the list above.</p>
+    </div>
+    <dl class="plain">
+      <div>
+        <dt>It is not proof of payment.</dt>
+        <dd><p>PesaCast forwards a text message. A text can be faked, delayed, or lost if the phone was off. If money or goods depend on a payment, confirm it with Safaricom&rsquo;s Daraja callbacks and use PesaCast alongside them.</p></dd>
+      </div>
+      <div>
+        <dt>It never touches your money or your PIN.</dt>
+        <dd><p>It cannot send money, cannot send SMS, and never asks for your <span class="nb">M-PESA</span> PIN. It only receives what arrives.</p></dd>
+      </div>
+      <div>
+        <dt>It is not from Safaricom.</dt>
+        <dd><p>Independent, unofficial, and not affiliated with or endorsed by Safaricom.</p></dd>
+      </div>
+      <div>
+        <dt>It is not on the Play Store.</dt>
+        <dd><p>You install it from a file. The <a href="start.html">setup guide</a> shows how, and checks the file against a checksum before it goes on the phone.</p></dd>
+      </div>
+      <div>
+        <dt>It will not make a cheap phone behave.</dt>
+        <dd><p>Many budget phones stop background apps to save battery. The setup checklist walks you through the settings that keep PesaCast alive, but some are menus only you can open. See <a href="phones.html">phones</a>.</p></dd>
+      </div>
+      <div>
+        <dt>It only understands <span class="nb">M-PESA</span>.</dt>
+        <dd><p>Other wallets and banks send different messages. They are ignored.</p></dd>
+      </div>
+    </dl>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Where your data goes</h2>
+    </div>
+    <p>To the desktop app, straight from the phone, over an encrypted link on your own network. To your webhook, only if you turn it on, over HTTPS, to the address you typed. Nowhere else.</p>
+    <p>The desktop app checks GitHub for new versions. The code is open, so you can read exactly what the phone does with a message: <a href="security.html">how it stays yours</a>.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="paths">
+      <div>
+        <h3>Running a shop or an office?</h3>
+        <p>About fifteen minutes: put the app on a spare Android phone, put the desktop app on a computer, pair them.</p>
+        <p><a class="btn" href="start.html">Set up a phone</a></p>
+      </div>
+      <div>
+        <h3>Building something?</h3>
+        <p>Each payment can be posted, signed and retried, to your own server. The format is published as a schema, with a reference receiver.</p>
+        <p><a class="btn" href="developers.html">Read the webhook guide</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <p>PesaCast is free software under the MIT licence. It is not made by, affiliated with or endorsed by Safaricom. M-PESA is a trademark of Safaricom PLC.</p>
+      <p>This site has no cookies, no analytics, no scripts, and loads nothing from other websites.</p>
+    </div>
+    <ul>
+      <li><a href="https://github.com/davidamunga/pesacast">Source code</a></li>
+      <li><a href="https://github.com/davidamunga/pesacast/releases">Downloads</a></li>
+      <li><a href="https://github.com/davidamunga/pesacast/issues/new/choose">Report a problem</a></li>
+      <li><a href="security.html">Security</a></li>
+    </ul>
+  </div>
+</footer>
+</body>
+</html>

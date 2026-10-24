@@ -10,6 +10,7 @@ Read [CONTEXT.md](CONTEXT.md) for vocabulary and [docs/architecture.md](docs/arc
 | `android/` | Intercepts SMS, parses, serves transactions to the desktop | Kotlin, BLE GATT server |
 | `desktop/` | Receives, notifies, stores, re-broadcasts | Tauri 2 (Rust) + React/TypeScript |
 | `docs/adr/` | Architecture decision records | Markdown |
+| `site/` | The public website (static HTML, no scripts; `python3 site/check.py`) | HTML, CSS |
 | `.changeset/` | Pending version bumps | Changesets |
 
 ## Commands
