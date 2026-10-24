@@ -36,7 +36,7 @@ Defined in: `android/.../model/MpesaTransaction.kt`, `desktop/src-tauri/src/mode
 - After `ok`, the server sends one text message per transaction (the JSON above). Client messages after auth are ignored.
 - Transactions generated while no client is connected are queued (max 50, in memory) and delivered on the next authenticated connection.
 - Peers outside loopback, private IPv4 (10/8, 172.16/12, 192.168/16), IPv4/IPv6 link-local and IPv6 ULA are refused. 5 failed attempts in 60 s blocks the source IP.
-- Discovery: the phone registers mDNS service `_pesacast._tcp.` but clients currently require a manually entered IP.
+- Discovery: the phone registers mDNS service `_pesacast._tcp.` (service name `PesaCast`, port = the WebSocket port). The desktop browses for it with the `discover_wifi_devices` command and fills in IP and port. The advertisement carries no secret; the pairing token is always entered by the user.
 
 ## Local broadcast (desktop, optional)
 

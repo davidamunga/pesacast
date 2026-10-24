@@ -151,7 +151,7 @@ PesaCast supports two transports, which can run at the same time. Transactions t
 1. Put both devices on the same network.
 2. In the Android app, open the **Connect** tab and turn on **Enable WiFi**.
 3. Tap **Share Pairing Info** to get the phone's IP, port and token.
-4. In the desktop app, open **Connect → WiFi**, enter the IP and token, and press **Connect**.
+4. In the desktop app, open **Connect → WiFi** and press **Find my phone** (or enter the IP by hand), paste the token, and press **Connect**.
 
 The connection is a token-authenticated WebSocket (default port `7877`) and is only accepted from private-network addresses. It is **not encrypted**, so use it on networks you trust. Regenerate the token from the Android app to revoke access.
 
