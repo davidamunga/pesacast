@@ -4,5 +4,11 @@
 <dict>
   <key>NSBluetoothAlwaysUsageDescription</key>
   <string>Pesacast uses Bluetooth to receive M-PESA transaction data from paired devices.</string>
+  <key>NSLocalNetworkUsageDescription</key>
+  <string>Pesacast looks for your phone on the local network to connect over WiFi.</string>
+  <key>NSBonjourServices</key>
+  <array>
+    <string>_pesacast._tcp</string>
+  </array>
 </dict>
 </plist>

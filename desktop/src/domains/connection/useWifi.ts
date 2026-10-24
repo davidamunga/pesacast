@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { TransportStatus } from "./types";
+import { DiscoveredDevice, TransportStatus } from "./types";
 
 const STORAGE_KEY_IP    = "wifi_ip";
 const STORAGE_KEY_PORT  = "wifi_port";
@@ -15,6 +15,10 @@ export function useWifi() {
   const [wifiIp, setWifiIp]           = useState(() => localStorage.getItem(STORAGE_KEY_IP) ?? "");
   const [wifiPort, setWifiPort]       = useState(() => parseInt(localStorage.getItem(STORAGE_KEY_PORT) ?? "7877", 10));
   const [wifiToken, setWifiToken]     = useState(() => localStorage.getItem(STORAGE_KEY_TOKEN) ?? "");
+
+  const [devices, setDevices]   = useState<DiscoveredDevice[]>([]);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanError, setScanError]   = useState<string | null>(null);
 
   const wsRef                   = useRef<WebSocket | null>(null);
   const intentionalCloseRef     = useRef(false);
@@ -131,6 +135,22 @@ export function useWifi() {
     openSocket(ip, port, token);
   }, [persistSettings, openSocket]);
 
+  const scanForDevices = useCallback(async () => {
+    setIsScanning(true);
+    setScanError(null);
+    try {
+      const found = await invoke<DiscoveredDevice[]>("discover_wifi_devices");
+      setDevices(found);
+      if (found.length === 0) {
+        setScanError("No phones found. Is WiFi enabled in PesaCast on the same network?");
+      }
+    } catch (e) {
+      setScanError(String(e));
+    } finally {
+      setIsScanning(false);
+    }
+  }, []);
+
   const disconnectWifi = useCallback(() => {
     intentionalCloseRef.current = true;
     clearReconnectTimer();
@@ -159,5 +179,9 @@ export function useWifi() {
     setWifiToken,
     connectWifi,
     disconnectWifi,
+    devices,
+    isScanning,
+    scanError,
+    scanForDevices,
   };
 }

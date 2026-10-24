@@ -1,5 +1,6 @@
 mod ble;
 mod db;
+mod discovery;
 mod ingest;
 mod model;
 mod notifications;
@@ -29,6 +30,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             ble::process_ble_transaction,
             wifi::process_wifi_transaction,
+            discovery::discover_wifi_devices,
             db::db_init,
             db::db_save_transaction,
             db::db_load_transactions,
