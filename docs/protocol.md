@@ -31,7 +31,7 @@ Defined in: `android/.../model/MpesaTransaction.kt`, `desktop/src-tauri/src/mode
 - **Chunks never split a character.** The desktop decodes every notification on its own, so Android cuts chunks only at character boundaries (a chunk can be a few bytes shorter than the limit).
 - **While a frame is in progress every chunk is data**, even if it looks like a header (`12:12:00+03:00` inside a timestamp). A partial frame idle for more than 5 s is abandoned. The desktop also accepts an unframed single JSON chunk.
 
-## WiFi (PR #12)
+## WiFi
 
 - Transport: WebSocket, `ws://<phone-ip>:<port>`, default port `7877`. Unencrypted.
 - Handshake: client sends `{"auth":"<token>"}` as its first text message. Server replies `{"status":"ok"}`; any other first message, a wrong token, or silence for 5 s closes the socket (`1008`).
