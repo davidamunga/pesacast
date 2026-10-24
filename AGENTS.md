@@ -22,6 +22,7 @@ cd desktop/src-tauri && cargo check            # fast compile check
 cd android && ./gradlew :app:compileDebugKotlin   # compile Android
 pnpm lint                                      # eslint + tsc + rustfmt + clippy
 cd android && ./gradlew :app:lintDebug         # Android lint
+cd android && ./gradlew :app:testDebugUnitTest # Android unit tests (MpesaParser)
 cd desktop && pnpm tauri dev                   # run desktop app
 ```
 
@@ -32,6 +33,7 @@ Run the commands for every side you touched before saying work is done. Say plai
 - Branch off `main`; never commit to `main` directly. One concern per commit.
 - [Conventional Commits](https://www.conventionalcommits.org/), enforced by commitlint (local `commit-msg` hook and CI, which also checks the PR title): `feat(android): …`, `fix(desktop): …`, `docs: …`. Allowed scopes: `android`, `desktop`, `ble`, `wifi`, `docs`, `ci`, `deps`, `release`. Subject in lower case, header ≤ 100 chars.
 - User-visible change → add a changeset (`pnpm changeset`). Versions are synced to Android and Cargo by `scripts/sync-android-version.mjs`; do not edit version numbers by hand.
+- Parser changes: add the real SMS body (with names/numbers anonymised) to `MpesaParserTest` first.
 - User-facing text on Android goes in `strings.xml`, colors in `colors.xml`. No hardcoded literals in Kotlin.
 - A change that alters a decision, a trust boundary, or the wire format needs an ADR (see below) and an update to [docs/protocol.md](docs/protocol.md) when the format changes.
 

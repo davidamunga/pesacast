@@ -99,13 +99,15 @@ object MpesaParser {
             return build(g[1], "received", g[2], g[3].trim(), g[4], g[5], g[6])
         }
 
+        // PAYBILL must be tried before SENT: with a numeric account ("... for account 14212345678 on")
+        // the SENT pattern ("sent to <name> <digits> on") would otherwise match it.
+        PAYBILL.find(body)?.groupValues?.let { g ->
+            return build(g[1], "paid", g[2], g[3].trim(), g[4], g[5], g[6], g[7].ifEmpty { null })
+        }
+
         SENT.find(body)?.groupValues?.let { g ->
             // Groups: ref, amount, party, date, time, balance, [transaction_cost]
             return build(g[1], "sent", g[2], g[3].trim(), g[4], g[5], g[6], g[7].ifEmpty { null })
-        }
-
-        PAYBILL.find(body)?.groupValues?.let { g ->
-            return build(g[1], "paid", g[2], g[3].trim(), g[4], g[5], g[6], g[7].ifEmpty { null })
         }
 
         BUY_GOODS.find(body)?.groupValues?.let { g ->
