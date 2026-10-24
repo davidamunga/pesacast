@@ -1,5 +1,6 @@
 mod ble;
 mod db;
+mod ingest;
 mod model;
 mod notifications;
 mod wifi;
@@ -20,6 +21,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_http::init())
         .manage(ws_tx.clone())
+        .manage(ingest::RecentTransactions::default())
         .manage(config_tx)
         .setup(move |_app| {
             tauri::async_runtime::spawn(ws_server::run(ws_tx, config_rx));
