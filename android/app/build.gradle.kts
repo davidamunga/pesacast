@@ -11,8 +11,8 @@ android {
         applicationId = "com.pesacast.android"
         minSdk = 26
         targetSdk = 35
-        versionCode = 501
-        versionName = "0.5.1"
+        versionCode = 600
+        versionName = "0.6.0"
     }
 
     signingConfigs {
