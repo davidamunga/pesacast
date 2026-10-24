@@ -1,8 +1,12 @@
 package com.pesacast.android.transport
 
 import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.core.content.ContextCompat
 import android.util.Log
 import com.pesacast.android.model.MpesaTransaction
+import com.pesacast.android.util.PermissionPlan
 import com.pesacast.android.util.PreferencesManager
 import com.pesacast.android.webhook.UrlConnectionPoster
 import com.pesacast.android.webhook.WebhookDelivery
@@ -65,11 +69,21 @@ class TransportManager(private val context: Context) {
         }
     }.stateIn(scope, SharingStarted.Eagerly, TransportState.Disconnected)
 
+    private fun grantedPermissions(): Set<String> =
+        PermissionPlan.bluetoothPermissions(Build.VERSION.SDK_INT)
+            .filter { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
+            .toSet()
+
     // MARK: - Lifecycle
 
     fun start() {
-        Log.i(TAG, "Starting BLE transport")
-        ble.start()
+        if (PermissionPlan.evaluate(grantedPermissions(), Build.VERSION.SDK_INT).bluetoothGranted) {
+            Log.i(TAG, "Starting BLE transport")
+            ble.start()
+        } else {
+            // Without Bluetooth permissions the BLE APIs throw SecurityException; keep the rest running.
+            Log.w(TAG, "Bluetooth permissions not granted: BLE transport not started")
+        }
         applyWifiSettings()
         // Deliver anything left in the webhook queue from before a restart or reboot.
         if (webhookSettings.enabled) webhook.kick()

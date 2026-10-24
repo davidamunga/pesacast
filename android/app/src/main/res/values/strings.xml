@@ -62,6 +62,14 @@
     <string name="pairing_info_token">Token: %1$s</string>
     <string name="ip_unavailable">Not connected to WiFi</string>
 
+    <!-- Permissions -->
+    <string name="permission_needed_title">Permission needed</string>
+    <string name="permission_sms_message">PesaCast reads incoming M-PESA messages to mirror them. Without the SMS permission it cannot see any transactions.</string>
+    <string name="permission_allow">Allow</string>
+    <string name="permission_open_settings">Open settings</string>
+    <string name="permission_not_now">Not now</string>
+    <string name="permission_bluetooth_denied">Bluetooth is not allowed, so mirroring to a desktop over Bluetooth is off. WiFi and webhook still work. You can allow it in Settings.</string>
+
     <!-- Webhook -->
     <string name="webhook_title">Webhook</string>
     <string name="webhook_enable">Send to webhook</string>

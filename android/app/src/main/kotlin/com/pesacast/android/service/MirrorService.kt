@@ -10,6 +10,7 @@ import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.Network
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.pesacast.android.R
 import com.pesacast.android.transport.TransportManager
@@ -52,8 +53,16 @@ class MirrorService : Service() {
             return START_NOT_STICKY
         }
 
-        // Promote to foreground immediately so Android doesn't kill us
-        startForeground(NOTIFICATION_ID, buildNotification(getString(R.string.notif_transport_starting)))
+        // Promote to foreground immediately so Android doesn't kill us. The system can refuse (for
+        // example a foreground service type whose prerequisites are not met); stop cleanly instead
+        // of crashing the app.
+        try {
+            startForeground(NOTIFICATION_ID, buildNotification(getString(R.string.notif_transport_starting)))
+        } catch (e: SecurityException) {
+            Log.e("MirrorService", "Foreground service refused: ${e.javaClass.simpleName}")
+            stopSelf()
+            return START_NOT_STICKY
+        }
 
         transport.start()
         watchNetwork()
