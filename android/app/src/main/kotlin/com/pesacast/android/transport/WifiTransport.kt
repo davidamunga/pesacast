@@ -16,6 +16,8 @@ import org.java_websocket.server.WebSocketServer
 import java.net.InetSocketAddress
 import java.security.SecureRandom
 import java.util.Base64
+import java.nio.ByteBuffer
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
@@ -49,7 +51,7 @@ class WifiTransport(private val context: Context) {
 
     // MARK: - Public API
 
-    fun start(token: String, port: Int = WIFI_DEFAULT_PORT) {
+    fun start(token: String, port: Int = WIFI_DEFAULT_PORT, allowLegacy: () -> Boolean = { false }) {
         stop()
         _error.value = null
         try {
@@ -57,6 +59,7 @@ class WifiTransport(private val context: Context) {
                 port = port,
                 token = token,
                 authenticatedClients = authenticatedClients,
+                allowLegacy = allowLegacy,
                 onClientAuthenticated = { count ->
                     _state.value = TransportState.Connected(count)
                     drainQueue()
@@ -114,9 +117,7 @@ class WifiTransport(private val context: Context) {
             }
             return
         }
-        for (client in openClients) {
-            client.send(json)
-        }
+        server?.sendToAuthenticated(json)
         Log.d(TAG, "WiFi: sent transaction to ${openClients.size} client(s)")
     }
 
@@ -166,12 +167,7 @@ class WifiTransport(private val context: Context) {
         val pending = synchronized(queueLock) {
             pendingQueue.toList().also { pendingQueue.clear() }
         }
-        val openClients = authenticatedClients.filter { it.isOpen }
-        for (json in pending) {
-            for (client in openClients) {
-                client.send(json)
-            }
-        }
+        for (json in pending) server?.sendToAuthenticated(json)
     }
 
     // MARK: - Token generation
@@ -189,10 +185,15 @@ class WifiTransport(private val context: Context) {
  * WebSocket server that enforces private-IP filtering and token authentication before
  * accepting any client into the [authenticatedClients] set. Transaction data is only
  * ever sent to authenticated clients.
+ *
+ * Two protocols share the port (docs/protocol.md): v2 clients negotiate an encrypted channel with
+ * `{"v":2,"hello":...}`; legacy v1 clients send `{"auth":"<token>"}` in the clear and are only
+ * accepted while [allowLegacy] returns true.
  */
 internal class PesaCastWsServer(
     port: Int,
-    token: String,
+    private val token: String,
+    private val allowLegacy: () -> Boolean = { false },
     private val authenticatedClients: CopyOnWriteArraySet<WebSocket>,
     private val onClientAuthenticated: (count: Int) -> Unit,
     private val onClientDisconnected: (count: Int) -> Unit,
@@ -202,6 +203,7 @@ internal class PesaCastWsServer(
 ) : WebSocketServer(InetSocketAddress(port)) {
 
     private val timers: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+    private val sessions = ConcurrentHashMap<WebSocket, WifiSession>()
 
     init {
         isReuseAddr = true
@@ -237,29 +239,97 @@ internal class PesaCastWsServer(
         }
     }
 
+    /** Sends [json] to every authenticated client, encrypting it for v2 clients. */
+    fun sendToAuthenticated(json: String) {
+        val bytes = json.toByteArray(Charsets.UTF_8)
+        for (client in authenticatedClients) {
+            if (!client.isOpen) continue
+            val session = sessions[client]
+            if (session != null) client.send(session.seal(bytes)) else client.send(json)
+        }
+    }
+
     override fun onMessage(conn: WebSocket, message: String) {
         if (authenticatedClients.contains(conn)) return // already authenticated
 
         try {
             val obj = JsonParser.parseString(message).asJsonObject
-            val incoming = obj.get("auth")?.asString
-            if (guard.isValid(incoming)) {
-                authenticatedClients.add(conn)
-                conn.send("""{"status":"ok"}""")
-                Log.i(TAG, "Client authenticated: ${conn.remoteSocketAddress}")
-                onClientAuthenticated(authenticatedClients.size)
-            } else {
-                Log.w(TAG, "Bad auth token from ${conn.remoteSocketAddress} — closing")
-                conn.remoteSocketAddress?.address?.hostAddress?.let(guard::recordFailure)
-                conn.close(1008, "Unauthorized")
+            when {
+                obj.has("v") -> handleHello(conn, obj)
+                obj.has("auth") -> handleLegacyAuth(conn, obj.get("auth")?.asString)
+                else -> conn.close(1008, "Bad request")
             }
         } catch (e: Exception) {
-            Log.w(TAG, "Malformed auth message from ${conn.remoteSocketAddress}: ${e.message}")
+            Log.w(TAG, "Malformed first message from ${conn.remoteSocketAddress}: ${e.message}")
             conn.close(1008, "Bad request")
         }
     }
 
+    private fun handleHello(conn: WebSocket, obj: com.google.gson.JsonObject) {
+        val hello = obj.getAsJsonObject("hello")
+        val accepted = if (obj.get("v")?.asInt == 2 && hello != null && !sessions.containsKey(conn)) {
+            WifiSession.accept(hello.get("pub")?.asString.orEmpty(), hello.get("nonce")?.asString.orEmpty(), token)
+        } else null
+        if (accepted == null) {
+            Log.w(TAG, "Bad v2 hello from ${conn.remoteSocketAddress}")
+            conn.close(1008, "Bad request")
+            return
+        }
+        sessions[conn] = accepted.session
+        conn.send(accepted.serverHello)
+    }
+
+    private fun handleLegacyAuth(conn: WebSocket, incoming: String?) {
+        if (!allowLegacy()) {
+            Log.w(TAG, "Legacy client from ${conn.remoteSocketAddress} refused: encryption required")
+            conn.close(1008, "Encryption required")
+            return
+        }
+        if (guard.isValid(incoming)) {
+            authenticatedClients.add(conn)
+            conn.send("""{"status":"ok"}""")
+            Log.i(TAG, "Legacy client authenticated: ${conn.remoteSocketAddress}")
+            onClientAuthenticated(authenticatedClients.size)
+        } else {
+            Log.w(TAG, "Bad auth token from ${conn.remoteSocketAddress} — closing")
+            conn.remoteSocketAddress?.address?.hostAddress?.let(guard::recordFailure)
+            conn.close(1008, "Unauthorized")
+        }
+    }
+
+    override fun onMessage(conn: WebSocket, message: ByteBuffer) {
+        val session = sessions[conn]
+        if (session == null) {
+            conn.close(1008, "Bad request")
+            return
+        }
+        if (session.authenticated) return // client records after `ready` are ignored
+
+        val record = ByteArray(message.remaining()).also(message::get)
+        val plaintext = session.open(record)
+        val ready = plaintext?.let {
+            try {
+                JsonParser.parseString(String(it, Charsets.UTF_8)).asJsonObject.get("ready")?.asBoolean == true
+            } catch (_: Exception) {
+                false
+            }
+        } ?: false
+        if (!ready) {
+            // Failed GCM authentication means the client derived different keys: wrong token.
+            Log.w(TAG, "v2 authentication failed from ${conn.remoteSocketAddress}")
+            conn.remoteSocketAddress?.address?.hostAddress?.let(guard::recordFailure)
+            conn.close(1008, "Unauthorized")
+            return
+        }
+        session.authenticated = true
+        authenticatedClients.add(conn)
+        conn.send(session.seal("""{"status":"ok"}""".toByteArray(Charsets.UTF_8)))
+        Log.i(TAG, "Encrypted client authenticated: ${conn.remoteSocketAddress}")
+        onClientAuthenticated(authenticatedClients.size)
+    }
+
     override fun onClose(conn: WebSocket, code: Int, reason: String, remote: Boolean) {
+        sessions.remove(conn)
         val wasAuthenticated = authenticatedClients.remove(conn)
         if (wasAuthenticated) {
             Log.i(TAG, "Authenticated client disconnected: ${conn.remoteSocketAddress} (${authenticatedClients.size} remaining)")

@@ -1,6 +1,6 @@
 # ADR-0003: Add a token-authenticated WebSocket WiFi transport
 
-- **Status:** Accepted (implemented in PR #12)
+- **Status:** Accepted; the plaintext handshake and its consequences are superseded by [ADR-0011](0011-encrypt-wifi-transport.md)
 - **Date:** 2026-10-24
 
 ## Context

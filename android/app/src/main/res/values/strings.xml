@@ -47,6 +47,8 @@
     <string name="pairing_token_hint">Share this with the desktop app to pair</string>
     <string name="copy_token">Copy</string>
     <string name="regenerate_token">Regenerate Token</string>
+    <string name="wifi_allow_legacy">Allow unencrypted connections</string>
+    <string name="wifi_allow_legacy_hint">Off by default. Turn on only if you still use an older desktop version that cannot encrypt, then update it.</string>
     <string name="wifi_port">Port</string>
     <string name="wifi_security_note">WiFi transport uses a token to verify the desktop. Only share your token with trusted devices.</string>
     <string name="your_ip">Your Phone\'s IP</string>

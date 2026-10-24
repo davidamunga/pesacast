@@ -154,6 +154,12 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, R.string.toast_token_regenerated, Toast.LENGTH_LONG).show()
         }
 
+        binding.switchAllowLegacy.setOnCheckedChangeListener(null)
+        binding.switchAllowLegacy.isChecked = vm.prefs.wifiAllowLegacy
+        binding.switchAllowLegacy.setOnCheckedChangeListener { _, checked ->
+            vm.prefs.wifiAllowLegacy = checked
+        }
+
         binding.tvWifiPort.text = vm.prefs.wifiPort.toString()
     }
 

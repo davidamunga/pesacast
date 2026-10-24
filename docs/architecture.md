@@ -24,8 +24,6 @@ flowchart LR
     end
 ```
 
-The WiFi transport and `ingest.rs` arrive with PR #12; until then the desktop handles BLE only.
-
 ## Android (`android/`)
 
 | Component | Role |
@@ -52,7 +50,7 @@ The WiFi transport and `ingest.rs` arrive with PR #12; until then the desktop ha
 
 - **SMS → app:** only M-PESA formats are parsed; the SMS body is never sent as-is.
 - **Phone ↔ desktop (BLE):** relies on OS-level BLE proximity; no application-level authentication.
-- **Phone ↔ desktop (WiFi):** pairing token, private-network peers only, no encryption. See [ADR-0003](adr/0003-wifi-transport-token-websocket.md).
+- **Phone ↔ desktop (WiFi):** private-network peers only; encrypted channel (ECDH + AES-GCM) authenticated by the pairing token. Legacy unencrypted clients are accepted only while "Allow unencrypted connections" is on. See [ADR-0003](adr/0003-wifi-transport-token-websocket.md) and [ADR-0011](adr/0011-encrypt-wifi-transport.md).
 - **Desktop → local tools:** loopback only, browser origins refused. See [ADR-0006](adr/0006-local-broadcast-rejects-browser-origins.md).
 - **Desktop → webhook:** user-configured URL and bearer token; sends transactions off-device by the user's choice.
 

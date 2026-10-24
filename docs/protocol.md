@@ -33,12 +33,42 @@ Defined in: `android/.../model/MpesaTransaction.kt`, `desktop/src-tauri/src/mode
 
 ## WiFi
 
-- Transport: WebSocket, `ws://<phone-ip>:<port>`, default port `7877`. Unencrypted.
-- Handshake: client sends `{"auth":"<token>"}` as its first text message. Server replies `{"status":"ok"}`; any other first message, a wrong token, or silence for 5 s closes the socket (`1008`).
-- After `ok`, the server sends one text message per transaction (the JSON above). Client messages after auth are ignored.
-- Transactions generated while no client is connected are queued (max 50, in memory) and delivered on the next authenticated connection.
-- Peers outside loopback, private IPv4 (10/8, 172.16/12, 192.168/16), IPv4/IPv6 link-local and IPv6 ULA are refused. 5 failed attempts in 60 s blocks the source IP.
+Transport: WebSocket on `<phone-ip>:<port>`, default port `7877`. Two protocol versions exist during the migration described in [ADR-0011](adr/0011-encrypt-wifi-transport.md). The server chooses by the first text message.
+
+Common to both versions:
+
+- Transactions generated while no client is authenticated are queued (max 50, in memory) and delivered on the next authenticated connection.
+- Peers outside loopback, private IPv4 (10/8, 172.16/12, 192.168/16), IPv6 link-local and IPv6 ULA are refused. 5 failed attempts in 60 s blocks the source IP.
+- An unauthenticated socket is closed (`1008`) after 5 s.
 - Discovery: the phone registers mDNS service `_pesacast._tcp.` (service name `PesaCast`, port = the WebSocket port). The desktop browses for it with the `discover_wifi_devices` command and fills in IP and port. The advertisement carries no secret; the pairing token is always entered by the user.
+
+### WiFi v2 (encrypted)
+
+Preferred. The pairing token is the pre-shared key; it is never sent.
+
+**Primitives:** ECDH on P-256, HKDF-SHA256, AES-256-GCM. Binary values in JSON are standard base64 with padding.
+
+1. **Client hello** (text): `{"v":2,"hello":{"pub":"<b64>","nonce":"<b64>"}}`
+   - `pub`: client ephemeral public key, 65-byte uncompressed point (`0x04 || X || Y`).
+   - `nonce`: 16 random bytes.
+2. **Server hello** (text): same shape with the server's ephemeral key and nonce. The server must validate that `pub` is a point on the curve.
+3. **Key derivation** (both sides):
+   - `shared` = ECDH(own private, peer public), the 32-byte X coordinate.
+   - `okm` = HKDF-SHA256(`ikm` = `shared`, `salt` = UTF-8 bytes of the token string, `info` = `"pesacast-v2"` (ASCII) `|| clientPub || serverPub || clientNonce || serverNonce`, length 64).
+   - `key_c2s` = `okm[0..32]`, `key_s2c` = `okm[32..64]`.
+4. **Record** (binary frame): `counter (8 bytes, big-endian) || ciphertext || tag (16 bytes)`.
+   - Nonce (12 bytes): `0x00000000 || counter`.
+   - AAD (9 bytes): direction byte (`0x01` client-to-server, `0x02` server-to-client) `|| counter`.
+   - Each direction has its own counter starting at 0 and increasing by 1 per record. A receiver rejects a record whose counter is not exactly the expected next value, or that fails authentication, and closes the connection.
+   - Plaintext is UTF-8 JSON.
+5. **Authentication:** the client sends its first record, `{"ready":true}`. If the server cannot decrypt it, the token is wrong: the server records a failed attempt for the IP and closes (`1008`). Otherwise the server replies with the record `{"status":"ok"}`.
+6. After that the server sends one record per transaction (the transaction JSON above). Client records after `ready` are ignored.
+
+Test vectors: [wifi-crypto-vectors.json](wifi-crypto-vectors.json).
+
+### WiFi v1 (legacy, unencrypted)
+
+`ws://`, plaintext. The first client message is `{"auth":"<token>"}`; the server replies `{"status":"ok"}`, then sends one text message per transaction. Accepted only while "Allow unencrypted connections" is enabled on the phone. It is **off by default**; the user must turn it on to use an older desktop (see ADR-0011 for the removal timeline). A v2 phone that sees this message treats the client as legacy.
 
 ## Local broadcast (desktop, optional)
 
