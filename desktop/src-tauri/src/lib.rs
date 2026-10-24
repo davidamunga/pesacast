@@ -2,6 +2,7 @@ mod ble;
 mod db;
 mod model;
 mod notifications;
+mod wifi;
 mod ws_server;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -26,6 +27,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             ble::process_ble_transaction,
+            wifi::process_wifi_transaction,
             db::db_init,
             db::db_save_transaction,
             db::db_load_transactions,
