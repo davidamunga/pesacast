@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Provisioning confirmation (ADR-0015). Kept in its own file. -->
+    <string name="provision_headline">Send this phone\'s M-PESA payments to:</string>
+    <string name="provision_details_with_both">A bearer token and a signing secret will be saved too.</string>
+    <string name="provision_details_token">A bearer token will be saved too.</string>
+    <string name="provision_details_secret">A signing secret will be saved too.</string>
+    <string name="provision_details_none">No token or signing secret was provided.</string>
+    <string name="provision_replaces">This replaces the current destination: %1$s</string>
+    <string name="provision_punycode">This host name uses international characters. Make sure it is the server you expect.</string>
+    <string name="provision_warning">Only continue if you started this yourself. Anyone who controls that server will receive the amount, sender name, reference and balance of every payment on this phone.</string>
+    <string name="provision_confirm">Save and test</string>
+    <string name="provision_cancel">Cancel</string>
+    <string name="provision_close">Close</string>
+    <string name="provision_testing">Saving and sending a test…</string>
+    <string name="provision_enabled">Done. The test succeeded (HTTP %1$d) and the webhook is on.</string>
+    <string name="provision_not_enabled">Saved, but the test failed, so the webhook is still off: %1$s</string>
+    <string name="provision_invalid_title">This request was not accepted</string>
+    <string name="provision_invalid_note">Nothing was changed.</string>
+</resources>

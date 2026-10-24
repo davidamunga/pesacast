@@ -80,15 +80,23 @@ class ManifestSecurityTest {
     }
 
     @Test
-    fun `only the launcher is reachable from other apps without a permission`() {
+    fun `only the launcher and the provisioning screen are reachable from other apps without a permission`() {
         val exported = (elements("activity") + elements("service") + elements("receiver") + elements("provider"))
             .filter { attr(it, "exported") == "true" && attr(it, "permission").isEmpty() }
             .map { attr(it, "name") }
             .toSet()
         // The system still delivers BOOT_COMPLETED to a receiver that is not exported.
-        assertEquals(setOf(".ui.MainActivity"), exported)
+        assertEquals(setOf(".ui.MainActivity", ".setup.ProvisionActivity"), exported)
         val boot = elements("receiver").single { attr(it, "name") == ".service.BootReceiver" }
         assertEquals("false", attr(boot, "exported"))
+    }
+
+    @Test
+    fun `the provisioning screen cannot be opened by a link or a web page`() {
+        val provision = elements("activity").single { attr(it, "name") == ".setup.ProvisionActivity" }
+        assertEquals("no intent filter: only an explicit component start can reach it", 0, provision.getElementsByTagName("intent-filter").length)
+        assertEquals("true", attr(provision, "excludeFromRecents"))
+        assertEquals("true", attr(provision, "noHistory"))
     }
 
     @Test
