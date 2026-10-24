@@ -9,6 +9,7 @@
     "lint": "pnpm lint:desktop && pnpm lint:rust",
     "lint:desktop": "pnpm --filter pesacast lint && pnpm --filter pesacast typecheck",
     "lint:rust": "cd desktop/src-tauri && cargo fmt --check && cargo clippy --all-targets -- -D warnings",
+    "test:scripts": "node --test scripts/",
     "commitlint": "commitlint"
   },
   "devDependencies": {
