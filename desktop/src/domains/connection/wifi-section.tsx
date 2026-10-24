@@ -10,7 +10,7 @@ import {
   CardAction,
 } from "@/components/ui/card";
 import { StatusBadge } from "../../components/ui/status-badge";
-import { TransportStatus } from "./types";
+import { DiscoveredDevice, TransportStatus } from "./types";
 
 interface WifiSectionProps {
   wifiStatus: TransportStatus;
@@ -23,6 +23,10 @@ interface WifiSectionProps {
   setWifiToken: (token: string) => void;
   connectWifi: (ip: string, port: number, token: string) => Promise<void>;
   disconnectWifi: () => void;
+  devices: DiscoveredDevice[];
+  isScanning: boolean;
+  scanError: string | null;
+  scanForDevices: () => Promise<void>;
 }
 
 export function WifiSection({
@@ -36,6 +40,10 @@ export function WifiSection({
   setWifiToken,
   connectWifi,
   disconnectWifi,
+  devices,
+  isScanning,
+  scanError,
+  scanForDevices,
 }: WifiSectionProps) {
   const [showToken, setShowToken] = useState(false);
 
@@ -104,8 +112,36 @@ export function WifiSection({
                   disabled={isConnecting}
                 />
               </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={scanForDevices}
+                  disabled={isScanning || isConnecting}
+                >
+                  {isScanning ? "Scanning…" : "Find my phone"}
+                </Button>
+                {devices.map((d) => (
+                  <Button
+                    key={`${d.ip}:${d.port}`}
+                    variant="ghost"
+                    size="sm"
+                    className="font-mono text-xs"
+                    onClick={() => {
+                      setWifiIp(d.ip);
+                      setWifiPort(d.port);
+                    }}
+                    disabled={isConnecting}
+                  >
+                    {d.name} · {d.ip}
+                  </Button>
+                ))}
+              </div>
+              {scanError && (
+                <p className="text-[11px] text-muted-foreground">{scanError}</p>
+              )}
               <p className="text-[11px] text-muted-foreground">
-                Find it in Android Settings → WiFi → tap your network.
+                Or enter it manually: Android Settings → WiFi → tap your network.
               </p>
             </div>
 

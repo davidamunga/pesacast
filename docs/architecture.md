@@ -33,7 +33,7 @@ The WiFi transport and `ingest.rs` arrive with PR #12; until then the desktop ha
 | `sms/SmsReceiver`, `MpesaParser` | Detect and parse M-PESA SMS into `MpesaTransaction` |
 | `transport/TransportManager` | Owns all transports, merges their state, fans out each transaction |
 | `transport/BleTransport` | GATT peripheral: advertise, accept central, chunked notify |
-| `transport/WifiTransport` | WebSocket server, token auth, mDNS registration |
+| `transport/WifiTransport` | WebSocket server, token auth, mDNS registration (found by the desktop's `discovery.rs`) |
 | `service/MirrorService` | Foreground service that keeps transports running; `BootReceiver` restarts it |
 | `ui/` | Transactions and Connect tabs |
 
