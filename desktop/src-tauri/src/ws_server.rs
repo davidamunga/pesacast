@@ -161,3 +161,146 @@ fn reject_browser_origins(req: &Request, resp: Response) -> Result<Response, Err
     }
     Ok(resp)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::Duration;
+    use tokio::time::timeout;
+    use tokio_tungstenite::connect_async;
+    use tokio_tungstenite::tungstenite::client::IntoClientRequest;
+    use tokio_tungstenite::tungstenite::Error as WsError;
+
+    fn free_port() -> u16 {
+        std::net::TcpListener::bind("127.0.0.1:0")
+            .unwrap()
+            .local_addr()
+            .unwrap()
+            .port()
+    }
+
+    struct Harness {
+        port: u16,
+        tx: broadcast::Sender<String>,
+        config: watch::Sender<WsConfig>,
+    }
+
+    async fn start(enabled: bool) -> Harness {
+        let port = free_port();
+        let (tx, _) = broadcast::channel(16);
+        let (config, config_rx) = watch::channel(WsConfig { enabled, port });
+        tokio::spawn(run(tx.clone(), config_rx));
+        let h = Harness { port, tx, config };
+        if enabled {
+            h.wait_until_listening().await;
+        }
+        h
+    }
+
+    impl Harness {
+        async fn wait_until_listening(&self) {
+            for _ in 0..100 {
+                if tokio::net::TcpStream::connect(("127.0.0.1", self.port))
+                    .await
+                    .is_ok()
+                {
+                    return;
+                }
+                tokio::time::sleep(Duration::from_millis(20)).await;
+            }
+            panic!("server did not start listening on {}", self.port);
+        }
+
+        fn request(
+            &self,
+            origin: Option<&str>,
+        ) -> tokio_tungstenite::tungstenite::http::Request<()> {
+            let mut req = format!("ws://127.0.0.1:{}", self.port)
+                .into_client_request()
+                .unwrap();
+            if let Some(o) = origin {
+                req.headers_mut().insert("origin", o.parse().unwrap());
+            }
+            req
+        }
+    }
+
+    #[test]
+    fn handshake_without_origin_is_accepted() {
+        let req = Request::builder().uri("/").body(()).unwrap();
+        let resp = Response::new(());
+        assert!(reject_browser_origins(&req, resp).is_ok());
+    }
+
+    #[test]
+    fn handshake_with_any_origin_gets_403() {
+        for origin in ["https://evil.example", "http://localhost:1420", "null"] {
+            let req = Request::builder()
+                .uri("/")
+                .header("origin", origin)
+                .body(())
+                .unwrap();
+            let err = reject_browser_origins(&req, Response::new(())).unwrap_err();
+            assert_eq!(err.status(), StatusCode::FORBIDDEN, "origin {origin}");
+        }
+    }
+
+    #[tokio::test]
+    async fn native_client_receives_broadcasts() {
+        let h = start(true).await;
+        let (mut ws, _) = connect_async(h.request(None)).await.expect("connect");
+        // Give the server a moment to subscribe before sending.
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        h.tx.send(r#"{"ref":"ABC"}"#.to_string()).unwrap();
+
+        let msg = timeout(Duration::from_secs(3), ws.next())
+            .await
+            .expect("timed out")
+            .expect("stream ended")
+            .expect("ws error");
+        assert_eq!(msg, Message::Text(r#"{"ref":"ABC"}"#.into()));
+    }
+
+    #[tokio::test]
+    async fn browser_origin_is_refused_with_403() {
+        let h = start(true).await;
+        let err = connect_async(h.request(Some("https://evil.example")))
+            .await
+            .expect_err("handshake should fail");
+        match err {
+            WsError::Http(resp) => assert_eq!(resp.status(), StatusCode::FORBIDDEN),
+            other => panic!("expected an HTTP 403, got {other:?}"),
+        }
+    }
+
+    #[tokio::test]
+    async fn server_is_off_until_enabled() {
+        let h = start(false).await;
+        assert!(
+            tokio::net::TcpStream::connect(("127.0.0.1", h.port))
+                .await
+                .is_err(),
+            "disabled server must not listen"
+        );
+
+        h.config.send_modify(|c| c.enabled = true);
+        h.wait_until_listening().await;
+        assert!(connect_async(h.request(None)).await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn disabling_stops_listening() {
+        let h = start(true).await;
+        h.config.send_modify(|c| c.enabled = false);
+        for _ in 0..100 {
+            if tokio::net::TcpStream::connect(("127.0.0.1", h.port))
+                .await
+                .is_err()
+            {
+                return;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        panic!("server still listening after being disabled");
+    }
+}
