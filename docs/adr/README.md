@@ -14,3 +14,4 @@ Why the code is the way it is. See [the template](0000-template.md) and [CONTRIB
 | [0008](0008-changesets-and-version-sync.md) | Version with Changesets and sync to Android/Cargo | Accepted |
 | [0009](0009-conventional-commits-and-lint-gates.md) | Enforce Conventional Commits and lint gates | Accepted |
 | [0010](0010-mdns-discovery-on-desktop.md) | Discover the phone over mDNS on the desktop | Accepted |
+| [0011](0011-encrypt-wifi-transport.md) | Encrypt the WiFi transport with a PSK-authenticated key exchange | Proposed |
