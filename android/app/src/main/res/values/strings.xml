@@ -54,6 +54,12 @@
     <string name="share_ip">Share</string>
     <string name="share_token">Share</string>
     <string name="share_pairing_info">Share Pairing Info</string>
+    <string name="toast_copied">Copied</string>
+    <string name="toast_token_regenerated">Token regenerated — re-pair the desktop app</string>
+    <string name="pairing_info_title">PesaCast WiFi Pairing</string>
+    <string name="pairing_info_ip">IP: %1$s</string>
+    <string name="pairing_info_port">Port: %1$d</string>
+    <string name="pairing_info_token">Token: %1$s</string>
     <string name="ip_unavailable">Not connected to WiFi</string>
 
     <string name="footer_made_by">Made by David Amunga</string>

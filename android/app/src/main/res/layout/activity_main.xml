@@ -117,7 +117,8 @@
                     android:layout_width="6dp"
                     android:layout_height="6dp"
                     android:layout_marginEnd="8dp"
-                    android:background="@drawable/status_dot" />
+                    android:background="@drawable/status_dot"
+                    android:backgroundTint="@color/status_warning" />
 
                 <TextView
                     android:layout_width="0dp"

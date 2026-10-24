@@ -151,7 +151,7 @@ class MainActivity : AppCompatActivity() {
         binding.btnSharePairingInfo.setOnClickListener { sharePairingInfo() }
         binding.btnRegenerateToken.setOnClickListener {
             vm.regenerateWifiToken()
-            Toast.makeText(this, "Token regenerated — re-pair the desktop app", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, R.string.toast_token_regenerated, Toast.LENGTH_LONG).show()
         }
 
         binding.tvWifiPort.text = vm.prefs.wifiPort.toString()
@@ -180,6 +180,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun color(resId: Int) = ContextCompat.getColor(this, resId)
+
     // MARK: - Rendering
 
     /**
@@ -188,9 +190,9 @@ class MainActivity : AppCompatActivity() {
      */
     private fun renderBadgeAndBanner(state: TransportState) {
         val (dotColor, badgeText) = when (state) {
-            is TransportState.Disconnected -> Color.GRAY to getString(R.string.status_disconnected)
-            is TransportState.Connecting   -> Color.parseColor("#FFA000") to getString(R.string.status_active)
-            is TransportState.Connected    -> Color.parseColor("#2E7D32") to resources.getQuantityString(
+            is TransportState.Disconnected -> color(R.color.status_idle) to getString(R.string.status_disconnected)
+            is TransportState.Connecting   -> color(R.color.status_warning) to getString(R.string.status_active)
+            is TransportState.Connected    -> color(R.color.status_connected) to resources.getQuantityString(
                 R.plurals.status_connected_devices, state.deviceCount, state.deviceCount
             )
         }
@@ -209,22 +211,16 @@ class MainActivity : AppCompatActivity() {
             if (isActive) R.string.no_transactions_connected else R.string.no_transactions_disconnected
         )
         binding.btnConnectFromEmpty.visibility = if (isActive) View.GONE else View.VISIBLE
-
-        // Amber dot in the banner
-        val bannerDotColor = Color.parseColor("#FFA000")
-        binding.bannerNotConnected.findViewWithTag<View?>("bannerDot")?.let {
-            (it.background as? android.graphics.drawable.GradientDrawable)?.setColor(bannerDotColor)
-        }
     }
 
     private fun renderBleState(state: TransportState) {
         val (color, statusText) = when (state) {
             is TransportState.Disconnected ->
-                Color.GRAY to getString(R.string.status_disconnected)
+                color(R.color.status_idle) to getString(R.string.status_disconnected)
             is TransportState.Connecting ->
-                Color.parseColor("#FFA000") to getString(R.string.status_ble_advertising)
+                color(R.color.status_warning) to getString(R.string.status_ble_advertising)
             is TransportState.Connected ->
-                Color.parseColor("#2E7D32") to resources.getQuantityString(
+                color(R.color.status_connected) to resources.getQuantityString(
                     R.plurals.status_connected_devices, state.deviceCount, state.deviceCount
                 )
         }
@@ -236,11 +232,11 @@ class MainActivity : AppCompatActivity() {
         if (state is TransportState.Disconnected && vm.wifiError.value != null) return
         val (color, statusText) = when (state) {
             is TransportState.Disconnected ->
-                Color.GRAY to getString(R.string.status_disconnected)
+                color(R.color.status_idle) to getString(R.string.status_disconnected)
             is TransportState.Connecting ->
-                Color.parseColor("#FFA000") to getString(R.string.status_wifi_listening)
+                color(R.color.status_warning) to getString(R.string.status_wifi_listening)
             is TransportState.Connected ->
-                Color.parseColor("#2E7D32") to resources.getQuantityString(
+                color(R.color.status_connected) to resources.getQuantityString(
                     R.plurals.status_connected_devices, state.deviceCount, state.deviceCount
                 )
         }
@@ -254,7 +250,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
         (binding.wifiStatusDot.background as? android.graphics.drawable.GradientDrawable)
-            ?.setColor(Color.parseColor("#C62828"))
+            ?.setColor(color(R.color.status_error))
         binding.wifiStatusLabel.text = getString(R.string.status_wifi_error)
     }
 
@@ -278,7 +274,7 @@ class MainActivity : AppCompatActivity() {
     private fun copyToClipboard(text: String) {
         val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         cm.setPrimaryClip(ClipData.newPlainText("PesaCast", text))
-        Toast.makeText(this, "Copied", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, R.string.toast_copied, Toast.LENGTH_SHORT).show()
     }
 
     private fun shareText(text: String) {
@@ -295,10 +291,10 @@ class MainActivity : AppCompatActivity() {
         val port  = vm.prefs.wifiPort
 
         val text = buildString {
-            appendLine("PesaCast WiFi Pairing")
-            if (ip.isNotEmpty()) appendLine("IP: $ip")
-            appendLine("Port: $port")
-            if (token.isNotEmpty()) appendLine("Token: $token")
+            appendLine(getString(R.string.pairing_info_title))
+            if (ip.isNotEmpty()) appendLine(getString(R.string.pairing_info_ip, ip))
+            appendLine(getString(R.string.pairing_info_port, port))
+            if (token.isNotEmpty()) appendLine(getString(R.string.pairing_info_token, token))
         }.trim()
 
         shareText(text)
