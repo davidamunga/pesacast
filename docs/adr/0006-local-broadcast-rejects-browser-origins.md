@@ -1,6 +1,6 @@
 # ADR-0006: Local broadcast server rejects browser origins
 
-- **Status:** Proposed (implemented in PR #12)
+- **Status:** Accepted (implemented in PR #12)
 - **Date:** 2026-10-24
 
 ## Context
