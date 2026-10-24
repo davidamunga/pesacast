@@ -36,9 +36,8 @@ Known-answer vectors in [`docs/wifi-crypto-vectors.json`](../wifi-crypto-vectors
 Compatibility:
 
 - The server inspects the first message. `{"v":2,...}` takes the encrypted path. `{"auth":...}` is the legacy plaintext path.
-- **Release N (this change):** legacy stays enabled by default so existing desktops keep working, with a setting to disable it. The desktop prefers v2 and, if the phone only speaks legacy, asks the user before connecting unencrypted and then shows an "unencrypted" badge. It never silently downgrades.
-- **Release N+1:** legacy is disabled by default on the phone.
-- **Release N+2:** legacy code is removed and this ADR is updated.
+- **Release N (this change):** the phone refuses legacy clients by default, with a setting ("Allow unencrypted connections") to turn them back on. This was decided at implementation time to avoid a separate overlap release, and applies to existing installs too: an older desktop stops connecting after the phone updates until the user either updates the desktop or turns the setting on. The desktop prefers v2 and, if the phone only speaks legacy, asks the user before connecting unencrypted and then shows an "unencrypted" badge. It never silently downgrades.
+- **Release N+1 or later:** legacy code and the setting are removed, and this ADR is updated.
 
 ## Alternatives considered
 
@@ -60,5 +59,5 @@ Compatibility:
 ## Open questions
 
 - Decided: records are binary WebSocket frames.
-- Is one release of overlap enough, or should N+1 wait for a measured update rate?
+- Decided: no overlap release; plaintext is off by default from the first release that ships v2.
 - Do we want the client to move to Rust anyway (background reconnect without webview throttling), which would let us choose TLS or Noise instead?

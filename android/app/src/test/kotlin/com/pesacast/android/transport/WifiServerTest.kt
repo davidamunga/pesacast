@@ -48,6 +48,7 @@ class WifiServerTest {
         server = PesaCastWsServer(
             port = 0,
             token = token,
+            allowLegacy = { true },
             authenticatedClients = authenticated,
             onClientAuthenticated = { authCount.set(it) },
             onClientDisconnected = { authCount.set(it) },

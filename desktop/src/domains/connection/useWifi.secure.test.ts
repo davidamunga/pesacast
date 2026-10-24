@@ -231,6 +231,22 @@ describe("useWifi (encrypted v2 protocol)", () => {
     expect(result.current.wifiSecure).toBe(false);
   });
 
+  it("explains how to proceed when the phone refuses an unencrypted connection", async () => {
+    const { result } = renderHook(() => useWifi());
+    await act(async () => {
+      await result.current.connectWifiLegacy("192.168.0.14", 7877, "tok");
+    });
+    await act(async () => {
+      last().serverOpen();
+    });
+    act(() => last().serverDrops());
+
+    expect(result.current.wifiStatus).toBe("error");
+    expect(result.current.wifiError).toMatch(/allow unencrypted connections/i);
+    act(() => vi.advanceTimersByTime(120_000));
+    expect(FakeWebSocket.instances).toHaveLength(1);
+  });
+
   it("rejects a malformed server hello", async () => {
     const { result } = renderHook(() => useWifi());
     await act(async () => {

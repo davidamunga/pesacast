@@ -68,7 +68,7 @@ Test vectors: [wifi-crypto-vectors.json](wifi-crypto-vectors.json).
 
 ### WiFi v1 (legacy, unencrypted)
 
-`ws://`, plaintext. The first client message is `{"auth":"<token>"}`; the server replies `{"status":"ok"}`, then sends one text message per transaction. Accepted only while "Allow unencrypted connections" is enabled on the phone (default on in the first release that ships v2; see ADR-0011 for the removal timeline). A v2 phone that sees this message treats the client as legacy.
+`ws://`, plaintext. The first client message is `{"auth":"<token>"}`; the server replies `{"status":"ok"}`, then sends one text message per transaction. Accepted only while "Allow unencrypted connections" is enabled on the phone. It is **off by default**; the user must turn it on to use an older desktop (see ADR-0011 for the removal timeline). A v2 phone that sees this message treats the client as legacy.
 
 ## Local broadcast (desktop, optional)
 

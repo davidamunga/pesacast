@@ -84,7 +84,7 @@ class WifiSecureServerTest {
         fun awaitClose() = closed.await(3, TimeUnit.SECONDS)
     }
 
-    private fun startServer(allowLegacy: Boolean = true, guard: AuthGuard = AuthGuard(token)) {
+    private fun startServer(allowLegacy: Boolean = false, guard: AuthGuard = AuthGuard(token)) {
         server = PesaCastWsServer(
             port = 0,
             token = token,
@@ -195,8 +195,8 @@ class WifiSecureServerTest {
     }
 
     @Test
-    fun `legacy client is refused when legacy is disabled and not counted as a failure`() {
-        startServer(allowLegacy = false)
+    fun `legacy client is refused by default and not counted as a failure`() {
+        startServer()
         val legacy = SecureClient(server.port, token).open()
         legacy.send("""{"auth":"$token"}""")
         assertTrue(legacy.awaitClose())
@@ -206,7 +206,7 @@ class WifiSecureServerTest {
 
     @Test
     fun `legacy and encrypted clients can be connected at once and each get the right format`() {
-        startServer()
+        startServer(allowLegacy = true)
         val legacy = SecureClient(server.port, token).open()
         legacy.send("""{"auth":"$token"}""")
         assertEquals("""{"status":"ok"}""", legacy.texts.poll(3, TimeUnit.SECONDS))

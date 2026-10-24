@@ -24,7 +24,7 @@ class PreferencesManager(context: Context) {
 
     /** Accept legacy unencrypted (v1) WiFi clients. See ADR-0011 for the removal timeline. */
     var wifiAllowLegacy: Boolean
-        get() = prefs.getBoolean(KEY_WIFI_ALLOW_LEGACY, true)
+        get() = prefs.getBoolean(KEY_WIFI_ALLOW_LEGACY, false)
         set(value) = prefs.edit { putBoolean(KEY_WIFI_ALLOW_LEGACY, value) }
 
     var wifiPort: Int

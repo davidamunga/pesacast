@@ -186,6 +186,16 @@ export function useWifi() {
         return;
       }
 
+      if (mode === "legacy" && opened && phase !== "authenticated" && !everConnectedRef.current) {
+        // The phone hung up on our plaintext auth. Since the phone defaults to refusing
+        // unencrypted clients, say what to change instead of showing a bare "disconnected".
+        setWifiStatus("error");
+        setWifiError(
+          "The phone refused the unencrypted connection. Turn on “Allow unencrypted connections” in PesaCast on the phone, or update the PesaCast desktop and phone apps.",
+        );
+        return;
+      }
+
       if (mode === "secure" && opened && phase === "ready") {
         // We sent our proof and the phone hung up: it could not verify the token (for example it
         // was regenerated while we were connected), so retrying with the same token cannot work.

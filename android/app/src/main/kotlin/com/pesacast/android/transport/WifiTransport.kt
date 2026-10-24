@@ -51,7 +51,7 @@ class WifiTransport(private val context: Context) {
 
     // MARK: - Public API
 
-    fun start(token: String, port: Int = WIFI_DEFAULT_PORT, allowLegacy: () -> Boolean = { true }) {
+    fun start(token: String, port: Int = WIFI_DEFAULT_PORT, allowLegacy: () -> Boolean = { false }) {
         stop()
         _error.value = null
         try {
@@ -193,7 +193,7 @@ class WifiTransport(private val context: Context) {
 internal class PesaCastWsServer(
     port: Int,
     private val token: String,
-    private val allowLegacy: () -> Boolean = { true },
+    private val allowLegacy: () -> Boolean = { false },
     private val authenticatedClients: CopyOnWriteArraySet<WebSocket>,
     private val onClientAuthenticated: (count: Int) -> Unit,
     private val onClientDisconnected: (count: Int) -> Unit,
