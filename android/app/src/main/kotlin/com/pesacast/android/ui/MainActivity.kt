@@ -22,6 +22,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.pesacast.android.util.PermissionPlan
 import com.pesacast.android.R
 import com.pesacast.android.databinding.ActivityMainBinding
 import com.pesacast.android.model.MpesaTransaction
@@ -37,9 +38,10 @@ class MainActivity : AppCompatActivity() {
 
     private val permLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { results ->
-        if (results.values.all { it }) onPermissionsGranted()
-    }
+    ) { _ -> handlePermissionResult() }
+
+    /** Avoids stacking dialogs if results arrive while one is already showing. */
+    private var permissionDialog: androidx.appcompat.app.AlertDialog? = null
 
     // MARK: - Lifecycle
 
@@ -390,32 +392,59 @@ class MainActivity : AppCompatActivity() {
 
     // MARK: - Permissions
 
+    private fun grantedPermissions(): Set<String> =
+        (PermissionPlan.smsPermissions() + PermissionPlan.bluetoothPermissions(Build.VERSION.SDK_INT) +
+            PermissionPlan.notificationPermissions(Build.VERSION.SDK_INT))
+            .filter(::hasPermission).toSet()
+
+    /** Asks for whatever is still missing in one prompt; each denial is handled on its own afterwards. */
     private fun requestAllPermissions() {
-        val needed = mutableListOf<String>()
+        val needed = PermissionPlan.toRequest(grantedPermissions(), Build.VERSION.SDK_INT)
+        if (needed.isEmpty()) onPermissionsGranted() else permLauncher.launch(needed.toTypedArray())
+    }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            if (!hasPermission(Manifest.permission.BLUETOOTH_CONNECT))
-                needed += Manifest.permission.BLUETOOTH_CONNECT
-            if (!hasPermission(Manifest.permission.BLUETOOTH_SCAN))
-                needed += Manifest.permission.BLUETOOTH_SCAN
-            if (!hasPermission(Manifest.permission.BLUETOOTH_ADVERTISE))
-                needed += Manifest.permission.BLUETOOTH_ADVERTISE
+    private fun handlePermissionResult() {
+        val state = PermissionPlan.evaluate(grantedPermissions(), Build.VERSION.SDK_INT)
+        // SMS alone is enough to run the service: webhook and WiFi delivery must not depend on Bluetooth.
+        if (state.canRunService) onPermissionsGranted()
+
+        if (!state.smsGranted) {
+            // After a request, "no rationale" means the user chose not to be asked again.
+            val permanent = !shouldShowRequestPermissionRationale(Manifest.permission.RECEIVE_SMS)
+            showPermissionDialog(
+                message = R.string.permission_sms_message,
+                permanent = permanent,
+                retry = { permLauncher.launch(PermissionPlan.smsPermissions().toTypedArray()) },
+            )
+        } else if (!state.bluetoothGranted) {
+            Toast.makeText(this, R.string.permission_bluetooth_denied, Toast.LENGTH_LONG).show()
         }
+    }
 
-        if (!hasPermission(Manifest.permission.RECEIVE_SMS))
-            needed += Manifest.permission.RECEIVE_SMS
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-            !hasPermission(Manifest.permission.POST_NOTIFICATIONS)
-        ) {
-            needed += Manifest.permission.POST_NOTIFICATIONS
-        }
-
-        if (needed.isNotEmpty()) {
-            permLauncher.launch(needed.toTypedArray())
+    private fun showPermissionDialog(message: Int, permanent: Boolean, retry: () -> Unit) {
+        if (permissionDialog?.isShowing == true) return
+        val builder = com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.permission_needed_title)
+            .setMessage(message)
+            .setNegativeButton(R.string.permission_not_now, null)
+        if (permanent) {
+            builder.setPositiveButton(R.string.permission_open_settings) { _, _ ->
+                startActivity(
+                    Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                        data = android.net.Uri.fromParts("package", packageName, null)
+                    }
+                )
+            }
         } else {
-            onPermissionsGranted()
+            builder.setPositiveButton(R.string.permission_allow) { _, _ -> retry() }
         }
+        permissionDialog = builder.show()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // The user may have granted a permission in Settings while the app was in the background.
+        if (PermissionPlan.evaluate(grantedPermissions(), Build.VERSION.SDK_INT).canRunService) onPermissionsGranted()
     }
 
     private fun onPermissionsGranted() {

@@ -44,6 +44,7 @@ Run the commands for every side you touched before saying work is done. Say plai
 - **The wire format is a contract between two codebases.** Change `MpesaTransaction` on both sides together (`android/.../model/`, `desktop/src-tauri/src/model.rs`, `desktop/src/domains/transactions/types.ts`).
 - **Never log or display pairing tokens or SMS bodies** beyond what the user explicitly copies/shares.
 - **Do not edit `desktop/src-tauri/vendor/`** without an ADR update; see [ADR-0007](docs/adr/0007-vendor-btleplug.md).
+- **Android storage and permissions** ([ADR-0014](docs/adr/0014-android-hardening.md)): keep `allowBackup="false"`; store secrets only through `KeystoreSecretCipher`; log sizes, never SMS text, tokens, secrets or payloads (a test enforces it); declare only permissions that are used, and never make an optional permission (Bluetooth, notifications) block the service.
 - Security-sensitive defaults stay conservative: local broadcast server is off by default and refuses browser origins.
 
 ## Pull requests
