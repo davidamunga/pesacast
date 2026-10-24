@@ -12,6 +12,7 @@ import {
   PopoverDescription,
 } from "@/components/ui/popover";
 import { MpesaTransaction } from "./types";
+import { buildWebhookBody, buildWebhookHeaders, getDeviceId } from "./webhook-payload";
 
 export const WEBHOOK_STORAGE_KEY_URL = "pesacast:webhook-push-url";
 export const WEBHOOK_STORAGE_KEY_TOKEN = "pesacast:webhook-push-token";
@@ -69,22 +70,13 @@ export function WebhookPush({
     setErrorMessage("");
     setResponseInfo("");
 
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-    if (token.trim()) {
-      headers["Authorization"] = `Bearer ${token.trim()}`;
-    }
+    const deviceId = getDeviceId();
 
     try {
       const res = await fetch(trimmedUrl, {
         method: "POST",
-        headers,
-        body: JSON.stringify({
-          transactions: targetTransactions,
-          count: targetTransactions.length,
-          exported_at: new Date().toISOString(),
-        }),
+        headers: buildWebhookHeaders(token, deviceId, targetTransactions),
+        body: JSON.stringify(buildWebhookBody(targetTransactions, deviceId)),
       });
 
       if (res.ok) {
