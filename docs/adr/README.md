@@ -12,3 +12,4 @@ Why the code is the way it is. See [the template](0000-template.md) and [CONTRIB
 | [0006](0006-local-broadcast-rejects-browser-origins.md) | Local broadcast server rejects browser origins | Proposed (PR #12) |
 | [0007](0007-vendor-btleplug.md) | Vendor and patch `btleplug` | Accepted, rationale to confirm |
 | [0008](0008-changesets-and-version-sync.md) | Version with Changesets and sync to Android/Cargo | Accepted |
+| [0009](0009-conventional-commits-and-lint-gates.md) | Enforce Conventional Commits and lint gates | Accepted |

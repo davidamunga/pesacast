@@ -9,8 +9,7 @@ mod ws_server;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let (ws_tx, _) = tokio::sync::broadcast::channel::<String>(64);
-    let (config_tx, config_rx) =
-        tokio::sync::watch::channel(ws_server::WsConfig::default()); // disabled by default
+    let (config_tx, config_rx) = tokio::sync::watch::channel(ws_server::WsConfig::default()); // disabled by default
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())

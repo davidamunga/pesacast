@@ -1,0 +1,44 @@
+name: Bug report
+description: Something is not working
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you expected and what you saw instead.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: PesaCast version
+      description: Shown at the bottom of the Android app and in the desktop app.
+    validations:
+      required: true
+  - type: dropdown
+    id: transport
+    attributes:
+      label: Transport
+      options: [Bluetooth LE, WiFi, Both, Not sure]
+    validations:
+      required: true
+  - type: input
+    id: phone
+    attributes:
+      label: Phone model and Android version
+      placeholder: Pixel 8, Android 15
+  - type: input
+    id: desktop
+    attributes:
+      label: Desktop OS
+      placeholder: macOS 15, Windows 11
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Remove pairing tokens, phone numbers, names and amounts you do not want public.
