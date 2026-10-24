@@ -83,7 +83,7 @@ jobs:
             echo ""
             echo "| Platform | Package |"
             echo "|----------|---------|"
-            echo "| Android (APK) | [pesacast-${VERSION}.apk](${BASE}/pesacast-${VERSION}.apk) |"
+            echo "| Android (APK) | [pesacast-${VERSION}.apk](${BASE}/pesacast-${VERSION}.apk) ([SHA-256](${BASE}/pesacast-${VERSION}.apk.sha256)) |"
           } > /tmp/release_body.md
 
       - name: Create GitHub Release
@@ -136,11 +136,20 @@ jobs:
           mv android/app/build/outputs/apk/release/app-release.apk \
              android/app/build/outputs/apk/release/pesacast-${VERSION}.apk
 
-      - name: Upload APK to release
+      - name: Write APK checksum
+        working-directory: android/app/build/outputs/apk/release
+        run: |
+          VERSION="${{ needs.create-release.outputs.version }}"
+          sha256sum "pesacast-${VERSION}.apk" > "pesacast-${VERSION}.apk.sha256"
+          cat "pesacast-${VERSION}.apk.sha256"
+
+      - name: Upload APK and checksum to release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.create-release.outputs.ref }}
-          files: android/app/build/outputs/apk/release/pesacast-${{ needs.create-release.outputs.version }}.apk
+          files: |
+            android/app/build/outputs/apk/release/pesacast-${{ needs.create-release.outputs.version }}.apk
+            android/app/build/outputs/apk/release/pesacast-${{ needs.create-release.outputs.version }}.apk.sha256
 
   build-desktop:
     name: Build Desktop (${{ matrix.platform }})
