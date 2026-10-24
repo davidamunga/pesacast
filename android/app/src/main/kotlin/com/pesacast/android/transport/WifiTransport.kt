@@ -23,6 +23,7 @@ private const val TAG = "WifiTransport"
 
 const val WIFI_DEFAULT_PORT = 7877
 private const val NSD_SERVICE_TYPE = "_pesacast._tcp."
+private const val MAX_PENDING = 50
 
 class WifiTransport(private val context: Context) {
 
@@ -37,6 +38,7 @@ class WifiTransport(private val context: Context) {
 
     private val authenticatedClients = CopyOnWriteArraySet<WebSocket>()
     private val pendingQueue = ArrayDeque<String>()
+    private val queueLock = Any()
 
     // MARK: - Public API
 
@@ -76,16 +78,23 @@ class WifiTransport(private val context: Context) {
         }
         server = null
         authenticatedClients.clear()
+        synchronized(queueLock) { pendingQueue.clear() }
         _state.value = TransportState.Disconnected
         Log.i(TAG, "WiFi transport stopped")
     }
 
     fun sendTransaction(txn: MpesaTransaction) {
+        // Server not running (WiFi disabled): nothing to deliver to, and nothing to queue for.
+        if (server == null) return
+
         val json = gson.toJson(txn)
         val openClients = authenticatedClients.filter { it.isOpen }
         if (openClients.isEmpty()) {
             Log.d(TAG, "WiFi: no authenticated clients — queuing")
-            pendingQueue.addLast(json)
+            synchronized(queueLock) {
+                if (pendingQueue.size >= MAX_PENDING) pendingQueue.removeFirst()
+                pendingQueue.addLast(json)
+            }
             return
         }
         for (client in openClients) {
@@ -137,9 +146,11 @@ class WifiTransport(private val context: Context) {
     }
 
     private fun drainQueue() {
-        while (pendingQueue.isNotEmpty()) {
-            val json = pendingQueue.removeFirst()
-            val openClients = authenticatedClients.filter { it.isOpen }
+        val pending = synchronized(queueLock) {
+            pendingQueue.toList().also { pendingQueue.clear() }
+        }
+        val openClients = authenticatedClients.filter { it.isOpen }
+        for (json in pending) {
             for (client in openClients) {
                 client.send(json)
             }
