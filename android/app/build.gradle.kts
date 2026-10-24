@@ -50,6 +50,11 @@ android {
         disable += "PermissionImpliesUnsupportedChromeOsHardware"
     }
 
+    testOptions {
+        // Parser code logs through android.util.Log; return defaults instead of throwing on the JVM.
+        unitTests.isReturnDefaultValues = true
+    }
+
     buildFeatures {
         viewBinding = true
     }
@@ -68,4 +73,6 @@ dependencies {
     implementation(libs.activity.ktx)
     implementation(libs.okhttp)
     implementation(libs.java.websocket)
+
+    testImplementation(libs.junit)
 }
