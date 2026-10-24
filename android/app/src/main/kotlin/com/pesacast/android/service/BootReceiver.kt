@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.content.ContextCompat
 import com.pesacast.android.util.PreferencesManager
+import com.pesacast.android.webhook.WebhookSettings
 
 /**
  * Restarts [MirrorService] after the device boots, so mirroring resumes without
@@ -19,7 +20,7 @@ class BootReceiver : BroadcastReceiver() {
         ) return
 
         val prefs = PreferencesManager(context)
-        if (prefs.mirroringEnabled) {
+        if (prefs.mirroringEnabled || WebhookSettings(context).enabled) {
             ContextCompat.startForegroundService(context, MirrorService.startIntent(context))
         }
     }

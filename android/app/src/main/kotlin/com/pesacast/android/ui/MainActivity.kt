@@ -120,6 +120,7 @@ class MainActivity : AppCompatActivity() {
         binding.tvVersion.text = "v$versionName"
 
         setupWifiControls()
+        setupWebhookControls()
     }
 
     private fun setupWifiControls() {
@@ -157,6 +158,68 @@ class MainActivity : AppCompatActivity() {
         binding.tvWifiPort.text = vm.prefs.wifiPort.toString()
     }
 
+    private fun setupWebhookControls() {
+        val settings = vm.webhookSettings
+        binding.etWebhookUrl.setText(settings.url)
+        binding.etWebhookToken.setText(settings.token)
+        binding.etWebhookSecret.setText(settings.secret)
+
+        binding.switchWebhook.isChecked = vm.webhookEnabled.value
+        binding.switchWebhook.setOnCheckedChangeListener { _, checked ->
+            if (!vm.setWebhookEnabled(checked)) {
+                binding.switchWebhook.isChecked = false
+                if (checked) {
+                    val noUrl = binding.etWebhookUrl.text.isNullOrBlank()
+                    showWebhookMessage(getString(if (noUrl) R.string.webhook_needs_url else R.string.webhook_needs_test))
+                }
+            }
+        }
+        binding.btnWebhookTest.setOnClickListener {
+            vm.testWebhook(
+                binding.etWebhookUrl.text?.toString().orEmpty(),
+                binding.etWebhookToken.text?.toString().orEmpty(),
+                binding.etWebhookSecret.text?.toString().orEmpty(),
+            )
+        }
+    }
+
+    private fun showWebhookMessage(message: String?) {
+        binding.tvWebhookMessage.text = message
+        binding.tvWebhookMessage.visibility = if (message.isNullOrEmpty()) View.GONE else View.VISIBLE
+    }
+
+    private fun renderWebhookTest(state: MainViewModel.WebhookTestUi) {
+        when (state) {
+            MainViewModel.WebhookTestUi.Idle -> Unit
+            MainViewModel.WebhookTestUi.Running -> {
+                binding.btnWebhookTest.isEnabled = false
+                showWebhookMessage(getString(R.string.webhook_testing))
+            }
+            is MainViewModel.WebhookTestUi.Done -> {
+                binding.btnWebhookTest.isEnabled = true
+                showWebhookMessage(
+                    when (val r = state.result) {
+                        is com.pesacast.android.webhook.TestResult.Success ->
+                            getString(R.string.webhook_test_ok, r.httpCode)
+                        is com.pesacast.android.webhook.TestResult.Failure -> r.message
+                    }
+                )
+            }
+        }
+    }
+
+    private fun renderWebhookStatus(status: com.pesacast.android.webhook.WebhookStatus, enabled: Boolean) {
+        if (binding.switchWebhook.isChecked != enabled) binding.switchWebhook.isChecked = enabled
+        binding.tvWebhookStatus.text = when {
+            !enabled -> getString(R.string.webhook_status_off)
+            status.paused -> getString(R.string.webhook_status_paused, status.lastError.orEmpty())
+            status.pending > 0 && status.lastError != null ->
+                getString(R.string.webhook_status_error, status.lastError)
+            status.pending > 0 -> getString(R.string.webhook_status_waiting, status.pending)
+            else -> getString(R.string.webhook_status_idle)
+        }
+    }
+
     private fun updateWifiSectionsVisibility(enabled: Boolean) {
         binding.wifiDetailSection.visibility = if (enabled) View.VISIBLE else View.GONE
         if (enabled) vm.refreshLocalIp()
@@ -169,6 +232,11 @@ class MainActivity : AppCompatActivity() {
                 launch { vm.bleState.collect(::renderBleState) }
                 launch { vm.wifiState.collect(::renderWifiState) }
                 launch { vm.wifiError.collect(::renderWifiError) }
+                launch { vm.webhookTest.collect(::renderWebhookTest) }
+                launch {
+                    kotlinx.coroutines.flow.combine(vm.webhookStatus, vm.webhookEnabled) { s, e -> s to e }
+                        .collect { (s, e) -> renderWebhookStatus(s, e) }
+                }
                 launch { vm.transactions.collect(::renderTransactions) }
                 launch { vm.wifiToken.collect { token -> binding.tvWifiToken.text = token } }
                 launch {

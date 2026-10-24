@@ -1,6 +1,6 @@
 # ADR-0013: Deliver transactions to a webhook directly from the phone
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-10-24
 
 ## Context

@@ -70,6 +70,46 @@ Test vectors: [wifi-crypto-vectors.json](wifi-crypto-vectors.json).
 
 Earlier releases used an unencrypted protocol (first message `{"auth":"<token>"}`). It is no longer supported ([ADR-0012](adr/0012-remove-wifi-v1-plaintext.md)): the server closes such a connection with `1008 Bad request`, and the desktop reports that the phone must be updated.
 
+## Phone webhook (Android, optional)
+
+[ADR-0013](adr/0013-phone-webhook-delivery.md). When enabled, the phone `POST`s each parsed transaction to a user-configured **HTTPS** URL, independent of any desktop. Redirects are not followed. Plain `http://` is refused.
+
+**Request**
+
+```
+POST <url>
+Content-Type: application/json
+User-Agent: PesaCast-Android
+Idempotency-Key: <ref>@<time>
+X-PesaCast-Timestamp: <unix seconds>
+X-PesaCast-Signature: v1=<hex>        (only if a signing secret is set)
+Authorization: Bearer <token>         (only if a token is set)
+```
+
+Body: the same envelope the desktop push uses, plus `source`:
+
+```json
+{
+  "exported_at": "2026-10-24T10:00:01.234Z",
+  "source": "android",
+  "transactions": [ { "type": "mpesa_txn", "ref": "ABC123", "time": "...", "amount": 500.0, "...": "..." } ],
+  "count": 1
+}
+```
+
+The "Save & send test" button sends the same envelope with `"test": true`, an empty `transactions` array and `"count": 0`. Receivers must not record it as a transaction. Receivers must ignore unknown fields.
+
+**Signature.** `v1=` plus the lowercase hex HMAC-SHA256 of the ASCII string `<timestamp>.` followed by the raw request body bytes, keyed with the signing secret (UTF-8). Verify with a constant-time comparison and reject timestamps older than a few minutes. See [webhooks.md](webhooks.md) for examples.
+
+**Delivery** is at-least-once and in order. The queue is persisted on the phone (max 500 items, 7 days, oldest dropped first).
+
+| Response | Behaviour |
+|---|---|
+| `2xx` | Delivered; item removed |
+| `408`, `429`, `5xx`, network error | Retried with backoff (5 s, doubling, max 15 min); the same `Idempotency-Key` |
+| `401`, `403` | Delivery pauses and the queue is kept until settings change or the user retries |
+| `3xx`, other `4xx` | That item is dropped and the error shown in the app |
+
 ## Local broadcast (desktop, optional)
 
 `ws://127.0.0.1:7878` (configurable, off by default). Server-to-client only: every ingested transaction as the JSON above. Handshakes with an `Origin` header are rejected with `403`.

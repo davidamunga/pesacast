@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Allow cleartext HTTP/WebSocket traffic to local (LAN) destinations only.
-    The desktop companion listens on a plain WS port; HTTPS is not required on the LAN.
+    No cleartext traffic. The phone only serves the encrypted WiFi channel and sends webhooks over
+    HTTPS (ADR-0012, ADR-0013). Android cannot scope cleartext to an IP range, so allowing it for
+    "the LAN" would allow it everywhere.
 -->
 <network-security-config>
-    <base-config cleartextTrafficPermitted="true" />
+    <base-config cleartextTrafficPermitted="false" />
 </network-security-config>

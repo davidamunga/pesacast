@@ -71,7 +71,6 @@ dependencies {
     implementation(libs.lifecycle.runtime.ktx)
     implementation(libs.recyclerview)
     implementation(libs.activity.ktx)
-    implementation(libs.okhttp)
     implementation(libs.java.websocket)
 
     testImplementation(libs.junit)

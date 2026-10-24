@@ -12,6 +12,7 @@ Shared vocabulary. Use these terms exactly in code, docs and commits.
 | **Peripheral / central** | BLE roles. The phone is the GATT *peripheral* (server); the desktop is the *central* (client). |
 | **WiFi transport** | The phone hosts a WebSocket server on the LAN; the desktop connects as a client. |
 | **Pairing token** | Random secret generated on the phone that the desktop sends to authenticate a WiFi connection. |
+| **Phone webhook** | Optional Android feature that POSTs each transaction from the phone to a user-configured HTTPS URL, independent of any desktop. Not the same as the desktop's webhook push or the local broadcast. |
 | **Local broadcast** | Optional desktop WebSocket server on `127.0.0.1:7878` that re-publishes every ingested transaction to local tools. Not related to the WiFi transport. |
 | **Ingest** | The desktop pipeline every transaction passes through: parse, dedupe, notify, emit, broadcast. |
 | **Changeset** | A pending version bump in `.changeset/`. |

@@ -7,6 +7,8 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.Network
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.pesacast.android.R
@@ -32,6 +34,7 @@ class MirrorService : Service() {
     private lateinit var transport: TransportManager
     private lateinit var nm: NotificationManager
     private var stateJob: Job? = null
+    private var networkCallback: ConnectivityManager.NetworkCallback? = null
 
     // MARK: - Lifecycle
 
@@ -53,6 +56,7 @@ class MirrorService : Service() {
         startForeground(NOTIFICATION_ID, buildNotification(getString(R.string.notif_transport_starting)))
 
         transport.start()
+        watchNetwork()
 
         // Keep the notification text in sync with connection state. onStartCommand runs on every
         // start request, so cancel the previous collector instead of stacking another one.
@@ -66,7 +70,31 @@ class MirrorService : Service() {
         return START_STICKY
     }
 
+    /** Retries queued webhook deliveries as soon as a network is available again. */
+    private fun watchNetwork() {
+        if (networkCallback != null) return
+        val cm = getSystemService(ConnectivityManager::class.java) ?: return
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                transport.webhook.kick()
+            }
+        }
+        try {
+            cm.registerDefaultNetworkCallback(callback)
+            networkCallback = callback
+        } catch (_: RuntimeException) {
+            // Registration can fail on some OEM builds; deliveries still retry on their backoff.
+        }
+    }
+
     override fun onDestroy() {
+        networkCallback?.let { cb ->
+            try {
+                getSystemService(ConnectivityManager::class.java)?.unregisterNetworkCallback(cb)
+            } catch (_: RuntimeException) {
+            }
+        }
+        networkCallback = null
         super.onDestroy()
         scope.cancel()
         transport.stop()
