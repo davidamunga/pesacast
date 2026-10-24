@@ -55,4 +55,21 @@ describe("FrameReassembler", () => {
     r.reset();
     expect(r.push(frame('{"a":1}'))).toBe('{"a":1}');
   });
+
+  it("treats a continuation chunk that looks like a header as data", () => {
+    // The chunk boundary lands right before "12:12", which parses as "length 12, then payload".
+    const json = '{"time":"2026-02-27T12:12:00+03:00"}';
+    const framed = frame(json);
+    const idx = framed.indexOf("12:12");
+    const out = feed(new FrameReassembler(), [framed.slice(0, idx), framed.slice(idx)]);
+    expect(out).toEqual([json]);
+  });
+
+  it("starts a new frame once a partial one has gone stale", () => {
+    let now = 0;
+    const r = new FrameReassembler(() => now);
+    expect(r.push("50:abc")).toBeNull(); // the rest of this frame is lost
+    now = 10_000;
+    expect(r.push(frame('{"a":1}'))).toBe('{"a":1}');
+  });
 });

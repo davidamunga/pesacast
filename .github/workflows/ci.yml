@@ -47,6 +47,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint:desktop
+      - run: pnpm --filter pesacast test
 
   desktop-rust:
     name: Desktop (rustfmt, clippy, test)

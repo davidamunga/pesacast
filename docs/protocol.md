@@ -26,8 +26,10 @@ Defined in: `android/.../model/MpesaTransaction.kt`, `desktop/src-tauri/src/mode
 
 - Phone is the GATT peripheral, desktop the central.
 - Service UUID `E7A12345-B09E-4B3C-83A6-00112233AABB`; transaction characteristic `E7A12346-B09E-4B3C-83A6-00112233AABB` (notify). Defined in `model/` on Android and `desktop/src/domains/connection/constants.ts`.
-- **Framing:** payload is `"<length>:<json>"` in UTF-8, split into chunks of `negotiated MTU − 3` bytes (20 bytes before MTU negotiation). The central reassembles until `<length>` is reached. The desktop also accepts an unframed single JSON chunk.
-- Android computes `<length>` from `json.length` (UTF-16 code units), while chunking operates on UTF-8 bytes. Non-ASCII payloads may therefore differ in length; confirm the desktop's comparison if you change either side. (`TODO`: verify and fix or document.)
+- **Framing:** payload is `"<length>:<json>"` in UTF-8, split into chunks of at most `negotiated MTU − 3` bytes (20 bytes before MTU negotiation). Android implements this in `BleFraming`; the desktop reassembles in `ble-framing.ts` (`FrameReassembler`). Both have unit tests.
+- **`<length>` counts UTF-16 code units** (Kotlin `String.length` = JavaScript `string.length`), not bytes. An accented character counts 1, an emoji counts 2. Keep it that way: changing it breaks older desktop/Android pairs.
+- **Chunks never split a character.** The desktop decodes every notification on its own, so Android cuts chunks only at character boundaries (a chunk can be a few bytes shorter than the limit).
+- **While a frame is in progress every chunk is data**, even if it looks like a header (`12:12:00+03:00` inside a timestamp). A partial frame idle for more than 5 s is abandoned. The desktop also accepts an unframed single JSON chunk.
 
 ## WiFi (PR #12)
 
