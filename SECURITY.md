@@ -11,7 +11,7 @@ Report it privately through GitHub: open the repository's **Security** tab, choo
 Helpful to include:
 
 - What you found and what an attacker could do with it.
-- The version (Settings screen on Android, or **About** on the desktop) and platform.
+- The app version (shown at the bottom of the Android Connect tab) and the platform.
 - Steps to reproduce, or a proof of concept.
 - Whether you plan to publish, and any deadline you are working to.
 
