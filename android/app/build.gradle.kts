@@ -61,4 +61,5 @@ dependencies {
     implementation(libs.recyclerview)
     implementation(libs.activity.ktx)
     implementation(libs.okhttp)
+    implementation(libs.java.websocket)
 }

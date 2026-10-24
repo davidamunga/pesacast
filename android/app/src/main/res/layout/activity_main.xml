@@ -1,314 +1,673 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:background="@color/neutral_900">
 
-    <!-- ── App Bar ── -->
-    <com.google.android.material.appbar.AppBarLayout
+    <!-- ══════════════════════════════════════════════
+         Header
+         ══════════════════════════════════════════════ -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/neutral_900"
-        app:elevation="0dp">
+        android:layout_height="56dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp">
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginEnd="10dp"
+            android:src="@drawable/logo"
+            android:contentDescription="@string/app_name" />
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingHorizontal="16dp">
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
-            <!-- Logo -->
-            <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_marginEnd="10dp"
-                android:src="@drawable/logo" />
-
-            <!-- Title + subtitle -->
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/toolbar"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/app_name"
-                    android:textColor="@color/neutral_100"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="M-PESA Notifications on PC"
-                    android:textColor="@color/neutral_500"
-                    android:textSize="11sp" />
-
-            </LinearLayout>
-
-            <!-- BLE status badge -->
-            <LinearLayout
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_ble_badge"
+                android:text="@string/app_name"
+                android:textColor="@color/neutral_100"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="M-PESA Notifications on PC"
+                android:textColor="@color/neutral_500"
+                android:textSize="11sp" />
+
+        </LinearLayout>
+
+        <!-- Combined transport status badge -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_ble_badge"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="5dp">
+
+            <View
+                android:id="@+id/bleStatusDot"
+                android:layout_width="6dp"
+                android:layout_height="6dp"
+                android:layout_marginEnd="5dp"
+                android:background="@drawable/status_dot" />
+
+            <TextView
+                android:id="@+id/bleStatusLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/status_disconnected"
+                android:textColor="@color/neutral_100"
+                android:textSize="11sp" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- Header bottom border -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/neutral_700" />
+
+    <!-- ══════════════════════════════════════════════
+         Tab content area (fills remaining space)
+         ══════════════════════════════════════════════ -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- ─────────────────────────────
+             TAB 0: Transactions
+             ───────────────────────────── -->
+        <LinearLayout
+            android:id="@+id/tabTransactions"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="visible">
+
+            <!-- Disconnect banner: shown whenever no transport is active -->
+            <LinearLayout
+                android:id="@+id/bannerNotConnected"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/neutral_850"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="5dp">
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="9dp"
+                android:visibility="visible">
 
+                <!-- Amber status dot -->
                 <View
-                    android:id="@+id/bleStatusDot"
-                    android:layout_width="7dp"
-                    android:layout_height="7dp"
-                    android:layout_marginEnd="5dp"
+                    android:layout_width="6dp"
+                    android:layout_height="6dp"
+                    android:layout_marginEnd="8dp"
                     android:background="@drawable/status_dot" />
 
                 <TextView
-                    android:id="@+id/bleStatusLabel"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/status_disconnected"
-                    android:textColor="@color/neutral_100"
+                    android:layout_weight="1"
+                    android:text="@string/banner_no_connection"
+                    android:textColor="@color/neutral_400"
                     android:textSize="11sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnBannerConnect"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="28dp"
+                    android:minWidth="0dp"
+                    android:paddingHorizontal="10dp"
+                    android:text="@string/banner_connect_action"
+                    android:textColor="@color/green_600"
+                    android:textSize="11sp"
+                    app:cornerRadius="6dp" />
 
             </LinearLayout>
 
-        </LinearLayout>
-
-        <!-- Bottom border -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/neutral_700" />
-
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <!-- ── Content ── -->
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
-
-            <!-- ── Connection Status card ── -->
-            <com.google.android.material.card.MaterialCardView
+            <!-- Banner separator -->
+            <View
+                android:id="@+id/bannerDivider"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardBackgroundColor="@color/neutral_800"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/neutral_700"
-                app:strokeWidth="1dp">
+                android:layout_height="1dp"
+                android:background="@color/neutral_700"
+                android:visibility="visible" />
 
+            <!-- Transactions content (recycler OR empty state) -->
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+
+                <!-- Empty state — centered, shown when list is empty -->
                 <LinearLayout
+                    android:id="@+id/emptyState"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
                     android:orientation="vertical"
-                    android:padding="14dp">
+                    android:paddingHorizontal="40dp"
+                    android:paddingBottom="48dp"
+                    android:visibility="visible">
+
+                    <ImageView
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:layout_marginBottom="20dp"
+                        android:src="@drawable/ic_empty_transactions"
+                        android:contentDescription="@null" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="10dp"
-                        android:text="@string/mac_connection"
+                        android:layout_marginBottom="8dp"
+                        android:gravity="center"
+                        android:text="@string/no_transactions_title"
                         android:textColor="@color/neutral_100"
-                        android:textSize="13sp"
+                        android:textSize="17sp"
                         android:textStyle="bold" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/ble_status"
-                            android:textColor="@color/neutral_400"
-                            android:textSize="13sp" />
-
-                        <View
-                            android:layout_width="7dp"
-                            android:layout_height="7dp"
-                            android:layout_marginEnd="6dp"
-                            android:background="@drawable/status_dot"
-                            android:id="@+id/bleCardDot" />
-
-                    </LinearLayout>
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ── App Settings card ── -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
-                app:cardBackgroundColor="@color/neutral_800"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/neutral_700"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="14dp">
 
                     <TextView
+                        android:id="@+id/tvEmptyBody"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="10dp"
-                        android:text="@string/settings"
-                        android:textColor="@color/neutral_100"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="48dp"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/mirror_to_desktop"
-                            android:textColor="@color/neutral_100"
-                            android:textSize="13sp" />
-
-                        <com.google.android.material.materialswitch.MaterialSwitch
-                            android:id="@+id/switchMirroring"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:checked="true" />
-
-                    </LinearLayout>
-
-                    <!-- Divider -->
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginVertical="10dp"
-                        android:background="@color/neutral_700" />
+                        android:layout_marginBottom="28dp"
+                        android:gravity="center"
+                        android:lineSpacingExtra="3dp"
+                        android:text="@string/no_transactions_disconnected"
+                        android:textColor="@color/neutral_500"
+                        android:textSize="13sp" />
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnTest"
+                        android:id="@+id/btnConnectFromEmpty"
                         style="@style/Widget.Material3.Button"
-                        android:layout_width="match_parent"
-                        android:layout_height="44dp"
-                        android:text="@string/send_test"
-                        android:textSize="13sp"
-                        app:cornerRadius="6dp" />
-
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- ── Transactions card ── -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/neutral_800"
-                app:cardCornerRadius="8dp"
-                app:cardElevation="0dp"
-                app:strokeColor="@color/neutral_700"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <TextView
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:paddingHorizontal="14dp"
-                        android:paddingTop="14dp"
-                        android:paddingBottom="10dp"
-                        android:text="@string/recent_transactions"
-                        android:textColor="@color/neutral_100"
+                        android:layout_height="44dp"
+                        android:paddingHorizontal="24dp"
+                        android:text="@string/cta_setup_connection"
                         android:textSize="13sp"
-                        android:textStyle="bold" />
-
-                    <!-- Divider under header -->
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/neutral_700" />
-
-                    <TextView
-                        android:id="@+id/emptyTransactions"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:padding="32dp"
-                        android:text="@string/no_transactions"
-                        android:textColor="@color/neutral_500"
-                        android:textSize="13sp"
+                        app:cornerRadius="8dp"
                         android:visibility="visible" />
 
-                    <androidx.recyclerview.widget.RecyclerView
-                        android:id="@+id/recyclerTransactions"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:nestedScrollingEnabled="false"
-                        android:paddingHorizontal="14dp"
-                        android:visibility="gone" />
-
                 </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
 
-            <!-- ── Footer ── -->
+                <!-- Transaction list — shown when list is not empty -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recyclerTransactions"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingHorizontal="14dp"
+                    android:clipToPadding="false"
+                    android:visibility="gone" />
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+        <!-- ─────────────────────────────
+             TAB 1: Connect
+             ───────────────────────────── -->
+        <androidx.core.widget.NestedScrollView
+            android:id="@+id/tabConnect"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
                 android:orientation="vertical"
-                android:paddingTop="20dp"
-                android:paddingBottom="8dp">
+                android:padding="16dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <!-- ── Bluetooth LE card ── -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/footer_made_by"
-                    android:textColor="@color/neutral_500"
-                    android:textSize="11sp" />
+                    android:layout_marginBottom="10dp"
+                    app:cardBackgroundColor="@color/neutral_800"
+                    app:cardCornerRadius="10dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/neutral_700"
+                    app:strokeWidth="1dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/footer_github"
-                    android:textColor="@color/neutral_500"
-                    android:textSize="11sp" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingHorizontal="16dp"
+                        android:paddingVertical="14dp">
 
-                <TextView
-                    android:id="@+id/tvVersion"
-                    android:layout_width="wrap_content"
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/bluetooth_le"
+                            android:textColor="@color/neutral_100"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <View
+                            android:id="@+id/bleCardDot"
+                            android:layout_width="6dp"
+                            android:layout_height="6dp"
+                            android:layout_marginEnd="7dp"
+                            android:background="@drawable/status_dot" />
+
+                        <TextView
+                            android:id="@+id/bleCardStatusLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/status_disconnected"
+                            android:textColor="@color/neutral_400"
+                            android:textSize="12sp" />
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- ── WiFi Transport card ── -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textColor="@color/neutral_500"
-                    android:textSize="11sp" />
+                    android:layout_marginBottom="10dp"
+                    app:cardBackgroundColor="@color/neutral_800"
+                    app:cardCornerRadius="10dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/neutral_700"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:paddingHorizontal="16dp"
+                        android:paddingTop="14dp"
+                        android:paddingBottom="16dp">
+
+                        <!-- Header: title + status -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/wifi_transport"
+                                android:textColor="@color/neutral_100"
+                                android:textSize="13sp"
+                                android:textStyle="bold" />
+
+                            <View
+                                android:id="@+id/wifiStatusDot"
+                                android:layout_width="6dp"
+                                android:layout_height="6dp"
+                                android:layout_marginEnd="7dp"
+                                android:background="@drawable/status_dot" />
+
+                            <TextView
+                                android:id="@+id/wifiStatusLabel"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/status_disconnected"
+                                android:textColor="@color/neutral_400"
+                                android:textSize="12sp" />
+
+                        </LinearLayout>
+
+                        <!-- Enable toggle -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/wifi_enable"
+                                android:textColor="@color/neutral_100"
+                                android:textSize="13sp" />
+
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switchWifi"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:checked="false" />
+
+                        </LinearLayout>
+
+                        <!-- Pairing detail section — visible when WiFi enabled -->
+                        <LinearLayout
+                            android:id="@+id/wifiDetailSection"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:visibility="gone">
+
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_marginBottom="20dp"
+                                android:background="@color/neutral_700" />
+
+                            <!-- IP Address -->
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="4dp"
+                                android:text="@string/your_ip"
+                                android:textColor="@color/neutral_500"
+                                android:textSize="9sp"
+                                android:textAllCaps="true"
+                                android:letterSpacing="0.12" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:layout_marginBottom="20dp">
+
+                                <TextView
+                                    android:id="@+id/tvLocalIp"
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:fontFamily="monospace"
+                                    android:textColor="@color/neutral_100"
+                                    android:textSize="22sp"
+                                    android:textStyle="bold"
+                                    android:text="@string/ip_unavailable" />
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnCopyIp"
+                                    style="@style/Widget.Material3.Button.TextButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:minWidth="0dp"
+                                    android:paddingHorizontal="10dp"
+                                    android:text="@string/copy_ip"
+                                    android:textSize="11sp"
+                                    android:textColor="@color/neutral_400"
+                                    app:cornerRadius="6dp" />
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnShareIp"
+                                    style="@style/Widget.Material3.Button.TextButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:minWidth="0dp"
+                                    android:paddingHorizontal="10dp"
+                                    android:text="@string/share_ip"
+                                    android:textSize="11sp"
+                                    android:textColor="@color/neutral_400"
+                                    app:cornerRadius="6dp" />
+
+                            </LinearLayout>
+
+                            <!-- Pairing Token -->
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="4dp"
+                                android:text="@string/pairing_token"
+                                android:textColor="@color/neutral_500"
+                                android:textSize="9sp"
+                                android:textAllCaps="true"
+                                android:letterSpacing="0.12" />
+
+                            <!-- Token text full-width with fade; buttons on their own row -->
+                            <FrameLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="2dp"
+                                android:clipChildren="true">
+
+                                <TextView
+                                    android:id="@+id/tvWifiToken"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:fontFamily="monospace"
+                                    android:textColor="@color/neutral_300"
+                                    android:textSize="12sp"
+                                    android:maxLines="1"
+                                    android:singleLine="true"
+                                    android:ellipsize="none" />
+
+                                <View
+                                    android:layout_width="64dp"
+                                    android:layout_height="match_parent"
+                                    android:layout_gravity="end"
+                                    android:background="@drawable/token_end_fade" />
+
+                            </FrameLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="end"
+                                android:layout_marginBottom="4dp">
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnCopyToken"
+                                    style="@style/Widget.Material3.Button.TextButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:minWidth="0dp"
+                                    android:paddingHorizontal="10dp"
+                                    android:text="@string/copy_token"
+                                    android:textSize="11sp"
+                                    android:textColor="@color/neutral_400"
+                                    app:cornerRadius="6dp" />
+
+                                <com.google.android.material.button.MaterialButton
+                                    android:id="@+id/btnShareToken"
+                                    style="@style/Widget.Material3.Button.TextButton"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:minWidth="0dp"
+                                    android:paddingHorizontal="10dp"
+                                    android:text="@string/share_token"
+                                    android:textSize="11sp"
+                                    android:textColor="@color/neutral_400"
+                                    app:cornerRadius="6dp" />
+
+                            </LinearLayout>
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="20dp"
+                                android:text="@string/pairing_token_hint"
+                                android:textColor="@color/neutral_500"
+                                android:textSize="11sp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnSharePairingInfo"
+                                style="@style/Widget.Material3.Button"
+                                android:layout_width="match_parent"
+                                android:layout_height="44dp"
+                                android:text="@string/share_pairing_info"
+                                android:textSize="13sp"
+                                app:cornerRadius="8dp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnRegenerateToken"
+                                style="@style/Widget.Material3.Button.TextButton"
+                                android:layout_width="match_parent"
+                                android:layout_height="36dp"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/regenerate_token"
+                                android:textColor="@color/neutral_500"
+                                android:textSize="12sp"
+                                app:cornerRadius="6dp" />
+
+                            <!-- Port footnote -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal"
+                                android:layout_marginTop="8dp">
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="@string/wifi_port"
+                                    android:textColor="@color/neutral_600"
+                                    android:textSize="11sp" />
+
+                                <TextView
+                                    android:id="@+id/tvWifiPort"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:fontFamily="monospace"
+                                    android:textColor="@color/neutral_600"
+                                    android:textSize="11sp" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- ── App Settings card ── -->
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"
+                    app:cardBackgroundColor="@color/neutral_800"
+                    app:cardCornerRadius="10dp"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/neutral_700"
+                    app:strokeWidth="1dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="10dp"
+                            android:text="@string/settings"
+                            android:textColor="@color/neutral_100"
+                            android:textSize="13sp"
+                            android:textStyle="bold" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/mirror_to_desktop"
+                                android:textColor="@color/neutral_100"
+                                android:textSize="13sp" />
+
+                            <com.google.android.material.materialswitch.MaterialSwitch
+                                android:id="@+id/switchMirroring"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:checked="true" />
+
+                        </LinearLayout>
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginVertical="10dp"
+                            android:background="@color/neutral_700" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnTest"
+                            style="@style/Widget.Material3.Button"
+                            android:layout_width="match_parent"
+                            android:layout_height="44dp"
+                            android:text="@string/send_test"
+                            android:textSize="13sp"
+                            app:cornerRadius="6dp" />
+
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- Footer -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="4dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/footer_made_by"
+                        android:textColor="@color/neutral_600"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/tvVersion"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:textColor="@color/neutral_600"
+                        android:textSize="11sp" />
+
+                </LinearLayout>
 
             </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
 
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
+    </FrameLayout>
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+    <!-- Bottom navigation separator -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/neutral_700" />
+
+    <!-- ══════════════════════════════════════════════
+         Bottom Navigation
+         ══════════════════════════════════════════════ -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/neutral_850"
+        app:itemTextColor="@color/bottom_nav_item_color"
+        app:itemIconTint="@color/bottom_nav_item_color"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_nav_menu" />
+
+</LinearLayout>

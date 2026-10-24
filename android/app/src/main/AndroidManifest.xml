@@ -17,10 +17,17 @@
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
 
+    <!-- ── Network (WiFi transport) ── -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
     <!-- ── Foreground service ── -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <!-- connectedDevice type required for BLE peripheral on Android 14+ -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <!-- dataSync type required for WiFi WebSocket server on Android 14+ -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <!-- Post the persistent transport notification (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Auto-start after device reboot -->
@@ -66,10 +73,10 @@
             </intent-filter>
         </receiver>
 
-        <!-- Foreground service — keeps BLE transport alive in the background -->
+        <!-- Foreground service — keeps BLE + WiFi transport alive in the background -->
         <service
             android:name=".service.MirrorService"
-            android:foregroundServiceType="connectedDevice"
+            android:foregroundServiceType="connectedDevice|dataSync"
             android:exported="false" />
 
         <!-- Boot receiver — restarts MirrorService after device reboot -->

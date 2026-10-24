@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Illustrated empty inbox — dark card with green receive arrow -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="72dp"
+    android:height="72dp"
+    android:viewportWidth="72"
+    android:viewportHeight="72">
+
+    <!-- Card body (receipt/document shape) -->
+    <path
+        android:fillColor="#1C1C1C"
+        android:pathData="M14,8C11.79,8 10,9.79 10,12L10,60C10,62.21 11.79,64 14,64L58,64C60.21,64 62,62.21 62,60L62,12C62,9.79 60.21,8 58,8Z" />
+
+    <!-- Subtle border -->
+    <path
+        android:fillColor="@android:color/transparent"
+        android:strokeColor="#262626"
+        android:strokeWidth="1.5"
+        android:pathData="M14,9C12.34,9 11,10.34 11,12L11,60C11,61.66 12.34,63 14,63L58,63C59.66,63 61,61.66 61,60L61,12C61,10.34 59.66,9 58,9Z" />
+
+    <!-- Faint lines representing empty records -->
+    <path
+        android:strokeColor="#2A2A2A"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M18,24L54,24" />
+    <path
+        android:strokeColor="#2A2A2A"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M18,32L54,32" />
+    <path
+        android:strokeColor="#2A2A2A"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M18,40L42,40" />
+
+    <!-- Green accent circle (bottom-right) -->
+    <path
+        android:fillColor="#16A34A"
+        android:pathData="M48,46C40.27,46 34,52.27 34,60S40.27,74 48,74S62,67.73 62,60S55.73,46 48,46Z" />
+
+    <!-- Down arrow inside circle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M50,55L50,49L46,49L46,55L43,55L48,61L53,55Z" />
+</vector>
