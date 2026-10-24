@@ -87,14 +87,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setWifiEnabled(enabled: Boolean) {
         prefs.wifiEnabled = enabled
-        transport.restartWithNewSettings()
+        transport.applyWifiSettings()
     }
 
     fun regenerateWifiToken() {
         val newToken = WifiTransport.generateToken()
         prefs.wifiToken = newToken
         _wifiToken.value = newToken
-        if (prefs.wifiEnabled) transport.restartWithNewSettings()
+        if (prefs.wifiEnabled) transport.applyWifiSettings()
     }
 
     // MARK: - Testing
