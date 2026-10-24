@@ -70,6 +70,54 @@
     <string name="permission_not_now">Not now</string>
     <string name="permission_bluetooth_denied">Bluetooth is not allowed, so mirroring to a desktop over Bluetooth is off. WiFi and webhook still work. You can allow it in Settings.</string>
 
+    <!-- Setup checklist -->
+    <string name="setup_title">Set up this phone</string>
+    <string name="setup_summary">%1$d of %2$d done</string>
+    <string name="setup_summary_ready">Ready: %1$d of %2$d done</string>
+    <string name="setup_summary_blocked">Not ready yet: %1$d of %2$d done</string>
+    <string name="setup_open">Setup checklist</string>
+    <string name="setup_open_action">Open</string>
+    <string name="setup_run_test">Run end-to-end test</string>
+    <string name="setup_testing">Sending a test…</string>
+    <string name="setup_state_done">Done</string>
+    <string name="setup_state_required">Needed</string>
+    <string name="setup_state_recommended">Recommended</string>
+    <string name="setup_state_manual">Check yourself</string>
+    <string name="setup_menus_vary">Menu names vary between phones and software versions.</string>
+
+    <string name="setup_sms_title">Read M-PESA messages</string>
+    <string name="setup_sms_body">PesaCast needs the SMS permission to see incoming M-PESA messages. Nothing works without it.</string>
+    <string name="setup_sms_action">Allow</string>
+    <string name="setup_restricted_title">Allow restricted settings</string>
+    <string name="setup_restricted_body">On Android 13 and newer, an app installed outside a store can be blocked from the SMS permission. Open the app info, tap the three dots at the top right, choose “Allow restricted settings”, then come back and allow SMS.</string>
+    <string name="setup_restricted_action">Open app info</string>
+    <string name="setup_notifications_title">Show the status notification</string>
+    <string name="setup_notifications_body">Lets PesaCast show its “running” notification. It keeps working without it, but you will not see whether it is active.</string>
+    <string name="setup_notifications_action">Allow</string>
+    <string name="setup_battery_title">Don\'t let the battery saver stop PesaCast</string>
+    <string name="setup_battery_body">Phones often put background apps to sleep, which would delay or lose forwarded payments. Open the list, find PesaCast and choose “Don\'t optimise” (or “Unrestricted”).</string>
+    <string name="setup_battery_action">Open battery settings</string>
+    <string name="setup_oem_title">Allow auto-start on %1$s</string>
+    <string name="setup_oem_action">I\'ve done this</string>
+    <string name="setup_oem_transsion">%1$s phones close background apps aggressively. Open the Phone Master app (or Settings, then Battery or App management), find PesaCast, and allow auto-start and background activity. Also lock PesaCast in the recent-apps list. %2$s</string>
+    <string name="setup_oem_xiaomi">Open Settings, then Apps, Manage apps, PesaCast. Turn on Autostart, and set Battery saver to No restrictions. Lock PesaCast in the recent-apps list. %2$s</string>
+    <string name="setup_oem_oppo">Open Settings, then Battery, App battery management (or App management), PesaCast, and allow background activity and auto-launch. %2$s</string>
+    <string name="setup_oem_vivo">Open Settings, then Battery, Background power consumption (or i Manager, App manager), PesaCast, and allow background running and autostart. %2$s</string>
+    <string name="setup_oem_samsung">Open Settings, then Battery, Background usage limits, and add PesaCast to “Never sleeping apps”. %2$s</string>
+    <string name="setup_oem_huawei">Open Settings, then Battery, App launch, PesaCast, choose “Manage manually” and allow auto-launch, secondary launch and background activity. %2$s</string>
+    <string name="setup_service_title">PesaCast is running</string>
+    <string name="setup_service_body">The background service that watches for M-PESA messages and forwards them.</string>
+    <string name="setup_service_action">Start</string>
+    <string name="setup_delivery_title">Choose where payments go</string>
+    <string name="setup_delivery_body">Turn on at least one: the webhook (your own server), WiFi or Bluetooth to the desktop app.</string>
+    <string name="setup_delivery_action">Open Connect</string>
+    <string name="setup_test_title">Test it end to end</string>
+    <string name="setup_test_body">Sends a clearly labelled test to everything that is turned on and shows each result. A connected desktop shows a fake test payment.</string>
+    <string name="setup_test_action">Run test</string>
+    <string name="setup_test_passed">Test passed.</string>
+    <string name="setup_test_failed">Test did not pass.</string>
+    <string name="setup_need_sms_first">Allow the SMS permission first.</string>
+
     <!-- Webhook -->
     <string name="webhook_title">Webhook</string>
     <string name="webhook_enable">Send to webhook</string>

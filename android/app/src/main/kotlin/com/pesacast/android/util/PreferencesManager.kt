@@ -32,6 +32,17 @@ class PreferencesManager(
         get() = prefs.getBoolean(KEY_MIRRORING, true)
         set(value) = prefs.edit { putBoolean(KEY_MIRRORING, value) }
 
+    // Setup checklist (ADR-0015)
+    /** The user said they changed their phone maker's autostart / background setting. */
+    var setupOemAcknowledged: Boolean
+        get() = prefs.getBoolean(KEY_SETUP_OEM_ACK, false)
+        set(value) = prefs.edit { putBoolean(KEY_SETUP_OEM_ACK, value) }
+
+    /** Result of the last end-to-end test: true passed, false failed, null never run. */
+    var setupLastTestPassed: Boolean?
+        get() = if (prefs.contains(KEY_SETUP_TEST)) prefs.getBoolean(KEY_SETUP_TEST, false) else null
+        set(value) = prefs.edit { if (value == null) remove(KEY_SETUP_TEST) else putBoolean(KEY_SETUP_TEST, value) }
+
     // WiFi transport
     var wifiEnabled: Boolean
         get() = prefs.getBoolean(KEY_WIFI_ENABLED, false)
@@ -67,6 +78,8 @@ class PreferencesManager(
         private const val KEY_WIFI_ENABLED = "wifi_enabled"
         private const val KEY_WIFI_TOKEN   = "wifi_token"          // legacy plaintext, migrated away
         private const val KEY_WIFI_TOKEN_ENC = "wifi_token_enc"
+        private const val KEY_SETUP_OEM_ACK = "setup_oem_ack"
+        private const val KEY_SETUP_TEST = "setup_last_test_passed"
         private const val KEY_WIFI_TOKEN_RESET = "wifi_token_reset_notice"
         private const val KEY_WIFI_PORT    = "wifi_port"
 

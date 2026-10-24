@@ -18,3 +18,4 @@ Why the code is the way it is. See [the template](0000-template.md) and [CONTRIB
 | [0012](0012-remove-wifi-v1-plaintext.md) | Remove the unencrypted WiFi v1 protocol | Accepted |
 | [0013](0013-phone-webhook-delivery.md) | Deliver transactions to a webhook directly from the phone | Accepted |
 | [0014](0014-android-hardening.md) | Android hardening: no backup, minimal permissions, secrets encrypted at rest | Accepted |
+| [0015](0015-setup-checklist-and-provisioning.md) | Guide phone setup from inside the app, and provision it from outside | Accepted |
