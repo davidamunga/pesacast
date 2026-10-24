@@ -1,5 +1,11 @@
 # pesacast
 
+## 0.7.0
+
+### Minor Changes
+
+- 4aed464: Add "Find my phone" to the WiFi card: the desktop discovers the phone over mDNS and fills in its IP and port. The pairing token is still entered manually.
+
 ## 0.6.0
 
 ### Minor Changes
