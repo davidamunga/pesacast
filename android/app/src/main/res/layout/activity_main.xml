@@ -524,6 +524,42 @@
                                 android:textSize="12sp"
                                 app:cornerRadius="6dp" />
 
+                            <!-- Legacy (unencrypted) clients; see ADR-0011 -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="12dp"
+                                android:gravity="center_vertical"
+                                android:orientation="horizontal">
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/wifi_allow_legacy"
+                                        android:textColor="@color/neutral_100"
+                                        android:textSize="13sp" />
+
+                                    <TextView
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="@string/wifi_allow_legacy_hint"
+                                        android:textColor="@color/neutral_400"
+                                        android:textSize="11sp" />
+                                </LinearLayout>
+
+                                <com.google.android.material.materialswitch.MaterialSwitch
+                                    android:id="@+id/switchAllowLegacy"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:checked="true" />
+                            </LinearLayout>
+
                             <!-- Port footnote -->
                             <LinearLayout
                                 android:layout_width="match_parent"
