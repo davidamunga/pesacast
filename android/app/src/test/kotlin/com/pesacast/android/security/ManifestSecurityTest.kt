@@ -80,13 +80,21 @@ class ManifestSecurityTest {
     }
 
     @Test
-    fun `only the launcher and the sms receiver are reachable from other apps without a permission`() {
+    fun `only the launcher is reachable from other apps without a permission`() {
         val exported = (elements("activity") + elements("service") + elements("receiver") + elements("provider"))
             .filter { attr(it, "exported") == "true" && attr(it, "permission").isEmpty() }
             .map { attr(it, "name") }
             .toSet()
-        // BootReceiver is listed because the system delivers BOOT_COMPLETED to it; see ADR-0014 follow-ups.
-        assertEquals(setOf(".ui.MainActivity", ".service.BootReceiver"), exported)
+        // The system still delivers BOOT_COMPLETED to a receiver that is not exported.
+        assertEquals(setOf(".ui.MainActivity"), exported)
+        val boot = elements("receiver").single { attr(it, "name") == ".service.BootReceiver" }
+        assertEquals("false", attr(boot, "exported"))
+    }
+
+    @Test
+    fun `bluetooth hardware is optional so a phone without it can use the webhook or wifi`() {
+        val feature = elements("uses-feature").single { attr(it, "name") == "android.hardware.bluetooth" }
+        assertEquals("false", attr(feature, "required"))
     }
 
     @Test
