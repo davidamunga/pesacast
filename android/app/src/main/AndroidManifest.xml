@@ -8,19 +8,18 @@
         android:maxSdkVersion="30" />
     <!-- ── Bluetooth permissions (Android 12+) ── -->
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
-        android:usesPermissionFlags="neverForLocation" />
     <!-- BLE peripheral/advertising (Android 12+) -->
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
 
     <!-- ── SMS permissions ── -->
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
-    <uses-permission android:name="android.permission.READ_SMS" />
 
     <!-- ── Network (WiFi transport) ── -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- Multicast for mDNS service registration. Also one of the normal permissions that lets a
+         connectedDevice foreground service start on Android 14+ without a Bluetooth grant. -->
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
 
     <!-- ── Foreground service ── -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
@@ -44,7 +43,9 @@
         android:required="false" />
 
     <application
-        android:allowBackup="true"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
