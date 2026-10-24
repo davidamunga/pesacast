@@ -6,57 +6,30 @@ const invoke = vi.fn();
 vi.mock("@tauri-apps/api/core", () => ({ invoke: (...args: unknown[]) => invoke(...args) }));
 
 import { useWifi } from "./useWifi";
+import { FakeWebSocket, connected, connectSecure, last } from "./wifi-fake-socket";
 
-class FakeWebSocket {
-  static instances: FakeWebSocket[] = [];
-  onopen: (() => void) | null = null;
-  onmessage: ((e: { data: string }) => void) | null = null;
-  onerror: (() => void) | null = null;
-  onclose: (() => void) | null = null;
-  sent: string[] = [];
-  closed = false;
+type Hook = { current: ReturnType<typeof useWifi> };
 
-  constructor(public url: string) {
-    FakeWebSocket.instances.push(this);
-  }
-  send(data: string) {
-    this.sent.push(data);
-  }
-  close() {
-    if (this.closed) return;
-    this.closed = true;
-    this.onclose?.();
-  }
-
-  // Test helpers: what the server/network would do.
-  serverOpen() {
-    this.onopen?.();
-  }
-  async serverSays(data: string) {
-    await act(async () => {
-      await this.onmessage?.({ data });
-    });
-  }
-  serverDrops() {
-    this.closed = true;
-    this.onclose?.();
-  }
-}
-
-const last = () => FakeWebSocket.instances[FakeWebSocket.instances.length - 1];
-
-/** Connects and completes the auth handshake. */
-async function connected(result: { current: ReturnType<typeof useWifi> }) {
+async function connect(result: Hook, ip = "192.168.0.14", port = 7877, token = "tok") {
   await act(async () => {
-    await result.current.connectWifiLegacy("192.168.0.14", 7877, "tok");
+    await result.current.connectWifi(ip, port, token);
   });
-  act(() => last().serverOpen());
-  await last().serverSays('{"status":"ok"}');
 }
 
-describe("useWifi (legacy v1 protocol)", () => {
+/** Opens the current socket and runs the handshake through to the phone's "ok" record. */
+async function openAndAuthenticate(token = "tok") {
+  await act(async () => {
+    last().serverOpen();
+  });
+  await vi.waitFor(() => expect(last().sent).toHaveLength(1));
+  await last().completeHello(token);
+  await vi.waitFor(() => expect(last().sent).toHaveLength(2));
+  await last().serverSendsRecord('{"status":"ok"}');
+}
+
+describe("useWifi (encrypted v2 protocol)", () => {
   beforeEach(() => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "Date"] });
     FakeWebSocket.instances = [];
     invoke.mockReset();
     invoke.mockResolvedValue(undefined);
@@ -70,27 +43,26 @@ describe("useWifi (legacy v1 protocol)", () => {
   });
 
   describe("connecting", () => {
-    it("sends the token on open and becomes connected after the ack", async () => {
+    it("sends a v2 hello, proves the token with an encrypted ready record, and connects on ok", async () => {
       const { result } = renderHook(() => useWifi());
-      await act(async () => {
-        await result.current.connectWifiLegacy("192.168.0.14", 7877, "tok");
-      });
-      expect(result.current.wifiStatus).toBe("connecting");
+      await connectSecure(result);
+
       expect(last().url).toBe("ws://192.168.0.14:7877");
-
-      act(() => last().serverOpen());
-      expect(last().sent).toEqual([JSON.stringify({ auth: "tok" })]);
+      expect(last().binaryType).toBe("arraybuffer");
+      expect(JSON.parse(last().sent[0] as string).v).toBe(2);
+      expect(JSON.stringify(last().sent[0])).not.toContain("tok"); // the token is never sent
       expect(result.current.wifiStatus).toBe("connecting");
 
-      await last().serverSays('{"status":"ok"}');
+      await vi.waitFor(() => expect(last().sent).toHaveLength(2));
+      expect(await last().clientRecord()).toBe('{"ready":true}');
+
+      await last().serverSendsRecord('{"status":"ok"}');
       expect(result.current.wifiStatus).toBe("connected");
     });
 
     it("trims input, persists it, and falls back to the default port when invalid", async () => {
       const { result } = renderHook(() => useWifi());
-      await act(async () => {
-        await result.current.connectWifiLegacy("  192.168.0.14 ", Number.NaN, " tok ");
-      });
+      await connect(result, "  192.168.0.14 ", Number.NaN, " tok ");
       expect(last().url).toBe("ws://192.168.0.14:7877");
       expect(localStorage.getItem("wifi_ip")).toBe("192.168.0.14");
       expect(localStorage.getItem("wifi_port")).toBe("7877");
@@ -99,52 +71,88 @@ describe("useWifi (legacy v1 protocol)", () => {
 
     it.each([0, -1, 65536, 1.5])("rejects out-of-range port %s", async (port) => {
       const { result } = renderHook(() => useWifi());
-      await act(async () => {
-        await result.current.connectWifiLegacy("10.0.0.2", port, "tok");
-      });
+      await connect(result, "10.0.0.2", port);
       expect(last().url).toBe("ws://10.0.0.2:7877");
     });
 
-    it("forwards transactions after auth to the backend", async () => {
+    it("forwards decrypted transactions to the backend", async () => {
       const { result } = renderHook(() => useWifi());
       await connected(result);
-      await last().serverSays('{"ref":"ABC"}');
+      await last().serverSendsRecord('{"ref":"ABC"}');
       expect(invoke).toHaveBeenCalledWith("process_wifi_transaction", { txnJson: '{"ref":"ABC"}' });
     });
 
     it("does not forward anything before auth completes", async () => {
       const { result } = renderHook(() => useWifi());
-      await act(async () => {
-        await result.current.connectWifiLegacy("10.0.0.2", 7877, "tok");
-      });
-      act(() => last().serverOpen());
-      await last().serverSays('{"status":"denied"}');
+      await connectSecure(result);
+      await vi.waitFor(() => expect(last().sent).toHaveLength(2));
+      await last().serverSendsRecord('{"status":"denied"}');
+      expect(result.current.wifiStatus).toBe("error");
       expect(invoke).not.toHaveBeenCalled();
+    });
+
+    it("rejects a malformed server hello", async () => {
+      const { result } = renderHook(() => useWifi());
+      await connect(result);
+      await act(async () => {
+        last().serverOpen();
+      });
+      await vi.waitFor(() => expect(last().sent).toHaveLength(1));
+      await last().serverSaysText('{"status":"ok"}');
+      expect(result.current.wifiStatus).toBe("error");
     });
   });
 
   describe("failures", () => {
-    it("reports a bad token and does not retry", async () => {
+    it("reports a wrong token when the phone hangs up after the ready record, and does not retry", async () => {
       const { result } = renderHook(() => useWifi());
-      await act(async () => {
-        await result.current.connectWifiLegacy("10.0.0.2", 7877, "wrong");
-      });
-      act(() => last().serverOpen());
-      await last().serverSays('{"status":"denied"}');
+      await connectSecure(result);
+      await vi.waitFor(() => expect(last().sent).toHaveLength(2));
+      act(() => last().serverDrops());
 
       expect(result.current.wifiStatus).toBe("error");
       expect(result.current.wifiError).toMatch(/authentication failed/i);
-
       act(() => vi.advanceTimersByTime(120_000));
       expect(FakeWebSocket.instances).toHaveLength(1);
     });
 
-    it("times out when the server never acknowledges", async () => {
+    it("reports a wrong token when the phone's reply cannot be decrypted", async () => {
       const { result } = renderHook(() => useWifi());
+      await connect(result, "192.168.0.14", 7877, "tok");
       await act(async () => {
-        await result.current.connectWifiLegacy("10.0.0.2", 7877, "tok");
+        last().serverOpen();
       });
-      act(() => last().serverOpen());
+      await vi.waitFor(() => expect(last().sent).toHaveLength(1));
+      await last().completeHello("a-different-token");
+      await vi.waitFor(() => expect(last().sent).toHaveLength(2));
+      await last().serverSendsRecord('{"status":"ok"}');
+
+      expect(result.current.wifiStatus).toBe("error");
+      expect(result.current.wifiError).toMatch(/authentication failed/i);
+      expect(invoke).not.toHaveBeenCalled();
+    });
+
+    it("tells the user to update an older phone that hangs up on the hello, and does not retry", async () => {
+      const { result } = renderHook(() => useWifi());
+      await connect(result);
+      await act(async () => {
+        last().serverOpen();
+      });
+      await vi.waitFor(() => expect(last().sent).toHaveLength(1));
+      act(() => last().serverDrops());
+
+      expect(result.current.wifiStatus).toBe("error");
+      expect(result.current.wifiError).toMatch(/update pesacast on the phone/i);
+      act(() => vi.advanceTimersByTime(120_000));
+      expect(FakeWebSocket.instances).toHaveLength(1);
+    });
+
+    it("times out when the phone never answers", async () => {
+      const { result } = renderHook(() => useWifi());
+      await connect(result);
+      await act(async () => {
+        last().serverOpen();
+      });
       act(() => vi.advanceTimersByTime(6_001));
       expect(result.current.wifiStatus).toBe("error");
       expect(result.current.wifiError).toMatch(/timed out/i);
@@ -152,9 +160,7 @@ describe("useWifi (legacy v1 protocol)", () => {
 
     it("does not auto-retry a connection that never worked", async () => {
       const { result } = renderHook(() => useWifi());
-      await act(async () => {
-        await result.current.connectWifiLegacy("10.0.0.2", 7877, "tok");
-      });
+      await connect(result);
       act(() => {
         last().onerror?.();
         last().serverDrops();
@@ -166,7 +172,7 @@ describe("useWifi (legacy v1 protocol)", () => {
   });
 
   describe("reconnecting after an established connection drops", () => {
-    it("retries after 2s and reconnects", async () => {
+    it("retries after 2s with a fresh handshake", async () => {
       const { result } = renderHook(() => useWifi());
       await connected(result);
 
@@ -180,9 +186,8 @@ describe("useWifi (legacy v1 protocol)", () => {
       expect(FakeWebSocket.instances).toHaveLength(2);
       expect(last().url).toBe("ws://192.168.0.14:7877");
 
-      act(() => last().serverOpen());
-      expect(last().sent).toEqual([JSON.stringify({ auth: "tok" })]);
-      await last().serverSays('{"status":"ok"}');
+      await openAndAuthenticate();
+      expect(JSON.parse(last().sent[0] as string).v).toBe(2);
       expect(result.current.wifiStatus).toBe("connected");
     });
 
@@ -212,8 +217,7 @@ describe("useWifi (legacy v1 protocol)", () => {
       act(() => vi.advanceTimersByTime(2_001)); // attempt 1
       act(() => last().serverDrops());
       act(() => vi.advanceTimersByTime(4_001)); // attempt 2 (4s)
-      act(() => last().serverOpen());
-      await last().serverSays('{"status":"ok"}');
+      await openAndAuthenticate();
 
       const count = FakeWebSocket.instances.length;
       act(() => last().serverDrops());
@@ -221,15 +225,20 @@ describe("useWifi (legacy v1 protocol)", () => {
       expect(FakeWebSocket.instances).toHaveLength(count + 1);
     });
 
-    it("stops retrying if the token is rejected on a reconnect", async () => {
+    it("stops retrying if the phone rejects the token on a reconnect", async () => {
       // e.g. the token was regenerated on the phone while the desktop was connected.
       const { result } = renderHook(() => useWifi());
       await connected(result);
 
       act(() => last().serverDrops());
       act(() => vi.advanceTimersByTime(2_001));
-      act(() => last().serverOpen());
-      await last().serverSays('{"status":"denied"}');
+      await act(async () => {
+        last().serverOpen();
+      });
+      await vi.waitFor(() => expect(last().sent).toHaveLength(1));
+      await last().completeHello();
+      await vi.waitFor(() => expect(last().sent).toHaveLength(2));
+      act(() => last().serverDrops());
 
       expect(result.current.wifiStatus).toBe("error");
       const count = FakeWebSocket.instances.length;
@@ -265,9 +274,7 @@ describe("useWifi (legacy v1 protocol)", () => {
       await connected(result);
 
       act(() => last().serverDrops());
-      await act(async () => {
-        await result.current.connectWifiLegacy("192.168.0.20", 7877, "tok2");
-      });
+      await connect(result, "192.168.0.20", 7877, "tok2");
       const count = FakeWebSocket.instances.length;
       act(() => vi.advanceTimersByTime(60_000));
 

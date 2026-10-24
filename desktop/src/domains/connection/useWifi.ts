@@ -17,15 +17,11 @@ const AUTH_TIMEOUT_MS   = 6000;
 const RECONNECT_BASE_MS = 2000;
 const RECONNECT_MAX_MS  = 30000;
 
-/** "secure" = WiFi v2 (encrypted); "legacy" = v1 plaintext, only on explicit user consent. */
-type Mode = "secure" | "legacy";
 type Phase = "hello" | "ready" | "authenticated";
 
 export function useWifi() {
   const [wifiStatus, setWifiStatus]   = useState<TransportStatus>("disconnected");
   const [wifiError, setWifiError]     = useState<string | null>(null);
-  const [wifiSecure, setWifiSecure]   = useState(false);
-  const [canConnectLegacy, setCanConnectLegacy] = useState(false);
   const [wifiIp, setWifiIp]           = useState(() => localStorage.getItem(STORAGE_KEY_IP) ?? "");
   const [wifiPort, setWifiPort]       = useState(() => parseInt(localStorage.getItem(STORAGE_KEY_PORT) ?? "7877", 10));
   const [wifiToken, setWifiToken]     = useState(() => localStorage.getItem(STORAGE_KEY_TOKEN) ?? "");
@@ -40,7 +36,6 @@ export function useWifi() {
   const reconnectTimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttemptRef     = useRef(0);
   const everConnectedRef        = useRef(false);
-  const modeRef                 = useRef<Mode>("secure");
 
   const persistSettings = useCallback((ip: string, port: number, token: string) => {
     localStorage.setItem(STORAGE_KEY_IP,    ip);
@@ -53,7 +48,7 @@ export function useWifi() {
     reconnectTimerRef.current = null;
   };
 
-  const openSocket = useCallback(function open(ip: string, port: number, token: string, mode: Mode) {
+  const openSocket = useCallback(function open(ip: string, port: number, token: string) {
     const ws = new WebSocket(`ws://${ip}:${port}`);
     ws.binaryType = "arraybuffer";
     wsRef.current = ws;
@@ -76,11 +71,8 @@ export function useWifi() {
     const markConnected = () => {
       phase = "authenticated";
       everConnectedRef.current = true;
-      modeRef.current = mode;
       reconnectAttemptRef.current = 0;
       if (authTimeoutRef.current) clearTimeout(authTimeoutRef.current);
-      setWifiSecure(mode === "secure");
-      setCanConnectLegacy(false);
       setWifiStatus("connected");
       setWifiError(null);
     };
@@ -96,10 +88,6 @@ export function useWifi() {
 
     ws.onopen = () => {
       opened = true;
-      if (mode === "legacy") {
-        ws.send(JSON.stringify({ auth: token }));
-        return;
-      }
       createClientHello().then(
         (h) => {
           hello = h;
@@ -111,17 +99,6 @@ export function useWifi() {
 
     const handleMessage = async (data: string | ArrayBuffer) => {
       try {
-        if (mode === "legacy") {
-          if (phase !== "authenticated") {
-            const msg = JSON.parse(data as string) as { status?: string };
-            if (msg.status === "ok") markConnected();
-            else failAuth("Authentication failed. Check your pairing token.");
-            return;
-          }
-          await invoke("process_wifi_transaction", { txnJson: data });
-          return;
-        }
-
         if (phase === "hello") {
           const serverHello = typeof data === "string" ? parseServerHello(data) : null;
           if (!serverHello || !hello) {
@@ -175,28 +152,17 @@ export function useWifi() {
       if (wsRef.current === ws) wsRef.current = null;
       if (intentionalCloseRef.current || wsRef.current) return;
 
-      if (mode === "secure" && opened && phase === "hello" && !everConnectedRef.current) {
-        // Connected, then dropped before answering our hello: the phone is most likely an older
-        // version that only understands the unencrypted protocol. Never downgrade silently.
+      if (opened && phase === "hello" && !everConnectedRef.current) {
+        // Connected, then dropped before answering our hello: the phone does not speak the
+        // encrypted protocol (an older PesaCast version), or refused us.
         setWifiStatus("error");
         setWifiError(
-          "This phone didn't accept an encrypted connection. Update PesaCast on the phone, or connect without encryption.",
-        );
-        setCanConnectLegacy(true);
-        return;
-      }
-
-      if (mode === "legacy" && opened && phase !== "authenticated" && !everConnectedRef.current) {
-        // The phone hung up on our plaintext auth. Since the phone defaults to refusing
-        // unencrypted clients, say what to change instead of showing a bare "disconnected".
-        setWifiStatus("error");
-        setWifiError(
-          "The phone refused the unencrypted connection. Turn on “Allow unencrypted connections” in PesaCast on the phone, or update the PesaCast desktop and phone apps.",
+          "The phone didn't accept the encrypted connection. Update PesaCast on the phone to the latest version.",
         );
         return;
       }
 
-      if (mode === "secure" && opened && phase === "ready") {
+      if (opened && phase === "ready") {
         // We sent our proof and the phone hung up: it could not verify the token (for example it
         // was regenerated while we were connected), so retrying with the same token cannot work.
         setWifiStatus("error");
@@ -213,14 +179,14 @@ export function useWifi() {
         );
         reconnectAttemptRef.current += 1;
         setWifiStatus("connecting");
-        reconnectTimerRef.current = setTimeout(() => open(ip, port, token, modeRef.current), delay);
+        reconnectTimerRef.current = setTimeout(() => open(ip, port, token), delay);
       } else {
         setWifiStatus((s) => (s === "error" ? s : "disconnected"));
       }
     };
   }, []);
 
-  const startConnection = useCallback(async (rawIp: string, rawPort: number, rawToken: string, mode: Mode) => {
+  const connectWifi = useCallback(async (rawIp: string, rawPort: number, rawToken: string) => {
     const ip = rawIp.trim();
     const token = rawToken.trim();
     const port = Number.isInteger(rawPort) && rawPort >= 1 && rawPort <= 65535 ? rawPort : 7877;
@@ -238,27 +204,12 @@ export function useWifi() {
     setWifiToken(token);
     setWifiStatus("connecting");
     setWifiError(null);
-    setWifiSecure(false);
-    setCanConnectLegacy(false);
     intentionalCloseRef.current = false;
     everConnectedRef.current = false;
     reconnectAttemptRef.current = 0;
-    modeRef.current = mode;
 
-    openSocket(ip, port, token, mode);
+    openSocket(ip, port, token);
   }, [persistSettings, openSocket]);
-
-  /** Encrypted connection (WiFi v2). The default. */
-  const connectWifi = useCallback(
-    (ip: string, port: number, token: string) => startConnection(ip, port, token, "secure"),
-    [startConnection],
-  );
-
-  /** Unencrypted connection (WiFi v1) for older phones; only call on explicit user consent. */
-  const connectWifiLegacy = useCallback(
-    (ip: string, port: number, token: string) => startConnection(ip, port, token, "legacy"),
-    [startConnection],
-  );
 
   const scanForDevices = useCallback(async () => {
     setIsScanning(true);
@@ -284,8 +235,6 @@ export function useWifi() {
     wsRef.current = null;
     setWifiStatus("disconnected");
     setWifiError(null);
-    setWifiSecure(false);
-    setCanConnectLegacy(false);
   }, []);
 
   useEffect(() => () => {
@@ -304,10 +253,7 @@ export function useWifi() {
     setWifiIp,
     setWifiPort,
     setWifiToken,
-    wifiSecure,
-    canConnectLegacy,
     connectWifi,
-    connectWifiLegacy,
     disconnectWifi,
     devices,
     isScanning,
