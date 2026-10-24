@@ -37,7 +37,7 @@ class SmsReceiver : BroadcastReceiver() {
             if (!sender.equals(MPESA_SENDER, ignoreCase = true)) continue
 
             val fullBody = parts.joinToString("") { it.displayMessageBody }
-            Log.d(TAG, "M-PESA SMS from $sender: ${fullBody.take(60)}")
+            Log.d(TAG, "M-PESA SMS received (${fullBody.length} chars)")
 
             val txn = MpesaParser.parse(fullBody) ?: continue
 
