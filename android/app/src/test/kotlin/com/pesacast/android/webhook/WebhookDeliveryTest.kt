@@ -40,7 +40,7 @@ class WebhookDeliveryTest {
         }
         scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         queue = WebhookQueue(File(folder.root, "q.json"))
-        cfg = WebhookConfig(true, "http://127.0.0.1:${server.port}/hook", token = "tok", secret = "sec")
+        cfg = WebhookConfig(true, "http://127.0.0.1:${server.port}/hook", token = "tok", secret = "sec", deviceId = "dev-1")
     }
 
     @After
@@ -77,6 +77,8 @@ class WebhookDeliveryTest {
         assertEquals(WebhookSigner.sign("sec", ts, r.body), r.headers["x-pesacast-signature"])
         val body = JsonParser.parseString(String(r.body)).asJsonObject
         assertEquals("android", body["source"].asString)
+        assertEquals("dev-1", body["device_id"].asString)
+        assertEquals("dev-1", r.headers["x-pesacast-device-id"])
         assertEquals("ABC123", body.getAsJsonArray("transactions")[0].asJsonObject["ref"].asString)
         eventually("status") { d.status.value.lastSuccessAt != null && d.status.value.pending == 0 }
     }

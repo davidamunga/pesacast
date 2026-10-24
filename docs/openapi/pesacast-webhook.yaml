@@ -1,0 +1,107 @@
+openapi: 3.1.0
+info:
+  title: PesaCast webhook receiver
+  version: "1"
+  summary: What your HTTPS endpoint must accept from the PesaCast phone or desktop app.
+  description: |
+    PesaCast calls **your** server; this file describes the endpoint you implement, not an API
+    hosted by PesaCast. Delivery is at-least-once, so the same transaction can arrive more than
+    once. An SMS is not proof of payment: confirm money-moving events through Safaricom's Daraja
+    callbacks (see docs/webhooks.md).
+
+    Verifying a request: when a signing secret is set, `X-PesaCast-Signature` is `v1=` plus the
+    lowercase hex HMAC-SHA256, keyed with the secret, of the ASCII text `<timestamp>.` followed
+    by the raw request body bytes, where `<timestamp>` is the `X-PesaCast-Timestamp` header.
+    Compare in constant time and reject timestamps more than a few minutes old.
+  license:
+    name: MIT
+servers:
+  - url: https://example.com
+    description: Replace with your own receiver.
+paths:
+  /pesacast/webhook:
+    post:
+      operationId: receivePesaCastEvent
+      summary: Receive a transaction (or a test ping)
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          description: >
+            `<ref>@<time>` for a transaction, identical on every retry and the same whether the
+            phone or the desktop sent it. Use it (or `ref` plus `time`) to de-duplicate. Starts with
+            `test-` on the connectivity check.
+          schema: { type: string }
+        - name: X-PesaCast-Device-Id
+          in: header
+          required: false
+          description: Same value as `device_id` in the body, for routing before parsing.
+          schema: { type: string }
+        - name: X-PesaCast-Timestamp
+          in: header
+          required: false
+          description: Unix seconds when the request was built. Sent by the phone.
+          schema: { type: integer }
+        - name: X-PesaCast-Signature
+          in: header
+          required: false
+          description: "`v1=<hex>` HMAC-SHA256 signature, present only if a signing secret is configured. Sent by the phone."
+          schema: { type: string, pattern: "^v1=[0-9a-f]{64}$" }
+        - name: Authorization
+          in: header
+          required: false
+          description: "`Bearer <token>`, present only if a token is configured."
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../webhook-payload.schema.json
+            examples:
+              transaction:
+                summary: One received payment
+                value:
+                  schema_version: 1
+                  source: android
+                  device_id: 5b0f6c1e-6a9a-4f4f-9e0e-2c5d7c0a9d11
+                  exported_at: "2026-10-24T10:00:01.234Z"
+                  count: 1
+                  transactions:
+                    - type: mpesa_txn
+                      direction: received
+                      amount: 500.0
+                      currency: KES
+                      from: JANE DOE
+                      ref: ABC123XYZ
+                      time: "2026-10-24T10:00:00+03:00"
+                      balance: 1500.0
+              test:
+                summary: The "Save & send test" ping
+                value:
+                  schema_version: 1
+                  source: android
+                  device_id: 5b0f6c1e-6a9a-4f4f-9e0e-2c5d7c0a9d11
+                  exported_at: "2026-10-24T10:00:01.234Z"
+                  test: true
+                  count: 0
+                  transactions: []
+      responses:
+        "200":
+          description: Accepted (or a duplicate you already have). The item is removed from the phone's queue.
+        "204":
+          description: Accepted with no body. Same effect as 200. Use it for test pings.
+        "401":
+          description: Credentials missing or wrong. **The phone pauses delivery and keeps the queue** until the user fixes the settings.
+        "403":
+          description: Refused. Same handling as 401; the app shows the first line of your response.
+        "408":
+          description: Retried later with backoff.
+        "429":
+          description: Retried later with backoff.
+        "5XX":
+          description: Retried later with backoff, with the same `Idempotency-Key`.
+        "4XX":
+          description: >
+            Any other client error. **The phone drops that transaction** and shows the error, so do
+            not use 4xx for something you could process later.

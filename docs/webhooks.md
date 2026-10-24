@@ -6,12 +6,18 @@ How to accept transactions that the Android app (or the desktop app) pushes to y
 
 PesaCast forwards the text of an M-PESA SMS. That is useful for notifications, dashboards and reconciliation, but it is not authoritative: the sender name on an SMS can be spoofed, and a message can be delayed, duplicated or missing if the phone was off or out of signal. If your system releases goods or credits an account, confirm the payment with Safaricom's official Daraja callbacks (C2B or STK push) and treat PesaCast events as a convenience alongside them.
 
+## Contract and a starting point
+
+- **Format:** [webhook-payload.schema.json](webhook-payload.schema.json) is the JSON Schema of the request body, and [openapi/pesacast-webhook.yaml](openapi/pesacast-webhook.yaml) describes the endpoint you implement (headers, status codes and what the phone does for each). Both are checked against the app's output in tests.
+- **Reference receiver:** [examples/webhook-receiver](../examples/webhook-receiver/README.md) is a small Python service (standard library plus SQLite) that verifies requests, answers test pings, de-duplicates in the database, and keeps the raw events. Its tests include the same signature vector the Android tests use.
+- **Telling senders apart:** every request carries `device_id` (also as the `X-PesaCast-Device-Id` header) and `source` (`android` or `desktop`).
+
 ## What to do on every request
 
 1. **Verify the signature** (if you set a signing secret in the app).
 2. **Reject old timestamps** (a few minutes) to stop replays.
 3. **Ignore test pings**: `"test": true` with an empty `transactions` array.
-4. **De-duplicate** on `Idempotency-Key` (`<ref>@<time>`). Delivery is at-least-once, and if you enable the push on both the phone and the desktop you will see each transaction twice.
+4. **De-duplicate** on `Idempotency-Key` (`<ref>@<time>`) or on `ref` plus `time`. Delivery is at-least-once, and if you enable the push on both the phone and the desktop you will see each transaction twice; both apps use the same key, so a database unique constraint on it collapses them. The desktop sends a key only for a single-transaction push and does not sign requests (it uses the bearer token), so accept either a valid signature or the token.
 5. **Answer `2xx` quickly.** Anything else makes the phone retry (`5xx`, `429`, `408`) or pause (`401`, `403`).
 
 ## Node (Express)

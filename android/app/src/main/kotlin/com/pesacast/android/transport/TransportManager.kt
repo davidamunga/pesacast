@@ -11,6 +11,7 @@ import com.pesacast.android.setup.EndToEndSummary
 import com.pesacast.android.setup.WebhookOutcome
 import com.pesacast.android.util.PermissionPlan
 import com.pesacast.android.util.PreferencesManager
+import com.pesacast.android.webhook.DeviceId
 import com.pesacast.android.webhook.TestResult
 import com.pesacast.android.webhook.UrlConnectionPoster
 import com.pesacast.android.webhook.WebhookConfig
@@ -52,6 +53,7 @@ class TransportManager(private val context: Context) {
 
     /** Optional HTTPS webhook sink, independent of the desktop transports (ADR-0013). */
     val webhookSettings = WebhookSettings(context)
+    val deviceId = DeviceId(context)
     val webhook = WebhookDelivery(
         queue = WebhookQueue(File(context.filesDir, "webhook-queue.json")),
         config = ::currentWebhookConfig,
@@ -116,7 +118,7 @@ class TransportManager(private val context: Context) {
     }
 
     /** One place that builds the webhook configuration, used by delivery and by the setup test. */
-    private fun currentWebhookConfig() = webhookSettings.config()
+    private fun currentWebhookConfig() = webhookSettings.config()?.copy(deviceId = deviceId.get())
 
     // MARK: - Setup test
 

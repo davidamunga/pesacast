@@ -8,6 +8,7 @@ import {
   WEBHOOK_STORAGE_KEY_TOKEN,
   WEBHOOK_STORAGE_KEY_AUTO_PUSH,
 } from "./webhook-push";
+import { buildWebhookBody, buildWebhookHeaders, getDeviceId } from "./webhook-payload";
 
 const MAX_TRANSACTIONS = 100;
 
@@ -16,18 +17,13 @@ function autoPushTransaction(txn: MpesaTransaction) {
   const url = localStorage.getItem(WEBHOOK_STORAGE_KEY_URL)?.trim();
   if (!enabled || !url) return;
 
-  const token = localStorage.getItem(WEBHOOK_STORAGE_KEY_TOKEN)?.trim();
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
+  const token = localStorage.getItem(WEBHOOK_STORAGE_KEY_TOKEN);
+  const deviceId = getDeviceId();
 
   fetch(url, {
     method: "POST",
-    headers,
-    body: JSON.stringify({
-      transactions: [txn],
-      count: 1,
-      exported_at: new Date().toISOString(),
-    }),
+    headers: buildWebhookHeaders(token, deviceId, [txn]),
+    body: JSON.stringify(buildWebhookBody([txn], deviceId)),
   }).catch((err) => {
     console.warn("[pesacast] auto-push failed:", err);
   });
