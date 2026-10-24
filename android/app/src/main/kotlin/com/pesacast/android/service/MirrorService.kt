@@ -15,6 +15,7 @@ import com.pesacast.android.transport.TransportState
 import com.pesacast.android.ui.MainActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -30,6 +31,7 @@ class MirrorService : Service() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private lateinit var transport: TransportManager
     private lateinit var nm: NotificationManager
+    private var stateJob: Job? = null
 
     // MARK: - Lifecycle
 
@@ -52,8 +54,10 @@ class MirrorService : Service() {
 
         transport.start()
 
-        // Keep the notification text in sync with connection state
-        scope.launch {
+        // Keep the notification text in sync with connection state. onStartCommand runs on every
+        // start request, so cancel the previous collector instead of stacking another one.
+        stateJob?.cancel()
+        stateJob = scope.launch {
             transport.combinedState.collect { state ->
                 nm.notify(NOTIFICATION_ID, buildNotification(statusText(state)))
             }

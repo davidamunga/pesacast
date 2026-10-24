@@ -37,6 +37,8 @@ import java.util.concurrent.CopyOnWriteArraySet
 
 private const val TAG = "BleTransport"
 
+/** Max transactions held while no central is connected; oldest are dropped first. */
+private const val MAX_PENDING = 50
 private const val DEFAULT_ATT_MTU = 23
 private const val ATT_HEADER_BYTES = 3
 
@@ -71,6 +73,7 @@ class BleTransport(private val context: Context) {
     private val connectedDevices = CopyOnWriteArraySet<BluetoothDevice>()
     private var txnCharacteristic: BluetoothGattCharacteristic? = null
     private val pendingQueue = ArrayDeque<String>()
+    private val queueLock = Any()
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
@@ -123,7 +126,10 @@ class BleTransport(private val context: Context) {
             _state.value !is TransportState.Connected
         ) {
             Log.d(TAG, "BLE not connected — queuing transaction")
-            pendingQueue.addLast(json)
+            synchronized(queueLock) {
+                if (pendingQueue.size >= MAX_PENDING) pendingQueue.removeFirst()
+                pendingQueue.addLast(json)
+            }
             return
         }
         Log.d(TAG, "Broadcasting transaction to ${devices.size} device(s)")
@@ -344,8 +350,10 @@ class BleTransport(private val context: Context) {
 
     private fun drainQueue() {
         val devices = connectedDevices.toList().ifEmpty { return }
-        while (pendingQueue.isNotEmpty()) {
-            val json = pendingQueue.removeFirst()
+        val pending = synchronized(queueLock) {
+            pendingQueue.toList().also { pendingQueue.clear() }
+        }
+        for (json in pending) {
             for (device in devices) {
                 enqueueChunks(device, json)
             }
