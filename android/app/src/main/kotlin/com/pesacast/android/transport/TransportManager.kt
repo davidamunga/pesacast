@@ -64,7 +64,7 @@ class TransportManager(private val context: Context) {
         if (prefs.wifiEnabled) {
             val token = prefs.wifiToken ?: WifiTransport.generateToken().also { prefs.wifiToken = it }
             Log.i(TAG, "Starting WiFi transport on port ${prefs.wifiPort}")
-            wifi.start(token, prefs.wifiPort) { prefs.wifiAllowLegacy }
+            wifi.start(token, prefs.wifiPort)
         } else {
             wifi.stop()
         }

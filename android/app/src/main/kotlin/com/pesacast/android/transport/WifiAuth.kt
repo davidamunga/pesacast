@@ -1,7 +1,6 @@
 package com.pesacast.android.transport
 
 import java.net.InetAddress
-import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 
 /** Which peers the WiFi server talks to at all. */
@@ -23,18 +22,13 @@ object PrivateIp {
     }
 }
 
-/** Token comparison and per-IP failed-attempt limiting. */
+/** Per-IP failed-attempt limiting. */
 class AuthGuard(
-    private val token: String,
     private val maxFailures: Int = 5,
     private val windowMs: Long = 60_000L,
     private val now: () -> Long = System::currentTimeMillis,
 ) {
     private val failures = ConcurrentHashMap<String, Pair<Int, Long>>()
-
-    /** Constant-time comparison so response timing doesn't leak how much of the token matched. */
-    fun isValid(candidate: String?): Boolean =
-        candidate != null && MessageDigest.isEqual(candidate.toByteArray(), token.toByteArray())
 
     fun isBlocked(ip: String): Boolean {
         val (count, since) = failures[ip] ?: return false

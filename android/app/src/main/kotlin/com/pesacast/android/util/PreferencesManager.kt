@@ -22,11 +22,6 @@ class PreferencesManager(context: Context) {
         get() = prefs.getString(KEY_WIFI_TOKEN, null)
         set(value) = prefs.edit { putString(KEY_WIFI_TOKEN, value) }
 
-    /** Accept legacy unencrypted (v1) WiFi clients. See ADR-0011 for the removal timeline. */
-    var wifiAllowLegacy: Boolean
-        get() = prefs.getBoolean(KEY_WIFI_ALLOW_LEGACY, false)
-        set(value) = prefs.edit { putBoolean(KEY_WIFI_ALLOW_LEGACY, value) }
-
     var wifiPort: Int
         get() = prefs.getInt(KEY_WIFI_PORT, 7877)
         set(value) = prefs.edit { putInt(KEY_WIFI_PORT, value) }
@@ -47,7 +42,6 @@ class PreferencesManager(context: Context) {
         private const val KEY_WIFI_ENABLED = "wifi_enabled"
         private const val KEY_WIFI_TOKEN   = "wifi_token"
         private const val KEY_WIFI_PORT    = "wifi_port"
-        private const val KEY_WIFI_ALLOW_LEGACY = "wifi_allow_legacy"
 
         // Legacy keys — not removed to avoid data loss on upgrade
         private const val KEY_MAC_ADDRESS  = "mac_device_address"
