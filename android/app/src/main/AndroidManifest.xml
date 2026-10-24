@@ -24,10 +24,9 @@
 
     <!-- ── Foreground service ── -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <!-- connectedDevice type required for BLE peripheral on Android 14+ -->
+    <!-- connectedDevice type covers the BLE peripheral and the WiFi WebSocket server. dataSync is
+         deliberately not used: Android 15 times it out after ~6h and stops the service. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
-    <!-- dataSync type required for WiFi WebSocket server on Android 14+ -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <!-- Post the persistent transport notification (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Auto-start after device reboot -->
@@ -76,7 +75,7 @@
         <!-- Foreground service — keeps BLE + WiFi transport alive in the background -->
         <service
             android:name=".service.MirrorService"
-            android:foregroundServiceType="connectedDevice|dataSync"
+            android:foregroundServiceType="connectedDevice"
             android:exported="false" />
 
         <!-- Boot receiver — restarts MirrorService after device reboot -->
