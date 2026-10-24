@@ -3,7 +3,14 @@ use serde::{Deserialize, Serialize};
 use tauri::{command, State};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::{broadcast, watch};
-use tokio_tungstenite::{accept_async, tungstenite::Message};
+use tokio_tungstenite::{
+    accept_hdr_async,
+    tungstenite::{
+        handshake::server::{ErrorResponse, Request, Response},
+        http::StatusCode,
+        Message,
+    },
+};
 
 pub const DEFAULT_WS_PORT: u16 = 7878;
 
@@ -106,7 +113,7 @@ async fn handle_client(
     mut rx: broadcast::Receiver<String>,
     peer: String,
 ) {
-    let ws = match accept_async(stream).await {
+    let ws = match accept_hdr_async(stream, reject_browser_origins).await {
         Ok(ws) => ws,
         Err(e) => {
             eprintln!("[pesacast-ws] WS handshake failed for {peer}: {e}");
@@ -144,4 +151,16 @@ async fn handle_client(
     }
 
     println!("[pesacast-ws] client disconnected: {peer}");
+}
+
+/// Browsers always attach an `Origin` header to WebSocket handshakes, and scripts on any web
+/// page can reach 127.0.0.1. Native clients (curl, websocat, scripts) send none, so refusing
+/// every request that carries one blocks cross-site WebSocket hijacking without affecting them.
+fn reject_browser_origins(req: &Request, resp: Response) -> Result<Response, ErrorResponse> {
+    if req.headers().contains_key("origin") {
+        let mut err = ErrorResponse::new(Some("Browser origins are not allowed".to_string()));
+        *err.status_mut() = StatusCode::FORBIDDEN;
+        return Err(err);
+    }
+    Ok(resp)
 }

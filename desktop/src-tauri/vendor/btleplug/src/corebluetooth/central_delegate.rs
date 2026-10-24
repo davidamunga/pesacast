@@ -386,7 +386,7 @@ declare_class!(
 
             let local_name = adv_data
                 .get(unsafe { CBAdvertisementDataLocalNameKey })
-                .map(|name| (name as *const AnyObject as *const NSString))
+                .map(|name| name as *const AnyObject as *const NSString)
                 .and_then(|name| unsafe { nsstring_to_string(name) });
 
             self.send_event(CentralDelegateEvent::DiscoveredPeripheral {

@@ -1,7 +1,9 @@
 mod ble;
 mod db;
+mod ingest;
 mod model;
 mod notifications;
+mod wifi;
 mod ws_server;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -19,6 +21,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_http::init())
         .manage(ws_tx.clone())
+        .manage(ingest::RecentTransactions::default())
         .manage(config_tx)
         .setup(move |_app| {
             tauri::async_runtime::spawn(ws_server::run(ws_tx, config_rx));
@@ -26,6 +29,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             ble::process_ble_transaction,
+            wifi::process_wifi_transaction,
             db::db_init,
             db::db_save_transaction,
             db::db_load_transactions,

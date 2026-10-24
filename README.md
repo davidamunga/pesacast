@@ -6,7 +6,7 @@
 
 <p align="center">
   Real-time M-PESA transaction mirroring from your Android phone to your desktop.<br/>
-  PesaCast intercepts incoming M-PESA SMS messages on Android, parses them into structured transaction data, and streams them live to a companion desktop app — over Bluetooth LE.
+  PesaCast intercepts incoming M-PESA SMS messages on Android, parses them into structured transaction data, and streams them live to a companion desktop app — over Bluetooth LE or your local WiFi.
 </p>
 
 ---
@@ -138,13 +138,22 @@ pnpm tauri build
 
 ## Connecting Android to Desktop
 
-PesaCast supports one transport mode currently.
+PesaCast supports two transports, which can run at the same time. Transactions that arrive over both are de-duplicated on the desktop.
 
 ### Bluetooth LE
 
 1. Enable Bluetooth on both devices.
 2. Open the desktop app — it will begin scanning automatically.
 3. Open the Android app and start the mirror service. The devices will pair and connect.
+
+### WiFi
+
+1. Put both devices on the same network.
+2. In the Android app, open the **Connect** tab and turn on **Enable WiFi**.
+3. Tap **Share Pairing Info** to get the phone's IP, port and token.
+4. In the desktop app, open **Connect → WiFi**, enter the IP and token, and press **Connect**.
+
+The connection is a token-authenticated WebSocket (default port `7877`) and is only accepted from private-network addresses. It is **not encrypted**, so use it on networks you trust. Regenerate the token from the Android app to revoke access.
 
 ---
 
