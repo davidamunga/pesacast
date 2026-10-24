@@ -7,8 +7,11 @@ import { Tabs, TabsList, TabsTab, TabsPanel } from "@/components/ui/tabs";
 import { useMpesaTransactions } from "@/domains/transactions/useMpesaTransactions";
 import { TransactionFeed } from "@/domains/transactions/feed";
 import { useBle } from "@/domains/connection/useBle";
+import { useWifi } from "@/domains/connection/useWifi";
 import { BluetoothSection } from "@/domains/connection/bluetooth-section";
+import { WifiSection } from "@/domains/connection/wifi-section";
 import { StatusBadge } from "@/components/ui/status-badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTheme } from "@/hooks/use-theme";
 import { ensureNotificationPermission } from "@/hooks/use-notification-permission";
 import { UpdateBanner } from "@/domains/updater/update-banner";
@@ -19,6 +22,7 @@ function App() {
   const { isDark, setIsDark } = useTheme();
   const { transactions } = useMpesaTransactions();
   const ble = useBle();
+  const wifi = useWifi();
   useEffect(() => {
     ensureNotificationPermission();
   }, []);
@@ -45,6 +49,10 @@ function App() {
           <StatusBadge
             status={ble.bleStatus}
             label={ble.bleStatus === "connected" ? "BLE" : "BLE off"}
+          />
+          <StatusBadge
+            status={wifi.wifiStatus}
+            label={wifi.wifiStatus === "connected" ? "WiFi" : "WiFi off"}
           />
           <Button
             variant="ghost"
@@ -80,7 +88,12 @@ function App() {
         </TabsPanel>
 
         <TabsPanel value="connect" className="mt-3 min-h-0 flex-1">
-          <BluetoothSection {...ble} />
+          <ScrollArea className="h-full">
+            <div className="flex flex-col gap-4 pb-4">
+              <BluetoothSection {...ble} />
+              <WifiSection {...wifi} />
+            </div>
+          </ScrollArea>
         </TabsPanel>
       </Tabs>
 

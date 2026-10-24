@@ -9,7 +9,6 @@ import {
   CardPanel,
   CardAction,
 } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { StatusBadge } from "../../components/ui/status-badge";
 import { TransportStatus } from "./types";
 
@@ -33,9 +32,7 @@ export function BluetoothSection({
   disconnectBle,
 }: BluetoothSectionProps) {
   return (
-    <ScrollArea className="h-full">
-      <div className="flex flex-col gap-4 pb-4">
-        <Card>
+    <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {bleStatus === "connected" ? (
@@ -104,7 +101,5 @@ export function BluetoothSection({
             </p>
           </CardPanel>
         </Card>
-      </div>
-    </ScrollArea>
   );
 }

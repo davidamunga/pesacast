@@ -17,9 +17,15 @@
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     <uses-permission android:name="android.permission.READ_SMS" />
 
+    <!-- ── Network (WiFi transport) ── -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
     <!-- ── Foreground service ── -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <!-- connectedDevice type required for BLE peripheral on Android 14+ -->
+    <!-- connectedDevice type covers the BLE peripheral and the WiFi WebSocket server. dataSync is
+         deliberately not used: Android 15 times it out after ~6h and stops the service. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <!-- Post the persistent transport notification (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -66,7 +72,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- Foreground service — keeps BLE transport alive in the background -->
+        <!-- Foreground service — keeps BLE + WiFi transport alive in the background -->
         <service
             android:name=".service.MirrorService"
             android:foregroundServiceType="connectedDevice"
