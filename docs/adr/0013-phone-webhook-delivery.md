@@ -66,3 +66,7 @@ Add an **opt-in webhook sink** on the phone, off by default, as a third destinat
 - Is 500 items / 7 days the right queue bound?
 - Should a failing endpoint raise a visible notification after N hours, or only show in the settings screen?
 - Does the project want a documented receiver example (Node, Python) under `docs/` for the signature check?
+
+## Update: payload additions
+
+Added afterwards, all additive and covered by the "receivers must ignore unknown fields" rule: `schema_version` (1), `device_id` (a random per-install identifier, also sent as `X-PesaCast-Device-Id`), and `"source":"desktop"` with the same envelope and an `Idempotency-Key` on the desktop's single-transaction push. The format is now published as [JSON Schema](../webhook-payload.schema.json) and an [OpenAPI description](../openapi/pesacast-webhook.yaml), with a [reference receiver](../../examples/webhook-receiver/README.md) that de-duplicates in a database. The parser's `airtime` direction, which the documentation had omitted, is now listed.

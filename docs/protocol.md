@@ -81,21 +81,28 @@ POST <url>
 Content-Type: application/json
 User-Agent: PesaCast-Android
 Idempotency-Key: <ref>@<time>
+X-PesaCast-Device-Id: <device_id>
 X-PesaCast-Timestamp: <unix seconds>
 X-PesaCast-Signature: v1=<hex>        (only if a signing secret is set)
 Authorization: Bearer <token>         (only if a token is set)
 ```
 
-Body: the same envelope the desktop push uses, plus `source`:
+Body: the envelope below. The desktop app's push uses the same envelope with `"source": "desktop"`. The formal definition is [webhook-payload.schema.json](webhook-payload.schema.json) (JSON Schema) and [openapi/pesacast-webhook.yaml](openapi/pesacast-webhook.yaml) (the endpoint you implement); both are checked against the code in tests.
 
 ```json
 {
-  "exported_at": "2026-10-24T10:00:01.234Z",
+  "schema_version": 1,
   "source": "android",
+  "device_id": "5b0f6c1e-6a9a-4f4f-9e0e-2c5d7c0a9d11",
+  "exported_at": "2026-10-24T10:00:01.234Z",
   "transactions": [ { "type": "mpesa_txn", "ref": "ABC123", "time": "...", "amount": 500.0, "...": "..." } ],
   "count": 1
 }
 ```
+
+- `schema_version` is incremented only for incompatible changes; adding optional fields does not change it. Receivers must ignore unknown fields.
+- `device_id` is a random identifier created once per install (a UUID; not a secret, and not derived from the device or the user). Use it to tell phones or desktops apart. It changes if the app is reinstalled or its storage is cleared.
+- `Idempotency-Key` is `<ref>@<time>` and is the same whether the phone or the desktop sent the transaction, so a receiver that de-duplicates on it (or on `ref` plus `time`) stores a transaction once even if both apps push to it. The desktop sends the key only for a single-transaction push.
 
 The "Save & send test" button sends the same envelope with `"test": true`, an empty `transactions` array and `"count": 0`. Receivers must not record it as a transaction. Receivers must ignore unknown fields.
 
