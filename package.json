@@ -4,10 +4,18 @@
   "scripts": {
     "changeset": "changeset",
     "version-packages": "changeset version && node scripts/sync-android-version.mjs",
-    "release": "changeset tag"
+    "release": "changeset tag",
+    "prepare": "husky",
+    "lint": "pnpm lint:desktop && pnpm lint:rust",
+    "lint:desktop": "pnpm --filter pesacast lint && pnpm --filter pesacast typecheck",
+    "lint:rust": "cd desktop/src-tauri && cargo fmt --check && cargo clippy --all-targets -- -D warnings",
+    "commitlint": "commitlint"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.27.0"
+    "@changesets/cli": "^2.27.0",
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "husky": "^9.1.7"
   },
   "packageManager": "pnpm@10.17.0+sha512.fce8a3dd29a4ed2ec566fb53efbb04d8c44a0f05bc6f24a73046910fb9c3ce7afa35a0980500668fa3573345bd644644fa98338fa168235c80f4aa17aa17fbef"
 }
