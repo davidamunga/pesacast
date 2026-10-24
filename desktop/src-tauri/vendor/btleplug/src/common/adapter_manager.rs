@@ -78,7 +78,7 @@ where
     pub fn peripheral_mut(
         &self,
         id: &PeripheralId,
-    ) -> Option<RefMut<PeripheralId, PeripheralType>> {
+    ) -> Option<RefMut<'_, PeripheralId, PeripheralType>> {
         self.peripherals.get_mut(id)
     }
 
