@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Wifi, WifiOff, Eye, EyeOff, CheckCircle2 } from "lucide-react";
+import { Wifi, WifiOff, Eye, EyeOff, CheckCircle2, ShieldCheck, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,7 +21,10 @@ interface WifiSectionProps {
   setWifiIp: (ip: string) => void;
   setWifiPort: (port: number) => void;
   setWifiToken: (token: string) => void;
+  wifiSecure: boolean;
+  canConnectLegacy: boolean;
   connectWifi: (ip: string, port: number, token: string) => Promise<void>;
+  connectWifiLegacy: (ip: string, port: number, token: string) => Promise<void>;
   disconnectWifi: () => void;
   devices: DiscoveredDevice[];
   isScanning: boolean;
@@ -38,7 +41,10 @@ export function WifiSection({
   setWifiIp,
   setWifiPort,
   setWifiToken,
+  wifiSecure,
+  canConnectLegacy,
   connectWifi,
+  connectWifiLegacy,
   disconnectWifi,
   devices,
   isScanning,
@@ -80,6 +86,15 @@ export function WifiSection({
                 <p className="font-mono text-[11px] text-muted-foreground">
                   {wifiIp}:{wifiPort}
                 </p>
+                {wifiSecure ? (
+                  <p className="mt-0.5 flex items-center gap-1 text-[11px] text-green-600">
+                    <ShieldCheck className="size-3" /> Encrypted
+                  </p>
+                ) : (
+                  <p className="mt-0.5 flex items-center gap-1 text-[11px] text-amber-600">
+                    <ShieldAlert className="size-3" /> Not encrypted — update PesaCast on the phone
+                  </p>
+                )}
               </div>
               <Button variant="ghost" size="sm" onClick={disconnectWifi}>
                 Disconnect
@@ -183,6 +198,15 @@ export function WifiSection({
               <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
                 {wifiError}
               </p>
+            )}
+            {canConnectLegacy && (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => connectWifiLegacy(wifiIp, wifiPort, wifiToken)}
+              >
+                Connect without encryption
+              </Button>
             )}
 
             <Button
