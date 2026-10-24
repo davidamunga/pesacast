@@ -114,6 +114,15 @@ class MpesaParserTest {
         assertEquals("PAYNAME", t.from)
     }
 
+    @Test
+    fun `paybill with purely numeric account is still paid`() {
+        val t = parse(
+            "RKA12345XY Confirmed.Ksh100.00 sent to KPLC PREPAID for account 14212345678 on 1/1/24 at 10:55 AM  New M-PESA balance is Ksh900.00.  Transaction cost, Ksh0.00."
+        )!!
+        assertEquals("paid", t.direction)
+        assertEquals("KPLC PREPAID", t.from)
+    }
+
     // ── withdraw / airtime / fuliza ──
 
     @Test
