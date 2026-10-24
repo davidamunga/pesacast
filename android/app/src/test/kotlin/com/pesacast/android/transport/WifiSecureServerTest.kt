@@ -84,15 +84,15 @@ class WifiSecureServerTest {
         fun awaitClose() = closed.await(3, TimeUnit.SECONDS)
     }
 
-    private fun startServer(allowLegacy: Boolean = false, guard: AuthGuard = AuthGuard(token)) {
+    private fun startServer(authTimeoutMs: Long = 5_000, guard: AuthGuard = AuthGuard()) {
         server = PesaCastWsServer(
             port = 0,
             token = token,
-            allowLegacy = { allowLegacy },
             authenticatedClients = authenticated,
             onClientAuthenticated = { authCount.set(it) },
             onClientDisconnected = { authCount.set(it) },
             onServerError = { throw it },
+            authTimeoutMs = authTimeoutMs,
             guard = guard,
         )
         server.start()
@@ -130,7 +130,7 @@ class WifiSecureServerTest {
 
     @Test
     fun `wrong token fails authentication and counts as a failed attempt`() {
-        startServer(guard = AuthGuard(token, maxFailures = 1))
+        startServer(guard = AuthGuard(maxFailures = 1))
         val client = SecureClient(server.port, "not-the-token").open().handshake()
         client.sendRecord("""{"ready":true}""")
         assertTrue(client.awaitClose())
@@ -195,30 +195,104 @@ class WifiSecureServerTest {
     }
 
     @Test
-    fun `legacy client is refused by default and not counted as a failure`() {
+    fun `v1 plaintext auth is refused as a bad request and not registered`() {
         startServer()
-        val legacy = SecureClient(server.port, token).open()
-        legacy.send("""{"auth":"$token"}""")
-        assertTrue(legacy.awaitClose())
-        assertEquals(1008, legacy.closeCode)
+        val client = SecureClient(server.port, token).open()
+        client.send("""{"auth":"$token"}""")
+        assertTrue(client.awaitClose())
+        assertEquals(1008, client.closeCode)
+        assertTrue(authenticated.isEmpty())
+        assertTrue("no plaintext ack", client.texts.isEmpty())
+    }
+
+    @Test
+    fun `malformed first message closes the connection`() {
+        startServer()
+        val client = SecureClient(server.port, token).open()
+        client.send("this is not json")
+        assertTrue(client.awaitClose())
+        assertEquals(1008, client.closeCode)
         assertTrue(authenticated.isEmpty())
     }
 
     @Test
-    fun `legacy and encrypted clients can be connected at once and each get the right format`() {
-        startServer(allowLegacy = true)
-        val legacy = SecureClient(server.port, token).open()
-        legacy.send("""{"auth":"$token"}""")
-        assertEquals("""{"status":"ok"}""", legacy.texts.poll(3, TimeUnit.SECONDS))
-        val secure = SecureClient(server.port, token).open().handshake()
-        secure.sendRecord("""{"ready":true}""")
-        secure.nextRecord()
+    fun `first message without a version closes the connection`() {
+        startServer()
+        val client = SecureClient(server.port, token).open()
+        client.send("""{"hello":"world"}""")
+        assertTrue(client.awaitClose())
+        assertTrue(authenticated.isEmpty())
+    }
+
+    @Test
+    fun `client that never authenticates is dropped after the timeout`() {
+        startServer(authTimeoutMs = 300)
+        val client = SecureClient(server.port, token).open()
+        assertTrue(client.awaitClose())
+        assertEquals(1008, client.closeCode)
+    }
+
+    @Test
+    fun `client that stalls after the hello is dropped after the timeout`() {
+        startServer(authTimeoutMs = 300)
+        val client = SecureClient(server.port, token).open().handshake()
+        assertTrue(client.awaitClose())
+        assertEquals(1008, client.closeCode)
+    }
+
+    @Test
+    fun `authenticated client is not dropped by the auth timeout`() {
+        startServer(authTimeoutMs = 300)
+        val client = SecureClient(server.port, token).open().handshake()
+        client.sendRecord("""{"ready":true}""")
+        assertEquals("""{"status":"ok"}""", client.nextRecord())
+        Thread.sleep(600)
+        assertTrue(client.isOpen)
+        client.close()
+    }
+
+    @Test
+    fun `ip is refused after repeated failed attempts`() {
+        startServer(guard = AuthGuard(maxFailures = 2))
+        repeat(2) {
+            val bad = SecureClient(server.port, "wrong").open().handshake()
+            bad.sendRecord("""{"ready":true}""")
+            assertTrue(bad.awaitClose())
+        }
+        val blocked = SecureClient(server.port, token)
+        blocked.connectBlocking(3, TimeUnit.SECONDS)
+        assertTrue(blocked.awaitClose())
+        assertEquals(1008, blocked.closeCode)
+        assertFalse(authenticated.any { it.isOpen })
+    }
+
+    @Test
+    fun `disconnect of an authenticated client updates the count`() {
+        startServer()
+        val client = SecureClient(server.port, token).open().handshake()
+        client.sendRecord("""{"ready":true}""")
+        client.nextRecord()
+        eventually("registered") { authCount.get() == 1 }
+        client.closeBlocking()
+        eventually("client removed") { authenticated.isEmpty() }
+        eventually("disconnect callback") { authCount.get() == 0 }
+    }
+
+    @Test
+    fun `two encrypted clients each receive their own encrypted copy`() {
+        startServer()
+        val a = SecureClient(server.port, token).open().handshake()
+        a.sendRecord("""{"ready":true}""")
+        a.nextRecord()
+        val b = SecureClient(server.port, token).open().handshake()
+        b.sendRecord("""{"ready":true}""")
+        b.nextRecord()
         eventually("two clients") { authenticated.size == 2 }
 
         server.sendToAuthenticated("""{"n":1}""")
-        assertEquals("""{"n":1}""", legacy.texts.poll(3, TimeUnit.SECONDS))
-        assertEquals("""{"n":1}""", secure.nextRecord())
-        legacy.close()
-        secure.close()
+        assertEquals("""{"n":1}""", a.nextRecord())
+        assertEquals("""{"n":1}""", b.nextRecord())
+        a.close()
+        b.close()
     }
 }

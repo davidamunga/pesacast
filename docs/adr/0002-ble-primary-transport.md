@@ -13,7 +13,7 @@ The Android app is a BLE GATT peripheral advertising a PesaCast service (UUID in
 
 ## Alternatives considered
 
-- **Classic Bluetooth** — used earlier and removed from the Android app; the reason was not recorded (`TODO(maintainer)`: confirm).
+- **Classic Bluetooth** — an earlier transport that paired with a chosen Mac in the Android app. It was removed before this repository's history begins (the initial commit already carries only leftover preference keys and a comment saying it was removed), and the reason was not recorded. Nothing here depends on it; this ADR does not claim why it was dropped.
 - **Cloud relay** — requires accounts and sends financial data off-device.
 
 ## Consequences

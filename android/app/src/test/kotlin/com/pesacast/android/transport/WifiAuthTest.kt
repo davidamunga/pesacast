@@ -55,21 +55,6 @@ class PrivateIpTest {
 class AuthGuardTest {
 
     @Test
-    fun `exact token is valid`() {
-        assertTrue(AuthGuard("secret").isValid("secret"))
-    }
-
-    @Test
-    fun `wrong null empty prefix and longer tokens are invalid`() {
-        val guard = AuthGuard("secret")
-        assertFalse(guard.isValid(null))
-        assertFalse(guard.isValid(""))
-        assertFalse(guard.isValid("secre"))
-        assertFalse(guard.isValid("secret "))
-        assertFalse(guard.isValid("SECRET"))
-    }
-
-    @Test
     fun `generated tokens are url safe and unique`() {
         val a = WifiTransport.generateToken()
         val b = WifiTransport.generateToken()
@@ -80,7 +65,7 @@ class AuthGuardTest {
 
     @Test
     fun `ip is blocked after the maximum number of failures`() {
-        val guard = AuthGuard("t", maxFailures = 3)
+        val guard = AuthGuard(maxFailures = 3)
         repeat(2) { guard.recordFailure("192.168.0.2") }
         assertFalse(guard.isBlocked("192.168.0.2"))
         guard.recordFailure("192.168.0.2")
@@ -89,7 +74,7 @@ class AuthGuardTest {
 
     @Test
     fun `blocking is per ip`() {
-        val guard = AuthGuard("t", maxFailures = 1)
+        val guard = AuthGuard(maxFailures = 1)
         guard.recordFailure("192.168.0.2")
         assertTrue(guard.isBlocked("192.168.0.2"))
         assertFalse(guard.isBlocked("192.168.0.3"))
@@ -98,7 +83,7 @@ class AuthGuardTest {
     @Test
     fun `block expires after the window`() {
         var now = 0L
-        val guard = AuthGuard("t", maxFailures = 1, windowMs = 1_000, now = { now })
+        val guard = AuthGuard(maxFailures = 1, windowMs = 1_000, now = { now })
         guard.recordFailure("192.168.0.2")
         assertTrue(guard.isBlocked("192.168.0.2"))
         now = 1_001
@@ -108,7 +93,7 @@ class AuthGuardTest {
     @Test
     fun `failures outside the window do not accumulate`() {
         var now = 0L
-        val guard = AuthGuard("t", maxFailures = 2, windowMs = 1_000, now = { now })
+        val guard = AuthGuard(maxFailures = 2, windowMs = 1_000, now = { now })
         guard.recordFailure("192.168.0.2")
         now = 2_000
         guard.recordFailure("192.168.0.2")

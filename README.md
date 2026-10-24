@@ -153,7 +153,7 @@ PesaCast supports two transports, which can run at the same time. Transactions t
 3. Tap **Share Pairing Info** to get the phone's IP, port and token.
 4. In the desktop app, open **Connect → WiFi** and press **Find my phone** (or enter the IP by hand), paste the token, and press **Connect**.
 
-The connection is a token-authenticated WebSocket (default port `7877`) and is only accepted from private-network addresses. Traffic is end-to-end encrypted with a key exchange authenticated by the pairing token (see [ADR-0011](docs/adr/0011-encrypt-wifi-transport.md)); the token itself is never sent. Older versions of the app use an unencrypted protocol: the phone refuses those clients unless you turn on **Allow unencrypted connections**, and the desktop shows *Not encrypted* and asks before falling back. Updating the desktop app is the better fix. Regenerate the token from the Android app to revoke access.
+The connection is a token-authenticated WebSocket (default port `7877`) and is only accepted from private-network addresses. Traffic is end-to-end encrypted with a key exchange authenticated by the pairing token (see [ADR-0011](docs/adr/0011-encrypt-wifi-transport.md)); the token itself is never sent. Older versions of the app (before 0.8) used an unencrypted protocol that is no longer supported, so update the phone and desktop apps together. Regenerate the token from the Android app to revoke access.
 
 ---
 

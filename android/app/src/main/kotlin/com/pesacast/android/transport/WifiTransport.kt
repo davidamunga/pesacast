@@ -51,7 +51,7 @@ class WifiTransport(private val context: Context) {
 
     // MARK: - Public API
 
-    fun start(token: String, port: Int = WIFI_DEFAULT_PORT, allowLegacy: () -> Boolean = { false }) {
+    fun start(token: String, port: Int = WIFI_DEFAULT_PORT) {
         stop()
         _error.value = null
         try {
@@ -59,7 +59,6 @@ class WifiTransport(private val context: Context) {
                 port = port,
                 token = token,
                 authenticatedClients = authenticatedClients,
-                allowLegacy = allowLegacy,
                 onClientAuthenticated = { count ->
                     _state.value = TransportState.Connected(count)
                     drainQueue()
@@ -186,20 +185,18 @@ class WifiTransport(private val context: Context) {
  * accepting any client into the [authenticatedClients] set. Transaction data is only
  * ever sent to authenticated clients.
  *
- * Two protocols share the port (docs/protocol.md): v2 clients negotiate an encrypted channel with
- * `{"v":2,"hello":...}`; legacy v1 clients send `{"auth":"<token>"}` in the clear and are only
- * accepted while [allowLegacy] returns true.
+ * Clients negotiate an encrypted channel with `{"v":2,"hello":...}` and prove knowledge of the
+ * pairing token inside it (docs/protocol.md, "WiFi v2"). There is no plaintext mode.
  */
 internal class PesaCastWsServer(
     port: Int,
     private val token: String,
-    private val allowLegacy: () -> Boolean = { false },
     private val authenticatedClients: CopyOnWriteArraySet<WebSocket>,
     private val onClientAuthenticated: (count: Int) -> Unit,
     private val onClientDisconnected: (count: Int) -> Unit,
     private val onServerError: (Exception) -> Unit,
     private val authTimeoutMs: Long = AUTH_TIMEOUT_MS,
-    private val guard: AuthGuard = AuthGuard(token),
+    private val guard: AuthGuard = AuthGuard(),
 ) : WebSocketServer(InetSocketAddress(port)) {
 
     private val timers: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
@@ -225,7 +222,7 @@ internal class PesaCastWsServer(
             return
         }
         Log.d(TAG, "New connection from $remote — awaiting auth")
-        // Client not added to authenticatedClients yet; waits for {"auth":"TOKEN"}.
+        // Client not added to authenticatedClients yet; waits for the v2 hello and `ready` record.
         // Drop sockets that never authenticate so they can't be held open indefinitely.
         try {
             timers.schedule({
@@ -239,13 +236,13 @@ internal class PesaCastWsServer(
         }
     }
 
-    /** Sends [json] to every authenticated client, encrypting it for v2 clients. */
+    /** Sends [json] to every authenticated client as an encrypted record. */
     fun sendToAuthenticated(json: String) {
         val bytes = json.toByteArray(Charsets.UTF_8)
         for (client in authenticatedClients) {
             if (!client.isOpen) continue
-            val session = sessions[client]
-            if (session != null) client.send(session.seal(bytes)) else client.send(json)
+            val session = sessions[client] ?: continue
+            client.send(session.seal(bytes))
         }
     }
 
@@ -254,11 +251,7 @@ internal class PesaCastWsServer(
 
         try {
             val obj = JsonParser.parseString(message).asJsonObject
-            when {
-                obj.has("v") -> handleHello(conn, obj)
-                obj.has("auth") -> handleLegacyAuth(conn, obj.get("auth")?.asString)
-                else -> conn.close(1008, "Bad request")
-            }
+            if (obj.has("v")) handleHello(conn, obj) else conn.close(1008, "Bad request")
         } catch (e: Exception) {
             Log.w(TAG, "Malformed first message from ${conn.remoteSocketAddress}: ${e.message}")
             conn.close(1008, "Bad request")
@@ -277,24 +270,6 @@ internal class PesaCastWsServer(
         }
         sessions[conn] = accepted.session
         conn.send(accepted.serverHello)
-    }
-
-    private fun handleLegacyAuth(conn: WebSocket, incoming: String?) {
-        if (!allowLegacy()) {
-            Log.w(TAG, "Legacy client from ${conn.remoteSocketAddress} refused: encryption required")
-            conn.close(1008, "Encryption required")
-            return
-        }
-        if (guard.isValid(incoming)) {
-            authenticatedClients.add(conn)
-            conn.send("""{"status":"ok"}""")
-            Log.i(TAG, "Legacy client authenticated: ${conn.remoteSocketAddress}")
-            onClientAuthenticated(authenticatedClients.size)
-        } else {
-            Log.w(TAG, "Bad auth token from ${conn.remoteSocketAddress} — closing")
-            conn.remoteSocketAddress?.address?.hostAddress?.let(guard::recordFailure)
-            conn.close(1008, "Unauthorized")
-        }
     }
 
     override fun onMessage(conn: WebSocket, message: ByteBuffer) {

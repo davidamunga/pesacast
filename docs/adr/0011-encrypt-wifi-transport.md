@@ -1,6 +1,6 @@
 # ADR-0011: Encrypt the WiFi transport with a PSK-authenticated key exchange
 
-- **Status:** Accepted (maintainer chose this design over moving the client to Rust)
+- **Status:** Accepted (maintainer chose this design over moving the client to Rust); the compatibility timeline is superseded by [ADR-0012](0012-remove-wifi-v1-plaintext.md)
 - **Date:** 2026-10-24
 - **Supersedes:** the plaintext handshake and consequences of [ADR-0003](0003-wifi-transport-token-websocket.md)
 
