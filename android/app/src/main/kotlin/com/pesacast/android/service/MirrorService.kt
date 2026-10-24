@@ -44,6 +44,7 @@ class MirrorService : Service() {
         nm = getSystemService(NotificationManager::class.java)
         transport = TransportManager.getInstance(applicationContext)
         createNotificationChannel()
+        running = true
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -104,6 +105,7 @@ class MirrorService : Service() {
             }
         }
         networkCallback = null
+        running = false
         super.onDestroy()
         scope.cancel()
         transport.stop()
@@ -163,6 +165,10 @@ class MirrorService : Service() {
     // MARK: - Companion
 
     companion object {
+        /** True while the service is alive; read by the setup checklist. */
+        @Volatile var running: Boolean = false
+            private set
+
         const val ACTION_STOP = "com.pesacast.android.action.STOP"
         const val CHANNEL_ID = "pesacast_transport"
         const val NOTIFICATION_ID = 1001

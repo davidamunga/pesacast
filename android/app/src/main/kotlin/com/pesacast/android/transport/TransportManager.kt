@@ -6,6 +6,9 @@ import android.os.Build
 import androidx.core.content.ContextCompat
 import android.util.Log
 import com.pesacast.android.model.MpesaTransaction
+import com.pesacast.android.setup.EndToEnd
+import com.pesacast.android.setup.EndToEndSummary
+import com.pesacast.android.setup.WebhookOutcome
 import com.pesacast.android.util.PermissionPlan
 import com.pesacast.android.util.PreferencesManager
 import com.pesacast.android.webhook.TestResult
@@ -51,7 +54,7 @@ class TransportManager(private val context: Context) {
     val webhookSettings = WebhookSettings(context)
     val webhook = WebhookDelivery(
         queue = WebhookQueue(File(context.filesDir, "webhook-queue.json")),
-        config = { webhookSettings.config() },
+        config = ::currentWebhookConfig,
         poster = UrlConnectionPoster(),
         scope = scope,
     )
@@ -110,6 +113,36 @@ class TransportManager(private val context: Context) {
     fun restartWithNewSettings() {
         stop()
         start()
+    }
+
+    /** One place that builds the webhook configuration, used by delivery and by the setup test. */
+    private fun currentWebhookConfig() = webhookSettings.config()
+
+    // MARK: - Setup test
+
+    /**
+     * Sends a clearly labelled test through every enabled destination and reports each result
+     * (setup checklist, ADR-0015). Blocking: the webhook check is a network call, so call it off
+     * the main thread. The webhook gets a `"test": true` ping with no transaction; a connected
+     * desktop gets the usual test transaction. Nothing is queued if no desktop is connected.
+     */
+    fun runEndToEndTest(): EndToEndSummary {
+        val cfg = currentWebhookConfig()
+        val webhookOutcome = if (webhookSettings.enabled && cfg != null) {
+            when (val r = webhook.sendTest(cfg)) {
+                is TestResult.Success -> WebhookOutcome.Ok(r.httpCode)
+                is TestResult.Failure -> WebhookOutcome.Failed(r.message)
+            }
+        } else null
+
+        val desktops = ((ble.state.value as? TransportState.Connected)?.deviceCount ?: 0) +
+            ((wifi.state.value as? TransportState.Connected)?.deviceCount ?: 0)
+        if (desktops > 0) sendTransaction(MpesaTransaction.makeTest())
+
+        val desktopLinkOn = prefs.wifiEnabled || ble.state.value !is TransportState.Disconnected
+        return EndToEnd.summarize(webhookOutcome, desktops, desktopLinkOn).also {
+            prefs.setupLastTestPassed = it.passed
+        }
     }
 
     /** Sends the webhook connectivity check for a configuration that may not be saved yet. Blocking. */
