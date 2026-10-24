@@ -2,6 +2,10 @@
 
 How to accept transactions that the Android app (or the desktop app) pushes to your URL. The wire format is in [protocol.md](protocol.md#phone-webhook-android-optional).
 
+## SMS is not proof of payment
+
+PesaCast forwards the text of an M-PESA SMS. That is useful for notifications, dashboards and reconciliation, but it is not authoritative: the sender name on an SMS can be spoofed, and a message can be delayed, duplicated or missing if the phone was off or out of signal. If your system releases goods or credits an account, confirm the payment with Safaricom's official Daraja callbacks (C2B or STK push) and treat PesaCast events as a convenience alongside them.
+
 ## What to do on every request
 
 1. **Verify the signature** (if you set a signing secret in the app).
@@ -93,3 +97,28 @@ def hook():
 - Your URL **must be HTTPS** with a certificate the phone trusts. For a receiver on your own network, put a TLS-terminating reverse proxy or tunnel in front; Android cannot allow plain HTTP for just a LAN.
 - The bearer token and the signature are independent; use either or both. The signature is the stronger option because the secret is never sent.
 - Keep the signing secret out of logs and source control. Rotate it by changing it in the app and on your receiver, then sending a test.
+
+## Trying it before you build a receiver
+
+`scripts/webhook-test-server.mjs` is a dependency-free receiver for testing the phone. It checks the token and signature you give it, ignores test pings, flags duplicates, and lets you change its answer while it runs by typing a status code (`500`, `429`, `401`, `400`, `302`), `slow` or `ok`.
+
+```bash
+node scripts/webhook-test-server.mjs --port 3919 --token mytoken --secret mysecret
+```
+
+The phone needs an **HTTPS** URL, so expose it with a tunnel:
+
+```bash
+ngrok http 3919
+# or
+cloudflared tunnel --url http://localhost:3919
+```
+
+Put `https://<tunnel-host>/hook` in the app's Webhook card, enter the same token and secret, press **Save & send test**, then turn the switch on.
+
+Troubleshooting:
+
+- **HTTP 403 on the test.** The request reached something that is not the test server. Check the port (`curl -i` the tunnel URL; a healthy test server answers `401` when a token is set). A tunnel to a port used by another dev server returns that server's own error page, which the app shows after the status code.
+- **HTTP 401.** The token or secret in the app differs from the server's `--token` or `--secret`.
+- **"The URL must start with https://".** Use the tunnel's `https://` address, not `http://localhost`.
+- A quick tunnel is reachable by anyone who has its address while it runs. Use test data and stop the tunnel afterwards.
