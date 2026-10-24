@@ -15,15 +15,23 @@ import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer
 import java.net.InetAddress
 import java.net.InetSocketAddress
+import java.security.MessageDigest
 import java.security.SecureRandom
 import java.util.Base64
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArraySet
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 
 private const val TAG = "WifiTransport"
 
 const val WIFI_DEFAULT_PORT = 7877
 private const val NSD_SERVICE_TYPE = "_pesacast._tcp."
 private const val MAX_PENDING = 50
+private const val AUTH_TIMEOUT_MS = 5_000L
+private const val MAX_FAILED_AUTH = 5
+private const val FAILED_AUTH_WINDOW_MS = 60_000L
 
 class WifiTransport(private val context: Context) {
 
@@ -84,6 +92,7 @@ class WifiTransport(private val context: Context) {
     fun stop() {
         unregisterNsd()
         try {
+            server?.shutdownTimers()
             server?.stop(500)
         } catch (e: Exception) {
             Log.w(TAG, "Error stopping WS server: ${e.message}")
@@ -195,9 +204,30 @@ private class PesaCastWsServer(
     private val onServerError: (Exception) -> Unit,
 ) : WebSocketServer(InetSocketAddress(port)) {
 
+    private val timers: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+    private val failures = ConcurrentHashMap<String, Pair<Int, Long>>()
+
     init {
         isReuseAddr = true
         connectionLostTimeout = 30
+    }
+
+    fun shutdownTimers() = timers.shutdownNow()
+
+    private fun isBlocked(ip: String): Boolean {
+        val (count, since) = failures[ip] ?: return false
+        if (System.currentTimeMillis() - since > FAILED_AUTH_WINDOW_MS) {
+            failures.remove(ip)
+            return false
+        }
+        return count >= MAX_FAILED_AUTH
+    }
+
+    private fun recordFailure(ip: String) {
+        val now = System.currentTimeMillis()
+        failures.merge(ip, 1 to now) { old, _ ->
+            if (now - old.second > FAILED_AUTH_WINDOW_MS) 1 to now else (old.first + 1) to old.second
+        }
     }
 
     override fun onOpen(conn: WebSocket, handshake: ClientHandshake) {
@@ -207,8 +237,24 @@ private class PesaCastWsServer(
             conn.close(1008, "Forbidden")
             return
         }
+        if (isBlocked(remote.hostAddress.orEmpty())) {
+            Log.w(TAG, "Rejected $remote: too many failed auth attempts")
+            conn.close(1008, "Too many attempts")
+            return
+        }
         Log.d(TAG, "New connection from $remote — awaiting auth")
-        // Client not added to authenticatedClients yet; waits for {"auth":"TOKEN"}
+        // Client not added to authenticatedClients yet; waits for {"auth":"TOKEN"}.
+        // Drop sockets that never authenticate so they can't be held open indefinitely.
+        try {
+            timers.schedule({
+                if (conn.isOpen && !authenticatedClients.contains(conn)) {
+                    Log.w(TAG, "Auth timeout for ${conn.remoteSocketAddress}")
+                    conn.close(1008, "Auth timeout")
+                }
+            }, AUTH_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        } catch (_: java.util.concurrent.RejectedExecutionException) {
+            conn.close(1001, "Shutting down")
+        }
     }
 
     override fun onMessage(conn: WebSocket, message: String) {
@@ -217,13 +263,14 @@ private class PesaCastWsServer(
         try {
             val obj = JsonParser.parseString(message).asJsonObject
             val incoming = obj.get("auth")?.asString
-            if (incoming == token) {
+            if (incoming != null && MessageDigest.isEqual(incoming.toByteArray(), token.toByteArray())) {
                 authenticatedClients.add(conn)
                 conn.send("""{"status":"ok"}""")
                 Log.i(TAG, "Client authenticated: ${conn.remoteSocketAddress}")
                 onClientAuthenticated(authenticatedClients.size)
             } else {
                 Log.w(TAG, "Bad auth token from ${conn.remoteSocketAddress} — closing")
+                conn.remoteSocketAddress?.address?.hostAddress?.let(::recordFailure)
                 conn.close(1008, "Unauthorized")
             }
         } catch (e: Exception) {
@@ -251,13 +298,14 @@ private class PesaCastWsServer(
     }
 
     /**
-     * Accepts only RFC-1918 private addresses and loopback.
-     * Rejects any public IP even if somehow reachable (e.g. via port forwarding).
+     * Accepts loopback, RFC-1918 IPv4, IPv4 link-local, and IPv6 link-local / unique-local
+     * (fc00::/7). Rejects every other address, including public IPv6.
      */
     private fun isPrivateIp(address: InetAddress): Boolean {
-        if (address.isLoopbackAddress) return true
+        if (address.isLoopbackAddress || address.isLinkLocalAddress) return true
         val b = address.address
-        if (b.size != 4) return true // IPv6 link-local — allow
+        if (b.size == 16) return (b[0].toInt() and 0xFE) == 0xFC
+        if (b.size != 4) return false
         val b0 = b[0].toInt() and 0xFF
         val b1 = b[1].toInt() and 0xFF
         return b0 == 10 ||
