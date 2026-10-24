@@ -44,6 +44,12 @@ android {
         jvmTarget = "17"
     }
 
+    lint {
+        // PesaCast is a phone-only app that requires SMS; declaring telephony as optional
+        // would widen Play Store availability to devices that cannot receive M-PESA SMS.
+        disable += "PermissionImpliesUnsupportedChromeOsHardware"
+    }
+
     buildFeatures {
         viewBinding = true
     }
