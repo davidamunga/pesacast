@@ -334,18 +334,12 @@ class BleTransport(private val context: Context) {
             Log.w(TAG, "No send channel for ${device.address} — dropping payload")
             return
         }
-        val fullPayload = "${json.length}:$json"
-        val bytes = fullPayload.toByteArray(Charsets.UTF_8)
+        val framed = BleFraming.frame(json)
         val chunkSize = (deviceMtu[device] ?: DEFAULT_ATT_MTU) - ATT_HEADER_BYTES
 
-        var offset = 0
-        while (offset < bytes.size) {
-            val end = minOf(offset + chunkSize, bytes.size)
-            channel.trySend(bytes.copyOfRange(offset, end))
-            offset = end
-        }
-        val chunkCount = (bytes.size + chunkSize - 1) / chunkSize
-        Log.d(TAG, "Enqueued $chunkCount chunk(s) for ${device.address} (${bytes.size}B payload, ${chunkSize}B chunks)")
+        val chunks = BleFraming.chunk(framed, chunkSize)
+        chunks.forEach { channel.trySend(it) }
+        Log.d(TAG, "Enqueued ${chunks.size} chunk(s) for ${device.address} (${chunkSize}B max chunk)")
     }
 
     private fun drainQueue() {
