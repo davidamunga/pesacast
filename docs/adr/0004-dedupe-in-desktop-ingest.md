@@ -1,6 +1,6 @@
 # ADR-0004: Deduplicate transactions in the desktop ingest pipeline
 
-- **Status:** Proposed (implemented in PR #12)
+- **Status:** Accepted (implemented in PR #12)
 - **Date:** 2026-10-24
 
 ## Context

@@ -1,6 +1,6 @@
 # ADR-0003: Add a token-authenticated WebSocket WiFi transport
 
-- **Status:** Proposed (implemented in PR #12)
+- **Status:** Accepted (implemented in PR #12)
 - **Date:** 2026-10-24
 
 ## Context
