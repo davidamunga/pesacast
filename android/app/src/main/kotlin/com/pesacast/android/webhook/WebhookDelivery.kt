@@ -21,6 +21,8 @@ data class WebhookConfig(
     val url: String,
     val token: String? = null,
     val secret: String? = null,
+    /** Per-install identifier sent as `device_id` (see [DeviceId]). */
+    val deviceId: String = "",
 )
 
 data class WebhookStatus(
@@ -86,7 +88,7 @@ class WebhookDelivery(
     /** Sends a payload with no transaction to check the URL, token and secret. Does not touch the queue. */
     fun sendTest(cfg: WebhookConfig): TestResult {
         validateUrl(cfg.url)?.let { return TestResult.Failure(it) }
-        val body = WebhookPayload.test()
+        val body = WebhookPayload.test(cfg.deviceId)
         return try {
             val response = poster.post(cfg.url.trim(), headers(cfg, "test-${clock()}", body), body)
             if (response.code in 200..299) TestResult.Success(response.code)
@@ -144,7 +146,7 @@ class WebhookDelivery(
         val url = cfg.url.trim()
         validateUrl(url)?.let { return Outcome.Pause(it) }
         val body = try {
-            WebhookPayload.transaction(item.json)
+            WebhookPayload.transaction(item.json, cfg.deviceId)
         } catch (e: Exception) {
             return Outcome.Drop("Unreadable queued transaction")
         }
@@ -170,6 +172,7 @@ class WebhookDelivery(
             "Idempotency-Key" to key,
             "X-PesaCast-Timestamp" to timestamp.toString(),
         )
+        cfg.deviceId.takeIf { it.isNotBlank() }?.let { headers["X-PesaCast-Device-Id"] = it }
         cfg.token?.takeIf { it.isNotBlank() }?.let { headers["Authorization"] = "Bearer $it" }
         cfg.secret?.takeIf { it.isNotBlank() }?.let {
             headers["X-PesaCast-Signature"] = WebhookSigner.sign(it, timestamp, body)

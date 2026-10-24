@@ -9,7 +9,7 @@ One transaction per message. Field names are fixed.
 | Field | Type | Notes |
 |---|---|---|
 | `type` | string | Always `"mpesa_txn"` from Android today |
-| `direction` | string | `received` \| `sent` \| `paid` \| `withdrawn` \| `fuliza` |
+| `direction` | string | `received` \| `sent` \| `paid` \| `withdrawn` \| `airtime` \| `fuliza`; new values may be added |
 | `amount` | number | |
 | `currency` | string | `"KES"` |
 | `from` | string | Sender name or merchant |

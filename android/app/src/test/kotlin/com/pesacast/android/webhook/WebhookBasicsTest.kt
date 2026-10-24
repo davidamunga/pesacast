@@ -54,9 +54,11 @@ class WebhookPayloadTest {
 
     @Test
     fun `transaction body matches the desktop envelope plus source`() {
-        val body = com.google.gson.JsonParser.parseString(String(WebhookPayload.transaction(txn))).asJsonObject
+        val body = com.google.gson.JsonParser.parseString(String(WebhookPayload.transaction(txn, "dev-1"))).asJsonObject
         assertEquals(1, body["count"].asInt)
         assertEquals("android", body["source"].asString)
+        assertEquals(1, body["schema_version"].asInt)
+        assertEquals("dev-1", body["device_id"].asString)
         assertEquals("ABC123", body.getAsJsonArray("transactions")[0].asJsonObject["ref"].asString)
         assertTrue(body.has("exported_at"))
         assertTrue(!body.has("test"))
@@ -64,7 +66,7 @@ class WebhookPayloadTest {
 
     @Test
     fun `test body carries no transactions`() {
-        val body = com.google.gson.JsonParser.parseString(String(WebhookPayload.test())).asJsonObject
+        val body = com.google.gson.JsonParser.parseString(String(WebhookPayload.test("dev-1"))).asJsonObject
         assertTrue(body["test"].asBoolean)
         assertEquals(0, body["count"].asInt)
         assertEquals(0, body.getAsJsonArray("transactions").size())

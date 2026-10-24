@@ -5,7 +5,7 @@ Shared vocabulary. Use these terms exactly in code, docs and commits.
 | Term | Meaning |
 |---|---|
 | **Transaction** | A parsed M-PESA SMS (`MpesaTransaction`): type, direction, amount, currency, from, ref, time, balance, optional transaction cost. Identity is `(ref, time)`. |
-| **Direction** | One of `received`, `sent`, `paid`, `withdrawn`, `fuliza`. |
+| **Direction** | One of `received`, `sent`, `paid`, `withdrawn`, `airtime`, `fuliza`. |
 | **Mirror / mirroring** | Relaying transactions from the phone to the desktop. Toggled by the user on Android (`mirroringEnabled`). |
 | **Transport** | A way to carry transactions from phone to desktop. Currently **BLE** and **WiFi**. Transports are independent and may run at once. |
 | **Mirror service** | The Android foreground service (`MirrorService`) that keeps transports alive in the background. |

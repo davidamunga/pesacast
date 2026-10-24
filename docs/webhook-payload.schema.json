@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/davidamunga/pesacast/blob/main/docs/webhook-payload.schema.json",
+  "title": "PesaCast webhook payload",
+  "description": "The JSON body the PesaCast phone or desktop app POSTs to your webhook. Receivers must ignore unknown properties; new optional properties may be added without changing schema_version.",
+  "type": "object",
+  "required": ["schema_version", "source", "device_id", "exported_at", "transactions", "count"],
+  "properties": {
+    "schema_version": {
+      "description": "Version of this payload format. Incremented only for incompatible changes.",
+      "type": "integer",
+      "const": 1
+    },
+    "source": {
+      "description": "Which app sent it.",
+      "enum": ["android", "desktop"]
+    },
+    "device_id": {
+      "description": "A random identifier created once per app install. Use it to tell phones or desktops apart. It is not a secret and changes if the app is reinstalled.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "exported_at": {
+      "description": "When the app built this request (UTC, ISO-8601).",
+      "type": "string",
+      "format": "date-time"
+    },
+    "test": {
+      "description": "Present and true on the connectivity check sent by the app's \"Save & send test\" button. Such a request has no transactions and must not be recorded.",
+      "type": "boolean"
+    },
+    "transactions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/transaction" }
+    },
+    "count": {
+      "description": "Number of items in transactions.",
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "$defs": {
+    "transaction": {
+      "type": "object",
+      "required": ["type", "direction", "amount", "currency", "from", "ref", "time", "balance"],
+      "properties": {
+        "type": { "type": "string", "examples": ["mpesa_txn"] },
+        "direction": {
+          "description": "Kind of transaction. New values may be added; treat an unknown one as \"other\".",
+          "enum": ["received", "sent", "paid", "withdrawn", "airtime", "fuliza"]
+        },
+        "amount": { "type": "number" },
+        "currency": { "type": "string", "examples": ["KES"] },
+        "from": { "description": "Sender name or merchant.", "type": "string" },
+        "ref": { "description": "M-PESA reference code.", "type": "string" },
+        "time": { "description": "When the transaction happened (ISO-8601).", "type": "string" },
+        "balance": { "description": "Balance after the transaction.", "type": "number" },
+        "transaction_cost": { "type": "number" }
+      }
+    }
+  }
+}

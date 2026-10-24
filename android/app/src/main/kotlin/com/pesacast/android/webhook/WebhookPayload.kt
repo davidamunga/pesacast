@@ -8,9 +8,12 @@ import java.time.Instant
 /** Request bodies; shape defined in docs/protocol.md ("Phone webhook"). Same envelope as the desktop push. */
 object WebhookPayload {
 
-    fun transaction(txnJson: String, now: Instant = Instant.now()): ByteArray {
+    /** Incremented only for incompatible changes (docs/webhook-payload.schema.json). */
+    const val SCHEMA_VERSION = 1
+
+    fun transaction(txnJson: String, deviceId: String, now: Instant = Instant.now()): ByteArray {
         val txn = JsonParser.parseString(txnJson)
-        val body = envelope(now).apply {
+        val body = envelope(deviceId, now).apply {
             add("transactions", JsonArray().apply { add(txn) })
             addProperty("count", 1)
         }
@@ -18,8 +21,8 @@ object WebhookPayload {
     }
 
     /** A connectivity check that carries no transaction, so a receiver never records a fake one. */
-    fun test(now: Instant = Instant.now()): ByteArray {
-        val body = envelope(now).apply {
+    fun test(deviceId: String, now: Instant = Instant.now()): ByteArray {
+        val body = envelope(deviceId, now).apply {
             addProperty("test", true)
             add("transactions", JsonArray())
             addProperty("count", 0)
@@ -37,8 +40,10 @@ object WebhookPayload {
         null
     }
 
-    private fun envelope(now: Instant) = JsonObject().apply {
-        addProperty("exported_at", now.toString())
+    private fun envelope(deviceId: String, now: Instant) = JsonObject().apply {
+        addProperty("schema_version", SCHEMA_VERSION)
         addProperty("source", "android")
+        addProperty("device_id", deviceId)
+        addProperty("exported_at", now.toString())
     }
 }

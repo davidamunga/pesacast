@@ -8,6 +8,7 @@ import android.util.Log
 import com.pesacast.android.model.MpesaTransaction
 import com.pesacast.android.util.PermissionPlan
 import com.pesacast.android.util.PreferencesManager
+import com.pesacast.android.webhook.DeviceId
 import com.pesacast.android.webhook.UrlConnectionPoster
 import com.pesacast.android.webhook.WebhookDelivery
 import com.pesacast.android.webhook.WebhookQueue
@@ -47,9 +48,10 @@ class TransportManager(private val context: Context) {
 
     /** Optional HTTPS webhook sink, independent of the desktop transports (ADR-0013). */
     val webhookSettings = WebhookSettings(context)
+    val deviceId = DeviceId(context)
     val webhook = WebhookDelivery(
         queue = WebhookQueue(File(context.filesDir, "webhook-queue.json")),
-        config = { webhookSettings.config() },
+        config = { webhookSettings.config()?.copy(deviceId = deviceId.get()) },
         poster = UrlConnectionPoster(),
         scope = scope,
     )

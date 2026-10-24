@@ -80,7 +80,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         saveWebhook(url, token, secret)
         _webhookTest.value = WebhookTestUi.Running
         viewModelScope.launch(Dispatchers.IO) {
-            val cfg = WebhookConfig(true, url.trim(), token.ifBlank { null }, secret.ifBlank { null })
+            val cfg = WebhookConfig(true, url.trim(), token.ifBlank { null }, secret.ifBlank { null }, transport.deviceId.get())
             val result = transport.webhook.sendTest(cfg)
             if (result is TestResult.Success) transport.webhookSettings.markVerified()
             _webhookTest.value = WebhookTestUi.Done(result)

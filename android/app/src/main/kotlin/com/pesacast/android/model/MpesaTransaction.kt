@@ -9,7 +9,7 @@ const val SERVICE_UUID = "E7A12345-B09E-4B3C-83A6-00112233AABB"
 
 data class MpesaTransaction(
     @SerializedName("type")             val type: String = "mpesa_txn",
-    @SerializedName("direction")        val direction: String,   // "received" | "sent" | "paid" | "withdrawn" | "fuliza"
+    @SerializedName("direction")        val direction: String,   // "received" | "sent" | "paid" | "withdrawn" | "airtime" | "fuliza"
     @SerializedName("amount")           val amount: Double,
     @SerializedName("currency")         val currency: String = "KES",
     @SerializedName("from")             val from: String,        // sender name or merchant
