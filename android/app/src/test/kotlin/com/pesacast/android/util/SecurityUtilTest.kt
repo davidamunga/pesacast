@@ -78,6 +78,91 @@ class MigratingSecretTest {
     }
 }
 
+class UnreadableSecretTest {
+    private val store = mutableMapOf<String, String>()
+    private val cipher = FakeCipher()
+
+    private fun secret() = MigratingSecret(
+        cipher,
+        get = { store[it] },
+        put = { k, v -> if (v == null) store.remove(k) else store[k] = v },
+        encryptedKey = "tok_enc",
+    )
+
+    @Test
+    fun `works without a legacy key`() {
+        secret().write("abc")
+        assertEquals("abc", secret().read())
+        assertFalse(secret().hasUnreadableValue())
+    }
+
+    @Test
+    fun `nothing stored is not an unreadable value`() {
+        assertFalse(secret().hasUnreadableValue())
+        assertNull(secret().read())
+    }
+
+    @Test
+    fun `a stored value that cannot be decrypted is reported, and recovers if the key comes back`() {
+        secret().write("abc")
+        cipher.broken = true
+        assertTrue(secret().hasUnreadableValue())
+        assertNull(secret().read())
+        cipher.broken = false
+        assertFalse(secret().hasUnreadableValue())
+        assertEquals("abc", secret().read())
+    }
+
+    @Test
+    fun `saving a new value replaces an unreadable one`() {
+        secret().write("abc")
+        cipher.broken = true
+        cipher.broken = false
+        store["tok_enc"] = "garbage"
+        assertTrue(secret().hasUnreadableValue())
+        secret().write("fresh")
+        assertFalse(secret().hasUnreadableValue())
+        assertEquals("fresh", secret().read())
+    }
+}
+
+class WifiTokenKeeperTest {
+    private val store = mutableMapOf<String, String>()
+    private val cipher = FakeCipher()
+    private var flag = false
+
+    private fun keeper() = WifiTokenKeeper(
+        MigratingSecret(cipher, { store[it] }, { k, v -> if (v == null) store.remove(k) else store[k] = v }, "enc", "plain"),
+        getFlag = { flag },
+        setFlag = { flag = it },
+    )
+
+    @Test
+    fun `first use generates and stores a token without a notice`() {
+        assertEquals("new-1", keeper().tokenOrRegenerate { "new-1" })
+        assertEquals("new-1", keeper().tokenOrRegenerate { "never-used" })
+        assertFalse(keeper().consumeResetNotice())
+    }
+
+    @Test
+    fun `an unreadable token is replaced and the user is told once`() {
+        keeper().write("old")
+        cipher.broken = true
+        assertEquals("new-2", keeper().tokenOrRegenerate { "new-2" })
+        cipher.broken = false
+        assertEquals("new-2", keeper().current())
+        assertTrue(keeper().consumeResetNotice())
+        assertFalse("only once", keeper().consumeResetNotice())
+    }
+
+    @Test
+    fun `a readable token is never replaced`() {
+        keeper().write("keep-me")
+        assertEquals("keep-me", keeper().tokenOrRegenerate { "other" })
+        assertFalse(keeper().consumeResetNotice())
+    }
+}
+
 class PermissionPlanTest {
     private val sms = Manifest.permission.RECEIVE_SMS
     private val btConnect = Manifest.permission.BLUETOOTH_CONNECT
@@ -96,6 +181,14 @@ class PermissionPlanTest {
     fun `already granted permissions are not asked for again`() {
         assertEquals(listOf(btAdvertise), PermissionPlan.toRequest(setOf(sms, btConnect, notifications), 34))
         assertTrue(PermissionPlan.toRequest(setOf(sms, btConnect, btAdvertise, notifications), 34).isEmpty())
+    }
+
+    @Test
+    fun `a phone without bluetooth is never asked for it and never counts as denied`() {
+        assertEquals(listOf(sms, notifications), PermissionPlan.toRequest(emptySet(), 34, hasBluetooth = false))
+        val state = PermissionPlan.evaluate(setOf(sms), 34, hasBluetooth = false)
+        assertTrue(state.bluetoothGranted)
+        assertTrue(state.canRunService)
     }
 
     @Test

@@ -147,6 +147,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun setWifiEnabled(enabled: Boolean) {
         prefs.wifiEnabled = enabled
         transport.applyWifiSettings()
+        // The token may have just been generated (first use) or replaced (unreadable old one).
+        _wifiToken.value = prefs.wifiToken ?: ""
+    }
+
+    fun refreshWifiToken() {
+        _wifiToken.value = prefs.wifiToken ?: ""
     }
 
     fun regenerateWifiToken() {
