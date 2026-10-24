@@ -34,7 +34,7 @@ export function useWifi() {
     reconnectTimerRef.current = null;
   };
 
-  const openSocket = useCallback((ip: string, port: number, token: string) => {
+  const openSocket = useCallback(function open(ip: string, port: number, token: string) {
     const ws = new WebSocket(`ws://${ip}:${port}`);
     wsRef.current = ws;
 
@@ -99,7 +99,7 @@ export function useWifi() {
         );
         reconnectAttemptRef.current += 1;
         setWifiStatus("connecting");
-        reconnectTimerRef.current = setTimeout(() => openSocket(ip, port, token), delay);
+        reconnectTimerRef.current = setTimeout(() => open(ip, port, token), delay);
       } else {
         setWifiStatus((s) => (s === "error" ? s : "disconnected"));
       }

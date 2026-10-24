@@ -86,7 +86,7 @@ export function WsServerInfo() {
     if (hasCustomPort) actions.push(invoke("set_ws_port", { port: storedPort }));
     if (storedEnabled) actions.push(invoke("set_ws_enabled", { enabled: true }));
     Promise.all(actions).catch(() => {});
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);  
 
   async function handleToggle() {
     const next = !enabled;
