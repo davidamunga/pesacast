@@ -62,6 +62,23 @@
     <string name="pairing_info_token">Token: %1$s</string>
     <string name="ip_unavailable">Not connected to WiFi</string>
 
+    <!-- Webhook -->
+    <string name="webhook_title">Webhook</string>
+    <string name="webhook_enable">Send to webhook</string>
+    <string name="webhook_note">When on, each M-PESA transaction (amount, sender name, reference and balance) is sent from this phone to the URL below. HTTPS only.</string>
+    <string name="webhook_url_hint">Webhook URL (https://…)</string>
+    <string name="webhook_token_hint">Bearer token (optional)</string>
+    <string name="webhook_secret_hint">Signing secret (optional)</string>
+    <string name="webhook_save_test">Save &amp; send test</string>
+    <string name="webhook_testing">Sending test…</string>
+    <string name="webhook_test_ok">Test succeeded (HTTP %1$d). You can turn the webhook on.</string>
+    <string name="webhook_needs_test">Send a successful test first.</string>
+    <string name="webhook_status_off">Off</string>
+    <string name="webhook_status_idle">Ready</string>
+    <string name="webhook_status_waiting">%1$d waiting to send</string>
+    <string name="webhook_status_paused">Paused: %1$s</string>
+    <string name="webhook_status_error">Last problem: %1$s</string>
+
     <string name="footer_made_by">Made by David Amunga</string>
     <string name="footer_github">github.com/davidamunga/pesacast</string>
 

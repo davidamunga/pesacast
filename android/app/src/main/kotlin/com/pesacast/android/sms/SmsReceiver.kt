@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
 import android.util.Log
+import com.google.gson.Gson
 import com.pesacast.android.transport.TransportManager
 import com.pesacast.android.util.PreferencesManager
 import com.pesacast.android.util.TransactionStore
@@ -18,8 +19,11 @@ class SmsReceiver : BroadcastReceiver() {
         if (intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return
 
         val prefs = PreferencesManager(context)
-        if (!prefs.mirroringEnabled) {
-            Log.d(TAG, "Mirroring disabled — ignoring SMS")
+        val transport = TransportManager.getInstance(context)
+        val mirror = prefs.mirroringEnabled
+        val webhook = transport.webhookSettings.enabled
+        if (!mirror && !webhook) {
+            Log.d(TAG, "Mirroring and webhook disabled — ignoring SMS")
             return
         }
 
@@ -38,7 +42,9 @@ class SmsReceiver : BroadcastReceiver() {
             val txn = MpesaParser.parse(fullBody) ?: continue
 
             TransactionStore.add(txn)
-            TransportManager.getInstance(context).sendTransaction(txn)
+            if (mirror) transport.sendTransaction(txn)
+            // Persisted before this returns; the sender delivers it from the service process.
+            if (webhook) transport.webhook.enqueue(Gson().toJson(txn))
         }
     }
 }

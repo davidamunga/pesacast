@@ -4,6 +4,11 @@ import android.content.Context
 import android.util.Log
 import com.pesacast.android.model.MpesaTransaction
 import com.pesacast.android.util.PreferencesManager
+import com.pesacast.android.webhook.UrlConnectionPoster
+import com.pesacast.android.webhook.WebhookDelivery
+import com.pesacast.android.webhook.WebhookQueue
+import com.pesacast.android.webhook.WebhookSettings
+import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -36,6 +41,15 @@ class TransportManager(private val context: Context) {
     val ble = BleTransport(context)
     val wifi = WifiTransport(context)
 
+    /** Optional HTTPS webhook sink, independent of the desktop transports (ADR-0013). */
+    val webhookSettings = WebhookSettings(context)
+    val webhook = WebhookDelivery(
+        queue = WebhookQueue(File(context.filesDir, "webhook-queue.json")),
+        config = { webhookSettings.config() },
+        poster = UrlConnectionPoster(),
+        scope = scope,
+    )
+
     /**
      * Merged state: Connected if any transport has clients, Connecting if any transport is
      * advertising/listening but no clients yet, Disconnected otherwise.
@@ -57,6 +71,8 @@ class TransportManager(private val context: Context) {
         Log.i(TAG, "Starting BLE transport")
         ble.start()
         applyWifiSettings()
+        // Deliver anything left in the webhook queue from before a restart or reboot.
+        if (webhookSettings.enabled) webhook.kick()
     }
 
     /** Starts or stops only the WiFi transport to match preferences; BLE is left untouched. */

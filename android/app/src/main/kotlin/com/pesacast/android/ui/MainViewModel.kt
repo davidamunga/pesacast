@@ -13,6 +13,11 @@ import com.pesacast.android.transport.TransportState
 import com.pesacast.android.transport.WifiTransport
 import com.pesacast.android.util.PreferencesManager
 import com.pesacast.android.util.TransactionStore
+import com.pesacast.android.webhook.TestResult
+import com.pesacast.android.webhook.WebhookConfig
+import com.pesacast.android.webhook.WebhookStatus
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -40,6 +45,60 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     val transactions: StateFlow<List<MpesaTransaction>> = TransactionStore.transactions
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    // MARK: - Webhook (ADR-0013)
+
+    val webhookSettings get() = transport.webhookSettings
+
+    val webhookStatus: StateFlow<WebhookStatus> = transport.webhook.status
+        .stateIn(viewModelScope, SharingStarted.Eagerly, WebhookStatus())
+
+    private val _webhookEnabled = MutableStateFlow(transport.webhookSettings.enabled)
+    val webhookEnabled: StateFlow<Boolean> = _webhookEnabled.asStateFlow()
+
+    /** Outcome of the last "save & send test": null while idle, otherwise a result to show. */
+    private val _webhookTest = MutableStateFlow<WebhookTestUi>(WebhookTestUi.Idle)
+    val webhookTest: StateFlow<WebhookTestUi> = _webhookTest.asStateFlow()
+
+    sealed class WebhookTestUi {
+        data object Idle : WebhookTestUi()
+        data object Running : WebhookTestUi()
+        data class Done(val result: TestResult) : WebhookTestUi()
+    }
+
+    /** Stores the fields. Changing any of them turns the webhook off until a new test succeeds. */
+    fun saveWebhook(url: String, token: String, secret: String) {
+        val s = transport.webhookSettings
+        val changed = s.url != url.trim() || s.token != token || s.secret != secret
+        s.url = url
+        s.token = token
+        s.secret = secret
+        if (changed && s.enabled) setWebhookEnabled(false)
+    }
+
+    fun testWebhook(url: String, token: String, secret: String) {
+        saveWebhook(url, token, secret)
+        _webhookTest.value = WebhookTestUi.Running
+        viewModelScope.launch(Dispatchers.IO) {
+            val cfg = WebhookConfig(true, url.trim(), token.ifBlank { null }, secret.ifBlank { null })
+            val result = transport.webhook.sendTest(cfg)
+            if (result is TestResult.Success) transport.webhookSettings.markVerified()
+            _webhookTest.value = WebhookTestUi.Done(result)
+        }
+    }
+
+    /** Returns false (and stays off) if enabling is not allowed because the current values were not tested. */
+    fun setWebhookEnabled(enabled: Boolean): Boolean {
+        val s = transport.webhookSettings
+        if (enabled && !s.canEnable()) {
+            _webhookEnabled.value = false
+            return false
+        }
+        s.enabled = enabled
+        _webhookEnabled.value = enabled
+        if (enabled) transport.webhook.kick()
+        return true
+    }
 
     // WiFi token as observable state so UI can update after regeneration
     private val _wifiToken = MutableStateFlow(prefs.wifiToken ?: "")
