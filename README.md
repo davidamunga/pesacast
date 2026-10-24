@@ -157,6 +157,14 @@ The connection is a token-authenticated WebSocket (default port `7877`) and is o
 
 ---
 
+## Webhook from the phone
+
+The Android app can send each transaction to your own server, without a desktop running. Open the **Connect** tab, fill in the **Webhook** card (HTTPS URL, optional bearer token, optional signing secret), press **Save & send test**, then turn the switch on. Transactions are queued on the phone and retried until your server accepts them, so use the `Idempotency-Key` header to avoid duplicates. Details and receiver examples: [docs/webhooks.md](docs/webhooks.md); decision: [ADR-0013](docs/adr/0013-phone-webhook-delivery.md).
+
+Transaction data (amounts, names, references, balances) leaves the phone when this is on, so only point it at a server you control.
+
+---
+
 ## Parsed Transaction Fields
 
 Each M-PESA SMS is parsed into the following structure:
