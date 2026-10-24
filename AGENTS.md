@@ -17,12 +17,13 @@ Read [CONTEXT.md](CONTEXT.md) for vocabulary and [docs/architecture.md](docs/arc
 ```bash
 pnpm install                                   # repo root
 cd desktop && pnpm exec tsc --noEmit           # type-check frontend
+cd desktop && pnpm test                        # frontend unit tests (vitest)
 cd desktop/src-tauri && cargo test             # Rust tests
 cd desktop/src-tauri && cargo check            # fast compile check
 cd android && ./gradlew :app:compileDebugKotlin   # compile Android
 pnpm lint                                      # eslint + tsc + rustfmt + clippy
 cd android && ./gradlew :app:lintDebug         # Android lint
-cd android && ./gradlew :app:testDebugUnitTest # Android unit tests (MpesaParser)
+cd android && ./gradlew :app:testDebugUnitTest # Android unit tests (MpesaParser, BleFraming)
 cd desktop && pnpm tauri dev                   # run desktop app
 ```
 
