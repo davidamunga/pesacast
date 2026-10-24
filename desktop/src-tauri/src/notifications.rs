@@ -5,12 +5,12 @@ use crate::model::MpesaTransaction;
 pub fn show_notification(app: &AppHandle, txn: &MpesaTransaction) {
     let title = match txn.direction.as_str() {
         "received" => format!("M-PESA Received {} {:.2}", txn.currency, txn.amount),
-        "sent"     => format!("M-PESA Sent {} {:.2}", txn.currency, txn.amount),
-        "paid"     => format!("M-PESA Payment {} {:.2}", txn.currency, txn.amount),
-        "withdrawn"=> format!("M-PESA Withdrawal {} {:.2}", txn.currency, txn.amount),
-        "airtime"  => format!("Airtime {} {:.2}", txn.currency, txn.amount),
-        "fuliza"   => format!("Fuliza Repayment {} {:.2}", txn.currency, txn.amount),
-        _          => format!("M-PESA Transaction {} {:.2}", txn.currency, txn.amount),
+        "sent" => format!("M-PESA Sent {} {:.2}", txn.currency, txn.amount),
+        "paid" => format!("M-PESA Payment {} {:.2}", txn.currency, txn.amount),
+        "withdrawn" => format!("M-PESA Withdrawal {} {:.2}", txn.currency, txn.amount),
+        "airtime" => format!("Airtime {} {:.2}", txn.currency, txn.amount),
+        "fuliza" => format!("Fuliza Repayment {} {:.2}", txn.currency, txn.amount),
+        _ => format!("M-PESA Transaction {} {:.2}", txn.currency, txn.amount),
     };
 
     let body = if let Some(cost) = txn.transaction_cost {

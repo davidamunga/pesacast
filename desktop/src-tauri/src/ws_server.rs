@@ -22,7 +22,10 @@ pub struct WsConfig {
 
 impl Default for WsConfig {
     fn default() -> Self {
-        Self { enabled: false, port: DEFAULT_WS_PORT }
+        Self {
+            enabled: false,
+            port: DEFAULT_WS_PORT,
+        }
     }
 }
 
@@ -91,16 +94,12 @@ pub fn set_ws_enabled(
     config_tx: State<'_, watch::Sender<WsConfig>>,
     enabled: bool,
 ) -> Result<(), String> {
-    config_tx
-        .send_modify(|c| c.enabled = enabled);
+    config_tx.send_modify(|c| c.enabled = enabled);
     Ok(())
 }
 
 #[command]
-pub fn set_ws_port(
-    config_tx: State<'_, watch::Sender<WsConfig>>,
-    port: u16,
-) -> Result<(), String> {
+pub fn set_ws_port(config_tx: State<'_, watch::Sender<WsConfig>>, port: u16) -> Result<(), String> {
     if port < 1024 {
         return Err("Port must be 1024 or higher".to_string());
     }
@@ -108,11 +107,7 @@ pub fn set_ws_port(
     Ok(())
 }
 
-async fn handle_client(
-    stream: TcpStream,
-    mut rx: broadcast::Receiver<String>,
-    peer: String,
-) {
+async fn handle_client(stream: TcpStream, mut rx: broadcast::Receiver<String>, peer: String) {
     let ws = match accept_hdr_async(stream, reject_browser_origins).await {
         Ok(ws) => ws,
         Err(e) => {
@@ -156,6 +151,8 @@ async fn handle_client(
 /// Browsers always attach an `Origin` header to WebSocket handshakes, and scripts on any web
 /// page can reach 127.0.0.1. Native clients (curl, websocat, scripts) send none, so refusing
 /// every request that carries one blocks cross-site WebSocket hijacking without affecting them.
+// Signature is dictated by tungstenite's handshake `Callback` trait.
+#[allow(clippy::result_large_err)]
 fn reject_browser_origins(req: &Request, resp: Response) -> Result<Response, ErrorResponse> {
     if req.headers().contains_key("origin") {
         let mut err = ErrorResponse::new(Some("Browser origins are not allowed".to_string()));

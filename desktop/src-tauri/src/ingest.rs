@@ -38,8 +38,8 @@ pub fn ingest(
     recent: &RecentTransactions,
     txn_json: &str,
 ) -> Result<(), String> {
-    let txn: MpesaTransaction = serde_json::from_str(txn_json)
-        .map_err(|e| format!("Invalid transaction JSON: {e}"))?;
+    let txn: MpesaTransaction =
+        serde_json::from_str(txn_json).map_err(|e| format!("Invalid transaction JSON: {e}"))?;
 
     if !recent.insert(&txn) {
         return Ok(());
