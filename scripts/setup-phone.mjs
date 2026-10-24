@@ -117,6 +117,13 @@ export function formatCommand(file, args) {
   return [file, ...shown].join(" ");
 }
 
+/** The SHA-256 GitHub records for a release asset (`digest: "sha256:<hex>"`), or null. */
+export function digestFromRelease(release, assetName) {
+  const asset = release?.assets?.find((a) => a.name === assetName);
+  const m = /^sha256:([0-9a-f]{64})$/i.exec(asset?.digest ?? "");
+  return m ? m[1].toLowerCase() : null;
+}
+
 export function parseChecksumFile(text) {
   const first = text.trim().split(/\s+/)[0] ?? "";
   return HEX64.test(first) ? first.toLowerCase() : null;
@@ -290,9 +297,25 @@ export async function main(argv, io = defaultIo()) {
         io.log(`Downloading PesaCast ${version}…`);
         await io.download(`${base}/pesacast-${version}.apk`, apkPath);
         if (!expected) {
-          const sumPath = join(tmp, `pesacast-${version}.apk.sha256`);
-          await io.download(`${base}/pesacast-${version}.apk.sha256`, sumPath);
-          expected = parseChecksumFile(await io.readText(sumPath));
+          // Releases from the checksum step onwards publish pesacast-<v>.apk.sha256.
+          try {
+            const sumPath = join(tmp, `pesacast-${version}.apk.sha256`);
+            await io.download(`${base}/pesacast-${version}.apk.sha256`, sumPath);
+            expected = parseChecksumFile(await io.readText(sumPath));
+          } catch {
+            expected = null;
+          }
+        }
+        if (!expected) {
+          // Older releases have no .sha256 file, but GitHub records a SHA-256 for every uploaded
+          // asset and returns it from the releases API.
+          try {
+            const rel = await io.fetchJson(`https://api.github.com/repos/${REPO}/releases/tags/pesacast@${version}`);
+            expected = digestFromRelease(rel, `pesacast-${version}.apk`);
+          } catch {
+            expected = null;
+          }
+          if (expected) io.log("This release has no .sha256 file; using the SHA-256 that GitHub recorded for the APK.");
         }
       }
     } else if (!dry && !expected) {
@@ -305,7 +328,10 @@ export async function main(argv, io = defaultIo()) {
 
     if (!dry) {
       if (!expected) {
-        throw new Error("No checksum to verify the APK against. Put pesacast-<version>.apk.sha256 next to it, or pass --sha256.");
+        throw new Error(
+          "No checksum to verify the APK against: this release has no .sha256 file and GitHub has no recorded digest for it.\n" +
+            "  Download the APK yourself, then run again with --apk <file> and --sha256 <hash> (a hash you obtained from a source you trust).",
+        );
       }
       const actual = (await io.sha256File(apkPath)).toLowerCase();
       if (actual !== expected) {

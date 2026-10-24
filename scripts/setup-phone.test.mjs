@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
 import {
-  PACKAGE, UsageError, checks, formatCommand, main, parseArgs, parseChecksumFile, parseDevices, pickDevice, shQuote, validateWebhook,
+  PACKAGE, UsageError, checks, digestFromRelease, formatCommand, main, parseArgs, parseChecksumFile, parseDevices, pickDevice, shQuote, validateWebhook,
 } from "./setup-phone.mjs";
 
 // ---- fakes ------------------------------------------------------------------------------------
@@ -48,9 +48,14 @@ function fakePhone(over = {}) {
       if (shell("am start")) return { code: 0, stdout: phone.amStart, stderr: "" };
       return { code: 0, stdout: "", stderr: "" };
     },
-    fetchJson: async () => ({ tag_name: "pesacast@0.9.0" }),
+    fetchJson: async (url) => {
+      if (url.endsWith("/releases/latest")) return { tag_name: "pesacast@0.9.0" };
+      if (phone.releaseRecord) return phone.releaseRecord;
+      throw new Error("404");
+    },
     download: async (url, dest) => {
       downloads.push(url);
+      if (url.endsWith(".sha256") && phone.noSha256File) throw new Error("HTTP 404");
       await writeFile(dest, url.endsWith(".sha256") ? `${phone.sha ?? ""}  pesacast-0.9.0.apk\n` : "APK-BYTES");
     },
     readText: async (p) => (await import("node:fs/promises")).readFile(p, "utf8"),
@@ -326,6 +331,41 @@ test("downloading resolves the latest release, verifies it and cleans up", async
     "https://github.com/davidamunga/pesacast/releases/download/pesacast@0.9.0/pesacast-0.9.0.apk.sha256",
   ]);
   assert.ok(f.logs.join("\n").includes("Checksum OK"));
+});
+
+test("a release with no .sha256 file falls back to the digest GitHub recorded", async () => {
+  const f = fakePhone({ noSha256File: true, releaseRecord: { assets: [{ name: "pesacast-0.9.0.apk", digest: `sha256:${sha("APK-BYTES")}` }] } });
+  const code = await main([], f.io);
+  assert.equal(code, 0, f.logs.join("\n"));
+  assert.ok(f.logs.join("\n").includes("GitHub recorded"));
+  assert.ok(adbArgs(f.calls).some((c) => c.includes("install -r")));
+});
+
+test("the GitHub digest is also enforced: a mismatch is not installed", async () => {
+  const f = fakePhone({ noSha256File: true, releaseRecord: { assets: [{ name: "pesacast-0.9.0.apk", digest: `sha256:${sha("different")}` }] } });
+  const code = await main([], f.io);
+  assert.equal(code, 1);
+  assert.ok(f.logs.join("\n").includes("does not match"));
+  assert.ok(!adbArgs(f.calls).some((c) => c.includes("install -r")));
+});
+
+test("with no .sha256 file and no GitHub digest, the user is told what to do", async () => {
+  const f = fakePhone({ noSha256File: true, releaseRecord: { assets: [{ name: "pesacast-0.9.0.apk" }] } });
+  const code = await main([], f.io);
+  assert.equal(code, 1);
+  const out = f.logs.join("\n");
+  assert.ok(out.includes("no .sha256 file") && out.includes("--sha256"));
+  assert.ok(!adbArgs(f.calls).some((c) => c.includes("install -r")));
+});
+
+test("digestFromRelease reads only a well-formed sha256 for the named asset", () => {
+  const h = "b".repeat(64);
+  const rel = { assets: [{ name: "a.apk", digest: `sha256:${h.toUpperCase()}` }, { name: "b.apk", digest: "md5:abc" }, { name: "c.apk" }] };
+  assert.equal(digestFromRelease(rel, "a.apk"), h);
+  assert.equal(digestFromRelease(rel, "b.apk"), null);
+  assert.equal(digestFromRelease(rel, "c.apk"), null);
+  assert.equal(digestFromRelease(rel, "missing.apk"), null);
+  assert.equal(digestFromRelease(null, "a.apk"), null);
 });
 
 test("a downloaded APK that does not match its published checksum is not installed", async () => {

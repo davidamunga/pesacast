@@ -38,7 +38,7 @@ The phone then shows the destination host and waits for you to tap **Save and te
 ## What it does, in order
 
 1. Finds exactly one connected, authorised phone and reads its model and Android version.
-2. Downloads `pesacast-<version>.apk` and `.apk.sha256` from the GitHub release, and **stops if the checksum does not match or is missing**. An APK is never installed unverified.
+2. Downloads `pesacast-<version>.apk` and `.apk.sha256` from the GitHub release, and **stops if the checksum does not match or is missing**. Releases made before the checksum file existed are checked against the SHA-256 that GitHub itself records for each uploaded file (shown in the releases API). If neither exists, it stops and tells you to supply `--sha256`. An APK is never installed unverified.
 3. `adb install -r`.
 4. Grants SMS, and notifications (Android 13+) and Bluetooth (Android 12+ with Bluetooth hardware) so the phone shows no permission dialogs.
 5. Excludes the app from battery optimisation and allows background running. Tries the "restricted settings" switch too; not every Android version supports it, and failure is reported, not fatal.
