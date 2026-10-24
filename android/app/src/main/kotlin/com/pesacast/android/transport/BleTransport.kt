@@ -64,7 +64,8 @@ val CCCD_UUID: UUID = UUID.fromString("00002902-0000-1000-8000-00805F9B34FB")
 class BleTransport(private val context: Context) {
 
     private val gson = Gson()
-    private val bleManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+    // Null on phones without Bluetooth hardware (the manifest marks the feature optional).
+    private val bleManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
 
     private val _state = MutableStateFlow<TransportState>(TransportState.Disconnected)
     val state: StateFlow<TransportState> = _state.asStateFlow()
@@ -113,7 +114,7 @@ class BleTransport(private val context: Context) {
         deviceNotificationAck.values.forEach { it.cancel() }
         deviceNotificationAck.clear()
         deviceSendJobs.clear()
-        bleManager.adapter.bluetoothLeAdvertiser?.stopAdvertising(advertiseCallback)
+        bleManager?.adapter?.bluetoothLeAdvertiser?.stopAdvertising(advertiseCallback)
         _state.value = TransportState.Disconnected
         Log.i(TAG, "BLE peripheral stopped")
     }
@@ -162,7 +163,7 @@ class BleTransport(private val context: Context) {
         service.addCharacteristic(characteristic)
         txnCharacteristic = characteristic
 
-        gattServer = bleManager.openGattServer(context, gattServerCallback)
+        gattServer = bleManager?.openGattServer(context, gattServerCallback)
         gattServer?.addService(service)
     }
 
@@ -241,7 +242,7 @@ class BleTransport(private val context: Context) {
 
     @Suppress("MissingPermission")
     private fun startAdvertising() {
-        val advertiser = bleManager.adapter.bluetoothLeAdvertiser ?: run {
+        val advertiser = bleManager?.adapter?.bluetoothLeAdvertiser ?: run {
             Log.w(TAG, "BluetoothLeAdvertiser not available")
             return
         }
@@ -361,6 +362,5 @@ class BleTransport(private val context: Context) {
     }
 
     private fun isSupported(): Boolean =
-        bleManager.adapter?.isEnabled == true &&
-            bleManager.adapter.bluetoothLeAdvertiser != null
+        bleManager?.adapter?.let { it.isEnabled && it.bluetoothLeAdvertiser != null } == true
 }

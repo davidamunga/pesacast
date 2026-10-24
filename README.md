@@ -157,6 +157,18 @@ The connection is a token-authenticated WebSocket (default port `7877`) and is o
 
 ---
 
+## Setting up a phone
+
+On the phone that receives the M-PESA messages, open **Connect, then Setup checklist**. It lists what is still missing, in the order to do it, and each item has a button that opens the right system screen:
+
+- **SMS permission**, including the "Allow restricted settings" step Android 13+ asks for when an app was installed outside a store;
+- **Battery**: exclude PesaCast from battery optimisation so payments are not delayed or lost;
+- **Your phone maker's auto-start menu** (Tecno, Infinix, itel, Xiaomi, Oppo, realme, vivo, Samsung, Huawei): it cannot be read by the app, so you confirm it yourself;
+- **A destination**: the webhook, WiFi or Bluetooth to the desktop app;
+- **An end-to-end test** that sends a clearly labelled test to everything that is on and shows each result. A connected desktop shows a fake test payment; the webhook receives a `"test": true` request with no transaction.
+
+Menu names differ between phones and software versions, so treat the hints as guidance. Design notes: [ADR-0015](docs/adr/0015-setup-checklist-and-provisioning.md).
+
 ## Webhook from the phone
 
 The Android app can send each transaction to your own server, without a desktop running. Open the **Connect** tab, fill in the **Webhook** card (HTTPS URL, optional bearer token, optional signing secret), press **Save & send test**, then turn the switch on. Transactions are queued on the phone and retried until your server accepts them, so use the `Idempotency-Key` header to avoid duplicates. Details and receiver examples: [docs/webhooks.md](docs/webhooks.md); decision: [ADR-0013](docs/adr/0013-phone-webhook-delivery.md).

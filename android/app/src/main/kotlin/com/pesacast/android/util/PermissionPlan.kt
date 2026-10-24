@@ -29,13 +29,18 @@ object PermissionPlan {
     fun notificationPermissions(sdk: Int): List<String> =
         if (sdk >= 33) listOf(Manifest.permission.POST_NOTIFICATIONS) else emptyList()
 
-    /** Everything still worth asking for, in one prompt. */
-    fun toRequest(granted: Set<String>, sdk: Int): List<String> =
-        (smsPermissions() + bluetoothPermissions(sdk) + notificationPermissions(sdk)).filter { it !in granted }
+    /**
+     * Everything still worth asking for, in one prompt. Phones without Bluetooth hardware
+     * ([hasBluetooth] false) are never asked for it.
+     */
+    fun toRequest(granted: Set<String>, sdk: Int, hasBluetooth: Boolean = true): List<String> =
+        (smsPermissions() + (if (hasBluetooth) bluetoothPermissions(sdk) else emptyList()) +
+            notificationPermissions(sdk)).filter { it !in granted }
 
-    fun evaluate(granted: Set<String>, sdk: Int) = State(
+    fun evaluate(granted: Set<String>, sdk: Int, hasBluetooth: Boolean = true) = State(
         smsGranted = smsPermissions().all { it in granted },
-        bluetoothGranted = bluetoothPermissions(sdk).all { it in granted },
+        // Nothing to grant on a phone without Bluetooth, so it never counts as "denied".
+        bluetoothGranted = !hasBluetooth || bluetoothPermissions(sdk).all { it in granted },
         notificationsGranted = notificationPermissions(sdk).all { it in granted },
     )
 }

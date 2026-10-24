@@ -24,6 +24,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.pesacast.android.util.PermissionPlan
 import com.pesacast.android.R
+import com.pesacast.android.setup.AndroidDeviceState
+import com.pesacast.android.setup.SetupActivity
+import com.pesacast.android.setup.SetupChecklist
 import com.pesacast.android.databinding.ActivityMainBinding
 import com.pesacast.android.model.MpesaTransaction
 import com.pesacast.android.service.MirrorService
@@ -123,6 +126,7 @@ class MainActivity : AppCompatActivity() {
 
         setupWifiControls()
         setupWebhookControls()
+        binding.btnOpenSetup.setOnClickListener { startActivity(Intent(this, SetupActivity::class.java)) }
     }
 
     private fun setupWifiControls() {
@@ -145,7 +149,7 @@ class MainActivity : AppCompatActivity() {
         }
         binding.btnCopyToken.setOnClickListener {
             val token = vm.wifiToken.value
-            if (token.isNotEmpty()) copyToClipboard(token)
+            if (token.isNotEmpty()) copyToClipboard(token, sensitive = true)
         }
         binding.btnShareToken.setOnClickListener {
             val token = vm.wifiToken.value
@@ -166,6 +170,7 @@ class MainActivity : AppCompatActivity() {
         binding.etWebhookToken.setText(settings.token)
         binding.etWebhookSecret.setText(settings.secret)
 
+        if (settings.credentialsUnreadable()) showWebhookMessage(getString(R.string.webhook_credentials_unreadable))
         binding.switchWebhook.isChecked = vm.webhookEnabled.value
         binding.switchWebhook.setOnCheckedChangeListener { _, checked ->
             if (!vm.setWebhookEnabled(checked)) {
@@ -183,6 +188,14 @@ class MainActivity : AppCompatActivity() {
                 binding.etWebhookSecret.text?.toString().orEmpty(),
             )
         }
+    }
+
+    private fun renderSetupSummary() {
+        val summary = SetupChecklist.summarize(SetupChecklist.evaluate(AndroidDeviceState(this)))
+        binding.tvSetupSummary.text = getString(
+            if (summary.ready) R.string.setup_summary_ready else R.string.setup_summary_blocked,
+            summary.done, summary.total,
+        )
     }
 
     private fun showWebhookMessage(message: String?) {
@@ -341,9 +354,17 @@ class MainActivity : AppCompatActivity() {
 
     // MARK: - Clipboard & Share
 
-    private fun copyToClipboard(text: String) {
+    /** [sensitive] hides the copied text from the clipboard preview and from keyboards' suggestions. */
+    private fun copyToClipboard(text: String, sensitive: Boolean = false) {
         val cm = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        cm.setPrimaryClip(ClipData.newPlainText("PesaCast", text))
+        val clip = ClipData.newPlainText("PesaCast", text)
+        if (sensitive) {
+            clip.description.extras = android.os.PersistableBundle().apply {
+                // ClipDescription.EXTRA_IS_SENSITIVE on Android 13+; the same key is read on 12 by some keyboards.
+                putBoolean("android.content.extra.IS_SENSITIVE", true)
+            }
+        }
+        cm.setPrimaryClip(clip)
         Toast.makeText(this, R.string.toast_copied, Toast.LENGTH_SHORT).show()
     }
 
@@ -392,6 +413,9 @@ class MainActivity : AppCompatActivity() {
 
     // MARK: - Permissions
 
+    private val hasBluetooth: Boolean
+        get() = packageManager.hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)
+
     private fun grantedPermissions(): Set<String> =
         (PermissionPlan.smsPermissions() + PermissionPlan.bluetoothPermissions(Build.VERSION.SDK_INT) +
             PermissionPlan.notificationPermissions(Build.VERSION.SDK_INT))
@@ -399,12 +423,12 @@ class MainActivity : AppCompatActivity() {
 
     /** Asks for whatever is still missing in one prompt; each denial is handled on its own afterwards. */
     private fun requestAllPermissions() {
-        val needed = PermissionPlan.toRequest(grantedPermissions(), Build.VERSION.SDK_INT)
+        val needed = PermissionPlan.toRequest(grantedPermissions(), Build.VERSION.SDK_INT, hasBluetooth)
         if (needed.isEmpty()) onPermissionsGranted() else permLauncher.launch(needed.toTypedArray())
     }
 
     private fun handlePermissionResult() {
-        val state = PermissionPlan.evaluate(grantedPermissions(), Build.VERSION.SDK_INT)
+        val state = PermissionPlan.evaluate(grantedPermissions(), Build.VERSION.SDK_INT, hasBluetooth)
         // SMS alone is enough to run the service: webhook and WiFi delivery must not depend on Bluetooth.
         if (state.canRunService) onPermissionsGranted()
 
@@ -441,10 +465,22 @@ class MainActivity : AppCompatActivity() {
         permissionDialog = builder.show()
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        // Only a fixed, known value is accepted: nothing from the extra reaches the UI or storage.
+        if (intent.getStringExtra(EXTRA_TAB) == TAB_CONNECT) binding.bottomNav.selectedItemId = R.id.nav_connect
+    }
+
     override fun onResume() {
         super.onResume()
+        renderSetupSummary()
+        if (vm.prefs.consumeWifiTokenResetNotice()) {
+            Toast.makeText(this, R.string.wifi_token_reset_notice, Toast.LENGTH_LONG).show()
+            vm.refreshWifiToken()
+        }
         // The user may have granted a permission in Settings while the app was in the background.
-        if (PermissionPlan.evaluate(grantedPermissions(), Build.VERSION.SDK_INT).canRunService) onPermissionsGranted()
+        if (PermissionPlan.evaluate(grantedPermissions(), Build.VERSION.SDK_INT, hasBluetooth).canRunService) onPermissionsGranted()
     }
 
     private fun onPermissionsGranted() {
@@ -453,4 +489,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun hasPermission(perm: String) =
         ContextCompat.checkSelfPermission(this, perm) == PackageManager.PERMISSION_GRANTED
+
+    companion object {
+        /** Internal hand-off from the setup screen: open this tab. */
+        const val EXTRA_TAB = "com.pesacast.android.extra.TAB"
+        const val TAB_CONNECT = "connect"
+    }
 }

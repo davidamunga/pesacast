@@ -16,17 +16,32 @@ class PreferencesManager(
 
     // The WiFi pairing token is the key to the encrypted channel, so it is stored encrypted. Older
     // versions kept it in plain text under "wifi_token"; MigratingSecret upgrades it on first read.
-    private val wifiTokenSecret = MigratingSecret(
-        cipher = cipher,
-        get = { key -> prefs.getString(key, null) },
-        put = { key, value -> prefs.edit { if (value == null) remove(key) else putString(key, value) } },
-        encryptedKey = KEY_WIFI_TOKEN_ENC,
-        legacyPlaintextKey = KEY_WIFI_TOKEN,
+    private val wifiTokenKeeper = WifiTokenKeeper(
+        secret = MigratingSecret(
+            cipher = cipher,
+            get = { key -> prefs.getString(key, null) },
+            put = { key, value -> prefs.edit { if (value == null) remove(key) else putString(key, value) } },
+            encryptedKey = KEY_WIFI_TOKEN_ENC,
+            legacyPlaintextKey = KEY_WIFI_TOKEN,
+        ),
+        getFlag = { prefs.getBoolean(KEY_WIFI_TOKEN_RESET, false) },
+        setFlag = { prefs.edit { putBoolean(KEY_WIFI_TOKEN_RESET, it) } },
     )
 
     var mirroringEnabled: Boolean
         get() = prefs.getBoolean(KEY_MIRRORING, true)
         set(value) = prefs.edit { putBoolean(KEY_MIRRORING, value) }
+
+    // Setup checklist (ADR-0015)
+    /** The user said they changed their phone maker's autostart / background setting. */
+    var setupOemAcknowledged: Boolean
+        get() = prefs.getBoolean(KEY_SETUP_OEM_ACK, false)
+        set(value) = prefs.edit { putBoolean(KEY_SETUP_OEM_ACK, value) }
+
+    /** Result of the last end-to-end test: true passed, false failed, null never run. */
+    var setupLastTestPassed: Boolean?
+        get() = if (prefs.contains(KEY_SETUP_TEST)) prefs.getBoolean(KEY_SETUP_TEST, false) else null
+        set(value) = prefs.edit { if (value == null) remove(KEY_SETUP_TEST) else putBoolean(KEY_SETUP_TEST, value) }
 
     // WiFi transport
     var wifiEnabled: Boolean
@@ -34,8 +49,14 @@ class PreferencesManager(
         set(value) = prefs.edit { putBoolean(KEY_WIFI_ENABLED, value) }
 
     var wifiToken: String?
-        get() = wifiTokenSecret.read()
-        set(value) = wifiTokenSecret.write(value)
+        get() = wifiTokenKeeper.current()
+        set(value) = wifiTokenKeeper.write(value)
+
+    /** The stored token, or a fresh one. Notes a reset if the stored token could not be read. */
+    fun wifiTokenOrRegenerate(generate: () -> String): String = wifiTokenKeeper.tokenOrRegenerate(generate)
+
+    /** True once if the WiFi token was replaced because Android reset secure storage. */
+    fun consumeWifiTokenResetNotice(): Boolean = wifiTokenKeeper.consumeResetNotice()
 
     var wifiPort: Int
         get() = prefs.getInt(KEY_WIFI_PORT, 7877)
@@ -57,6 +78,9 @@ class PreferencesManager(
         private const val KEY_WIFI_ENABLED = "wifi_enabled"
         private const val KEY_WIFI_TOKEN   = "wifi_token"          // legacy plaintext, migrated away
         private const val KEY_WIFI_TOKEN_ENC = "wifi_token_enc"
+        private const val KEY_SETUP_OEM_ACK = "setup_oem_ack"
+        private const val KEY_SETUP_TEST = "setup_last_test_passed"
+        private const val KEY_WIFI_TOKEN_RESET = "wifi_token_reset_notice"
         private const val KEY_WIFI_PORT    = "wifi_port"
 
         // Legacy keys — not removed to avoid data loss on upgrade

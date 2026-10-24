@@ -34,3 +34,13 @@ A security review of the Android app (manifest, receivers, service, permission f
 - A user who denies Bluetooth permanently now sees a clear message; they can still use WiFi and webhook.
 - Existing installs keep working: the WiFi token is migrated on first launch of the new version.
 - Follow-ups not done here: `BootReceiver` is `exported="true"` though the system can deliver boot broadcasts to a non-exported receiver (verify on a device); `EXTRA_IS_SENSITIVE` on the clipboard when copying the token; `uses-feature android.hardware.bluetooth` is still `required="true"`, which excludes phones without Bluetooth that could use the webhook alone.
+
+## Update: follow-ups completed
+
+The follow-ups listed above were done afterwards, without changing the decisions:
+
+- `BootReceiver` is `exported="false"`; the system still delivers boot broadcasts to it. A manifest test now allows only the launcher to be reachable without a permission.
+- Copying the WiFi token sets the clipboard "sensitive" flag so it is hidden from previews.
+- `uses-feature android.hardware.bluetooth` is optional. `BleTransport` tolerates a missing Bluetooth service, and the permission prompt never asks a Bluetooth-less phone for Bluetooth permissions.
+- A saved webhook token, signing secret or WiFi token that can no longer be decrypted (Android reset the Keystore key) is detected. The webhook is held off instead of sending without credentials, and the user is told to re-enter them; a replaced WiFi token produces a one-time notice to pair again.
+- The WiFi token field now refreshes when the token is generated or replaced; before, a first-time enable could show an empty token until the app restarted.
