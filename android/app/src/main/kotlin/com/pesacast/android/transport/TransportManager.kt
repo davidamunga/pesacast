@@ -8,7 +8,9 @@ import android.util.Log
 import com.pesacast.android.model.MpesaTransaction
 import com.pesacast.android.util.PermissionPlan
 import com.pesacast.android.util.PreferencesManager
+import com.pesacast.android.webhook.TestResult
 import com.pesacast.android.webhook.UrlConnectionPoster
+import com.pesacast.android.webhook.WebhookConfig
 import com.pesacast.android.webhook.WebhookDelivery
 import com.pesacast.android.webhook.WebhookQueue
 import com.pesacast.android.webhook.WebhookSettings
@@ -109,6 +111,9 @@ class TransportManager(private val context: Context) {
         stop()
         start()
     }
+
+    /** Sends the webhook connectivity check for a configuration that may not be saved yet. Blocking. */
+    fun sendWebhookTest(config: WebhookConfig): TestResult = webhook.sendTest(config)
 
     // MARK: - Sending
 

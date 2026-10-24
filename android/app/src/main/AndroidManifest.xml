@@ -64,6 +64,16 @@
             </intent-filter>
         </activity>
 
+        <!-- Webhook provisioning from adb (ADR-0015). Exported so `adb shell am start -n` can reach it,
+             which makes it reachable by other apps: it applies nothing without an on-screen
+             confirmation, accepts only https, never enables before a successful test, and has no
+             intent filter, so a link or web page cannot open it. -->
+        <activity
+            android:name=".setup.ProvisionActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true" />
+
         <!-- SMS BroadcastReceiver — must be exported to receive system broadcasts -->
         <receiver
             android:name=".sms.SmsReceiver"
