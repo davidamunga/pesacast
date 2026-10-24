@@ -61,4 +61,17 @@ class BleFramingTest {
     fun `empty input yields no chunks`() {
         assertEquals(0, BleFraming.chunk("", 20).size)
     }
+
+    @Test
+    fun `multibyte characters are never split across chunks`() {
+        // Each chunk is decoded on its own by the desktop. A UTF-8 sequence cut in half decodes to
+        // replacement characters and corrupts the message.
+        val json = """{"from":"José Ñandú 😀 Åsa","note":"ééééééééééééééééééé"}"""
+        val framed = BleFraming.frame(json)
+        for (size in 4..24) {
+            val chunks = BleFraming.chunk(framed, size)
+            assertTrue("size $size", chunks.all { it.size <= size })
+            assertEquals("size $size", framed, reassemble(chunks))
+        }
+    }
 }

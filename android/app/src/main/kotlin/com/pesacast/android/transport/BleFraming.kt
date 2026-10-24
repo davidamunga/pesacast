@@ -11,16 +11,31 @@ object BleFraming {
 
     fun frame(json: String): String = "${json.length}:$json"
 
-    /** Splits [framed] into UTF-8 chunks of at most [maxBytes] bytes each. */
+    /**
+     * Splits [framed] into UTF-8 chunks of at most [maxBytes] bytes each, never cutting through a
+     * character. The desktop decodes each notification independently, so a multi-byte sequence
+     * split across two chunks would turn into replacement characters.
+     *
+     * [maxBytes] is raised to 4 (the longest UTF-8 sequence) so every character fits in a chunk.
+     */
     fun chunk(framed: String, maxBytes: Int): List<ByteArray> {
-        val bytes = framed.toByteArray(Charsets.UTF_8)
+        val limit = maxBytes.coerceAtLeast(MAX_UTF8_BYTES_PER_CHAR)
         val chunks = mutableListOf<ByteArray>()
-        var offset = 0
-        while (offset < bytes.size) {
-            val end = minOf(offset + maxBytes, bytes.size)
-            chunks += bytes.copyOfRange(offset, end)
-            offset = end
+        val current = java.io.ByteArrayOutputStream()
+        var i = 0
+        while (i < framed.length) {
+            val cp = framed.codePointAt(i)
+            val charBytes = String(Character.toChars(cp)).toByteArray(Charsets.UTF_8)
+            if (current.size() + charBytes.size > limit) {
+                chunks += current.toByteArray()
+                current.reset()
+            }
+            current.write(charBytes)
+            i += Character.charCount(cp)
         }
+        if (current.size() > 0) chunks += current.toByteArray()
         return chunks
     }
+
+    private const val MAX_UTF8_BYTES_PER_CHAR = 4
 }
