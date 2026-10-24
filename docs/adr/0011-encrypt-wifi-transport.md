@@ -2,7 +2,7 @@
 
 - **Status:** Accepted (maintainer chose this design over moving the client to Rust)
 - **Date:** 2026-10-24
-- **Supersedes (on acceptance):** the plaintext handshake and consequences of [ADR-0003](0003-wifi-transport-token-websocket.md)
+- **Supersedes:** the plaintext handshake and consequences of [ADR-0003](0003-wifi-transport-token-websocket.md)
 
 ## Context
 
