@@ -48,13 +48,13 @@ const last = () => FakeWebSocket.instances[FakeWebSocket.instances.length - 1];
 /** Connects and completes the auth handshake. */
 async function connected(result: { current: ReturnType<typeof useWifi> }) {
   await act(async () => {
-    await result.current.connectWifi("192.168.0.14", 7877, "tok");
+    await result.current.connectWifiLegacy("192.168.0.14", 7877, "tok");
   });
   act(() => last().serverOpen());
   await last().serverSays('{"status":"ok"}');
 }
 
-describe("useWifi", () => {
+describe("useWifi (legacy v1 protocol)", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     FakeWebSocket.instances = [];
@@ -73,7 +73,7 @@ describe("useWifi", () => {
     it("sends the token on open and becomes connected after the ack", async () => {
       const { result } = renderHook(() => useWifi());
       await act(async () => {
-        await result.current.connectWifi("192.168.0.14", 7877, "tok");
+        await result.current.connectWifiLegacy("192.168.0.14", 7877, "tok");
       });
       expect(result.current.wifiStatus).toBe("connecting");
       expect(last().url).toBe("ws://192.168.0.14:7877");
@@ -89,7 +89,7 @@ describe("useWifi", () => {
     it("trims input, persists it, and falls back to the default port when invalid", async () => {
       const { result } = renderHook(() => useWifi());
       await act(async () => {
-        await result.current.connectWifi("  192.168.0.14 ", Number.NaN, " tok ");
+        await result.current.connectWifiLegacy("  192.168.0.14 ", Number.NaN, " tok ");
       });
       expect(last().url).toBe("ws://192.168.0.14:7877");
       expect(localStorage.getItem("wifi_ip")).toBe("192.168.0.14");
@@ -100,7 +100,7 @@ describe("useWifi", () => {
     it.each([0, -1, 65536, 1.5])("rejects out-of-range port %s", async (port) => {
       const { result } = renderHook(() => useWifi());
       await act(async () => {
-        await result.current.connectWifi("10.0.0.2", port, "tok");
+        await result.current.connectWifiLegacy("10.0.0.2", port, "tok");
       });
       expect(last().url).toBe("ws://10.0.0.2:7877");
     });
@@ -115,7 +115,7 @@ describe("useWifi", () => {
     it("does not forward anything before auth completes", async () => {
       const { result } = renderHook(() => useWifi());
       await act(async () => {
-        await result.current.connectWifi("10.0.0.2", 7877, "tok");
+        await result.current.connectWifiLegacy("10.0.0.2", 7877, "tok");
       });
       act(() => last().serverOpen());
       await last().serverSays('{"status":"denied"}');
@@ -127,7 +127,7 @@ describe("useWifi", () => {
     it("reports a bad token and does not retry", async () => {
       const { result } = renderHook(() => useWifi());
       await act(async () => {
-        await result.current.connectWifi("10.0.0.2", 7877, "wrong");
+        await result.current.connectWifiLegacy("10.0.0.2", 7877, "wrong");
       });
       act(() => last().serverOpen());
       await last().serverSays('{"status":"denied"}');
@@ -142,7 +142,7 @@ describe("useWifi", () => {
     it("times out when the server never acknowledges", async () => {
       const { result } = renderHook(() => useWifi());
       await act(async () => {
-        await result.current.connectWifi("10.0.0.2", 7877, "tok");
+        await result.current.connectWifiLegacy("10.0.0.2", 7877, "tok");
       });
       act(() => last().serverOpen());
       act(() => vi.advanceTimersByTime(6_001));
@@ -153,7 +153,7 @@ describe("useWifi", () => {
     it("does not auto-retry a connection that never worked", async () => {
       const { result } = renderHook(() => useWifi());
       await act(async () => {
-        await result.current.connectWifi("10.0.0.2", 7877, "tok");
+        await result.current.connectWifiLegacy("10.0.0.2", 7877, "tok");
       });
       act(() => {
         last().onerror?.();
@@ -266,7 +266,7 @@ describe("useWifi", () => {
 
       act(() => last().serverDrops());
       await act(async () => {
-        await result.current.connectWifi("192.168.0.20", 7877, "tok2");
+        await result.current.connectWifiLegacy("192.168.0.20", 7877, "tok2");
       });
       const count = FakeWebSocket.instances.length;
       act(() => vi.advanceTimersByTime(60_000));
