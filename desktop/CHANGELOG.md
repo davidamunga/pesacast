@@ -1,5 +1,13 @@
 # pesacast
 
+## 0.7.1
+
+### Patch Changes
+
+- b9cba89: Fix BLE transactions being corrupted when a name contains accented characters or emoji that fall on a chunk boundary, and when a chunk happens to start with digits followed by a colon (for example inside a timestamp).
+- 2f794d1: Fix Paybill payments to a numeric account number (for example KPLC prepaid) being shown as "sent" instead of "paid".
+- ce67fd8: Cap the Android BLE pending-transaction queue and make it thread-safe, and stop `MirrorService` from stacking duplicate notification collectors.
+
 ## 0.7.0
 
 ### Minor Changes
