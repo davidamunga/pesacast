@@ -76,8 +76,11 @@ class WebhookDelivery(
 
     /** Starts the worker if needed and makes it retry now (new item, network back, settings changed). */
     @Synchronized fun kick() {
-        if (worker?.isActive != true) worker = scope.launch { run() }
+        // Signal first: a freshly started worker discards wake-ups that predate its first attempt,
+        // so signalling after launch could leave a stale one behind and cause an immediate second
+        // attempt after a pause or retry wait.
         wake.trySend(Unit)
+        if (worker?.isActive != true) worker = scope.launch { run() }
     }
 
     /** Sends a payload with no transaction to check the URL, token and secret. Does not touch the queue. */
