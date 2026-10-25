@@ -24,38 +24,31 @@
 
 <section class="hero">
   <div class="wrap">
-    <div class="hero-copy">
-      <p class="eyebrow">M-PESA, mirrored</p>
-      <h1>Every payment, on your screen the second it lands.</h1>
-      <p class="lede">A phone receives the M-PESA message. PesaCast reads it and shows it on your computer, or posts it to your own server. That is all it does.</p>
-      <div class="actions">
-        <a class="btn" href="start.html">Set up a phone</a>
-        <a class="btn btn-quiet" href="developers.html">Build on the webhook</a>
-      </div>
-      <p class="small meta">Free and open source. An Android phone, plus a Mac or Windows computer if you want the desktop view.</p>
+    <p class="kicker">M-PESA payments, on screen</p>
+    <h1>Every payment on your screen the second it lands.</h1>
+    <p class="lede">A phone receives the M-PESA message. PesaCast reads it and shows it on your computer, or posts it to your own server. That is all it does.</p>
+    <div class="actions">
+      <a class="btn" href="start.html">Set up a phone</a>
+      <a class="btn btn-secondary" href="developers.html">Build on the webhook</a>
     </div>
-    <div class="stage" role="img" aria-label="The PesaCast desktop app listing four payments, with a notification announcing KES 500.00 received from Jane Doe. Sample data.">
-      <div class="window" aria-hidden="true">
-        <div class="titlebar">
-          <span class="lights"><i></i><i></i><i></i></span>
-          <strong>PesaCast</strong>
-          <span class="badge">Connected</span>
-        </div>
-        <ul class="feed">
-          <li><span class="avatar">JD</span><span><span class="who">Jane Doe</span><span class="what">Received &middot; ABC123XYZ</span></span><span class="amt in">+ KES 500.00<span class="when">just now</span></span></li>
-          <li><span class="avatar">PK</span><span><span class="who">Peter Kamau</span><span class="what">Received &middot; ABB9QW2LM</span></span><span class="amt in">+ KES 1,200.00<span class="when">9 min ago</span></span></li>
-          <li><span class="avatar">TM</span><span><span class="who">Tuma Mart</span><span class="what">Paid &middot; ABA4TR7NC</span></span><span class="amt">KES 350.00<span class="when">42 min ago</span></span></li>
-          <li><span class="avatar">AW</span><span><span class="who">Amina Wanjiru</span><span class="what">Received &middot; AB91XC0KD</span></span><span class="amt in">+ KES 2,000.00<span class="when">1 hr ago</span></span></li>
-        </ul>
+    <p class="small meta">Free and open source. An Android phone, plus a Mac or Windows computer if you want the desktop view.</p>
+
+    <figure class="example">
+      <div>
+        <p class="label">What the phone receives</p>
+        <p class="sms">ABC123XYZ Confirmed. You have received Ksh500.00 from JANE DOE on 24/10/26 at 10:00 AM. New <span class="nb">M-PESA</span> balance is Ksh1,500.00.</p>
       </div>
-      <div class="toast" aria-hidden="true">
-        <img src="assets/logo.png" alt="" width="38" height="38">
-        <div>
-          <div class="top"><strong>PesaCast</strong><span>now</span></div>
-          <p>KES 500.00 received from Jane Doe</p>
-        </div>
+      <div>
+        <p class="label">What PesaCast shows</p>
+        <dl class="fields">
+          <div><dt>Received</dt><dd>KES 500.00</dd></div>
+          <div><dt>From</dt><dd>Jane Doe</dd></div>
+          <div><dt>Reference</dt><dd>ABC123XYZ</dd></div>
+          <div><dt>Balance</dt><dd>KES 1,500.00</dd></div>
+        </dl>
       </div>
-    </div>
+      <figcaption>Sample message, invented for illustration.</figcaption>
+    </figure>
   </div>
 </section>
 
@@ -70,7 +63,6 @@
         <div>
           <h3>The phone reads the message.</h3>
           <p>Safaricom texts the phone for every payment. PesaCast, running on that phone, picks up messages from MPESA and turns each into an amount, a name, a reference and a balance.</p>
-          <div class="sms" aria-label="Example M-PESA text message"><small>MPESA</small>ABC123XYZ Confirmed. You have received Ksh500.00 from JANE DOE on 24/10/26 at 10:00 AM. New <span class="nb">M-PESA</span> balance is Ksh1,500.00. <small>Sample message</small></div>
         </div>
       </li>
       <li>
@@ -145,7 +137,7 @@
       <div>
         <h3>Building something?</h3>
         <p>Each payment can be posted, signed and retried, to your own server. The format is published as a schema, with a reference receiver.</p>
-        <p><a class="btn btn-quiet" href="developers.html">Read the webhook guide</a></p>
+        <p><a class="btn btn-secondary" href="developers.html">Read the webhook guide</a></p>
       </div>
     </div>
   </div>
