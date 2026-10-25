@@ -148,7 +148,7 @@ class TransportManager(private val context: Context) {
     }
 
     /** Sends the webhook connectivity check for a configuration that may not be saved yet. Blocking. */
-    fun sendWebhookTest(config: WebhookConfig): TestResult = webhook.sendTest(config)
+    fun sendWebhookTest(config: WebhookConfig): TestResult = webhook.sendTest(config.withDeviceIdIfMissing(deviceId.get()))
 
     // MARK: - Sending
 
