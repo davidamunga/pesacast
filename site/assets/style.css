@@ -11,8 +11,6 @@
   color-scheme: light dark;
 
   --bg: oklch(97.6% 0.007 155);
-  --glow-a: oklch(90% 0.07 152 / 0.55);
-  --glow-b: oklch(94% 0.05 85 / 0.6);
   --surface: oklch(100% 0 0 / 0.72);
   --surface-solid: oklch(100% 0 0);
   --surface-quiet: oklch(96% 0.01 155 / 0.8);
@@ -48,8 +46,6 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: oklch(16% 0.012 160);
-    --glow-a: oklch(34% 0.09 152 / 0.45);
-    --glow-b: oklch(28% 0.05 85 / 0.35);
     --surface: oklch(25% 0.016 160 / 0.7);
     --surface-solid: oklch(25% 0.016 160);
     --surface-quiet: oklch(22% 0.014 160 / 0.8);
@@ -82,17 +78,6 @@ body {
   font-variant-numeric: lining-nums;
   -webkit-font-smoothing: antialiased;
   overflow-x: clip; /* a sliding notification must never create sideways scrolling */
-}
-/* Two soft pools of colour behind everything, like a desktop wallpaper under frosted glass. */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(60rem 40rem at 8% -8%, var(--glow-a), transparent 70%),
-    radial-gradient(55rem 38rem at 100% 12%, var(--glow-b), transparent 70%);
-  pointer-events: none;
 }
 
 img { max-width: 100%; height: auto; }
@@ -192,7 +177,7 @@ section { padding-block: clamp(3rem, 7vw, 6rem); }
 .ledger li { counter-increment: step; position: relative; display: grid; grid-template-columns: 2.6rem minmax(0, 1fr); gap: 1.2rem; padding-bottom: 2.2rem; }
 .ledger li:last-child { padding-bottom: 0; }
 .ledger li::before { content: counter(step); width: 2.6rem; height: 2.6rem; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: var(--on-accent); background: var(--accent); box-shadow: 0 0 0 6px var(--accent-wash); z-index: 1; }
-.ledger li::after { content: ""; position: absolute; left: 1.3rem; top: 2.6rem; bottom: 0; width: 2px; margin-left: -1px; background: linear-gradient(var(--accent-wash), transparent); }
+.ledger li::after { content: ""; position: absolute; left: 1.3rem; top: 2.6rem; bottom: 0; width: 2px; margin-left: -1px; background: var(--accent-wash); }
 .ledger li:last-child::after { display: none; }
 .ledger li h3 { margin: 0.35rem 0 0.5rem; }
 .ledger p { margin-bottom: 0.7rem; color: var(--text-soft); }
@@ -214,7 +199,7 @@ section { padding-block: clamp(3rem, 7vw, 6rem); }
 /* ---- Two paths ---- */
 .paths { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
 .paths > div { border-radius: var(--radius); padding: clamp(1.5rem, 4vw, 2.4rem); background: var(--surface); border: 1px solid var(--edge); box-shadow: var(--shadow-soft); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
-.paths > div:first-child { background: linear-gradient(160deg, var(--accent-wash), var(--surface) 70%); }
+.paths > div:first-child { background: var(--accent-wash); }
 .paths h3 { font-size: var(--step-2); margin-bottom: 0.8rem; }
 .paths p { color: var(--text-soft); }
 .paths .btn { margin-top: 0.4rem; }
