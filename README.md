@@ -5,8 +5,8 @@
 <h1 align="center">PesaCast</h1>
 
 <p align="center">
-  Real-time M-PESA transaction mirroring from your Android phone to your desktop.<br/>
-  PesaCast intercepts incoming M-PESA SMS messages on Android, parses them into structured transaction data, and streams them live to a companion desktop app — over Bluetooth LE or your local WiFi.
+  Real-time M-PESA payment notifications from your Android phone to your desktop or your own server.<br/>
+  PesaCast reads incoming M-PESA SMS messages on Android, parses each into structured transaction data, and sends it live to a companion desktop app (over Bluetooth LE or your local WiFi), to a webhook you control, or both. Free and open source; no account, no cloud.
 </p>
 
 ---
@@ -22,23 +22,35 @@ https://github.com/user-attachments/assets/e52ceab4-d7dd-41d4-b63a-5364eeb25541
 
 ---
 
+## Install
+
+PesaCast is not on the Play Store, so you install the Android app from a file. Two ways:
+
+- **One command over USB:** [`scripts/setup-phone.sh`](docs/phone-setup-script.md) downloads the release, checks its SHA-256, installs it with `adb`, grants the permissions a computer can grant, and can send your webhook settings. Use `--dry-run` first to see what it would do.
+- **By hand:** follow [docs/phone-setup.md](docs/phone-setup.md).
+
+Then open the app's **Setup checklist** (see [Setting up a phone](#setting-up-a-phone)). Get the desktop app from the [releases page](https://github.com/davidamunga/pesacast/releases).
+
+---
+
 ## How It Works
 
 ```mermaid
 sequenceDiagram
     participant MPESA as Safaricom / M-PESA
     participant Android as Android App
-    participant BLE as Bluetooth LE
     participant Desktop as Desktop App (Tauri + React)
+    participant Server as Your server (optional)
 
     MPESA->>Android: SMS — "You have received KES 500..."
-    Android->>Android: SmsReceiver intercepts broadcast
+    Android->>Android: SmsReceiver keeps only MPESA messages
     Android->>Android: MpesaParser → MpesaTransaction
-    Android->>Android: MirrorService (foreground) picks up transaction
-    Android->>BLE: GATT characteristic notify (JSON payload)
-    BLE->>Desktop: BLE event received
-    Desktop->>Desktop: Decode & store transaction
-    Desktop->>Desktop: Render live feed + desktop notification
+    par Desktop, over Bluetooth LE or encrypted WiFi
+        Android->>Desktop: transaction (JSON)
+        Desktop->>Desktop: Ingest: dedupe, notify, store, show
+    and Webhook, over HTTPS
+        Android->>Server: signed POST, queued and retried on the phone
+    end
 ```
 
 ---
@@ -47,8 +59,12 @@ sequenceDiagram
 
 ```
 pesacast/
-├── android/        # Android app — SMS interception & broadcasting
-└── desktop/        # Desktop app — Tauri (Rust) + React frontend
+├── android/        # Android app — SMS interception, transports, phone webhook, setup checklist
+├── desktop/        # Desktop app — Tauri (Rust) + React frontend
+├── docs/           # Architecture, wire format, webhook guide and schema, setup guides, ADRs
+├── examples/       # Reference webhook receiver (Python)
+├── scripts/        # Phone setup script, webhook test server, version sync
+└── site/           # The public website (Vite, no scripts in the output)
 ```
 
 ---
@@ -116,9 +132,11 @@ cd pesacast
 Open the `android/` folder in Android Studio, connect your device, and run the `app` configuration.
 
 > The app requires the following permissions (granted at runtime on first launch):
-> - `RECEIVE_SMS` — to intercept M-PESA messages
-> - `BLUETOOTH_SCAN` / `BLUETOOTH_CONNECT` / `BLUETOOTH_ADVERTISE` — for BLE transport
-> - `POST_NOTIFICATIONS` — for foreground service notification
+> - `RECEIVE_SMS` — to read M-PESA messages (granted at runtime; Android 13+ may also need "Allow restricted settings" for a sideloaded app)
+> - `BLUETOOTH_CONNECT` / `BLUETOOTH_ADVERTISE` — for the BLE transport (optional; never required for the app to run)
+> - `POST_NOTIFICATIONS` — for the foreground service notification (optional)
+>
+> It also declares, without a prompt: `INTERNET` and `ACCESS_NETWORK_STATE` (WiFi transport and webhook), `CHANGE_WIFI_MULTICAST_STATE` (mDNS discovery), `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_CONNECTED_DEVICE`, `RECEIVE_BOOT_COMPLETED` (restart after reboot) and `VIBRATE`. See [ADR-0014](docs/adr/0014-android-hardening.md).
 
 ### 3. Run the desktop app
 
@@ -179,10 +197,23 @@ Transaction data (amounts, names, references, balances) leaves the phone when th
 
 ## Parsed Transaction Fields
 
-Each M-PESA SMS is parsed into the following structure:
+Each M-PESA SMS is parsed into the following structure. The same fields are sent to the desktop and in the webhook ([wire format](docs/protocol.md), [JSON Schema](docs/webhook-payload.schema.json)).
 
 | Field | Description |
 |---|---|
+| `type` | Always `mpesa_txn` |
+| `direction` | `received`, `sent`, `paid`, `withdrawn`, `airtime` or `fuliza`. New values may be added |
+| `amount` | Transaction amount |
+| `currency` | Currency (e.g. `KES`) |
+| `from` | Sender name, or the merchant for payments you made |
+| `ref` | M-PESA confirmation code |
+| `time` | When the transaction happened (ISO 8601) |
+| `balance` | M-PESA balance after the transaction |
+| `transaction_cost` | Optional. The fee, when the message states one |
+
+Identity is `(ref, time)`; see [CONTEXT.md](CONTEXT.md).
+
+---|---|
 | `type` | Transaction type (e.g. `RECEIVED`, `SENT`, `PAYBILL`, `BUY_GOODS`, `WITHDRAW`) |
 | `amount` | Transaction amount |
 | `currency` | Currency (e.g. `KES`) |
@@ -190,6 +221,19 @@ Each M-PESA SMS is parsed into the following structure:
 | `reference` | M-PESA confirmation code |
 | `timestamp` | Date and time of the transaction |
 | `balance` | Remaining M-PESA balance after the transaction |
+
+---
+
+## Documentation
+
+| Read | For |
+|---|---|
+| [docs/architecture.md](docs/architecture.md) | Components, data flow and trust boundaries |
+| [docs/protocol.md](docs/protocol.md) | Wire format: BLE, the encrypted WiFi channel and the webhook |
+| [docs/webhooks.md](docs/webhooks.md) | Receiving payments on your server, with examples and a test server |
+| [docs/phone-setup.md](docs/phone-setup.md) and [docs/phone-setup-script.md](docs/phone-setup-script.md) | Installing and provisioning a phone |
+| [docs/adr](docs/adr/README.md) | Why the code is the way it is |
+| [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md) | Working on the project |
 
 ---
 
