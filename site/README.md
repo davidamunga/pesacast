@@ -45,6 +45,18 @@ Without `SITE_URL` the image path is relative, which is fine for local work but 
 
 ## Publish
 
+**Vercel.** Import the repository, then set:
+
+| Setting | Value |
+|---|---|
+| Root Directory | `site` |
+| Include source files outside of the Root Directory | on (the lockfile lives at the repo root) |
+| Environment variable | `SITE_URL` = your final address, with `https://` |
+
+Framework, build command and output directory come from `site/vercel.json`, which also carries the security headers (Vercel does not read `_headers`). Keep the two in sync; `check.py` fails if the policies differ. To avoid rebuilds on Android or desktop commits, set Ignored Build Step to `git diff --quiet HEAD^ HEAD -- . ../pnpm-lock.yaml`.
+
+**Other hosts.**
+
 Any static host works. On Cloudflare Pages: build command `pnpm --filter pesacast-site build`, output directory `site/dist`. `public/_headers` is copied into the output and picked up automatically. Nothing here publishes the site by itself.
 
 ## Editing

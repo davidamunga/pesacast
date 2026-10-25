@@ -148,6 +148,15 @@ for needle in ("default-src 'none'", "style-src 'self'", "frame-ancestors 'none'
 if "script-src" in headers or "unsafe-inline" in headers:
     fail("_headers", "allows scripts or inline content")
 
+# Vercel ignores _headers and reads vercel.json, so the two must carry the same policy.
+vercel = Path(__file__).resolve().parent / "vercel.json"
+if not vercel.is_file():
+    fail("vercel.json", "missing")
+else:
+    csp = re.search(r"Content-Security-Policy: (.+)", headers).group(1).strip()
+    if csp not in vercel.read_text(encoding="utf-8"):
+        fail("vercel.json", "Content-Security-Policy differs from public/_headers")
+
 if problems:
     print("\n".join(problems))
     sys.exit(1)
