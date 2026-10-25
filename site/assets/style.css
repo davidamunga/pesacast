@@ -47,8 +47,8 @@ a:hover { color: var(--accent-hover); }
 /* Header and footer */
 .site-header { border-bottom: 1px solid var(--border); }
 .site-header .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 2rem; padding-block: 1rem; }
-.brand { display: inline-flex; align-items: center; gap: 0.6rem; font-weight: 700; font-size: 1.15rem; color: var(--text); text-decoration: none; }
-.brand img { width: 2.25rem; height: 2.25rem; border-radius: 0.5rem; }
+.brand { display: inline-flex; align-items: center; gap: 0.7rem; font-weight: 700; font-size: 1.3rem; letter-spacing: -0.01em; color: var(--text); text-decoration: none; }
+.brand img { width: 2.75rem; height: 2.75rem; border-radius: 0.65rem; }
 .site-nav { display: flex; flex-wrap: wrap; gap: 0.2rem 1.5rem; margin-left: auto; }
 .site-nav a { color: var(--muted); text-decoration: none; font-size: 0.95rem; padding-block: 0.2rem; border-bottom: 2px solid transparent; }
 .site-nav a:hover { color: var(--text); }
@@ -91,7 +91,7 @@ section + section { border-top: 1px solid var(--border); }
 /* Home hero: copy on the left, the animated stage on the right, both above the fold on a laptop. */
 .hero { padding-block: clamp(1.75rem, 4vw, 3.25rem); }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 40rem); gap: clamp(2rem, 4vw, 3.5rem); align-items: center; }
-.hero h1 { font-size: clamp(2.2rem, 1.2rem + 2.8vw, 3.25rem); max-width: 16ch; }
+.hero h1 { font-size: clamp(2.1rem, 1rem + 2.5vw, 2.9rem); max-width: none; }
 .hero .lede { font-size: 1.15rem; }
 .hero .meta { margin-top: 1.25rem; }
 @media (max-width: 64rem) { .hero-grid { grid-template-columns: 1fr; } }
@@ -271,3 +271,5 @@ html { scroll-padding-top: 1rem; }
 .site-nav .nav-star:hover { border-color: var(--accent); color: var(--accent); }
 .site-footer .made { margin-top: 1rem; color: var(--text); }
 .site-footer .made a { color: var(--text); font-weight: 600; }
+.site-footer .footer-brand { display: inline-flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; font-weight: 700; font-size: 1.1rem; color: var(--text); text-decoration: none; }
+.site-footer .footer-brand img { width: 2rem; height: 2rem; border-radius: 0.5rem; }

@@ -21,7 +21,7 @@ const NAV = [
 
 const header = (current) => `<header class="site-header">
   <div class="wrap">
-    <a class="brand" href="index.html"><img src="assets/logo.png" alt="" width="36" height="36">PesaCast</a>
+    <a class="brand" href="index.html"><img src="assets/logo.png" alt="" width="44" height="44">PesaCast</a>
     <nav class="site-nav" aria-label="Main">${NAV.map(
       ([href, label]) => `<a href="${href}"${href === current ? ' aria-current="page"' : ""}>${label}</a>`,
     ).join("")}<a class="nav-star" href="${GH}">&#9733; Star on GitHub</a></nav>
@@ -31,6 +31,7 @@ const header = (current) => `<header class="site-header">
 const footer = `<footer class="site-footer">
   <div class="wrap">
     <div>
+      <a class="footer-brand" href="index.html"><img src="assets/logo.png" alt="" width="32" height="32">PesaCast</a>
       <p>PesaCast is free software under the MIT licence. It is not made by, affiliated with or endorsed by Safaricom. M-PESA is a trademark of Safaricom PLC.</p>
       <p>This site has no cookies, no analytics, no scripts, and loads nothing from other websites.</p>
       <p class="made">Made by <a href="https://davidamunga.com">David Amunga</a> &middot; <a href="https://x.com/davidamunga_">@davidamunga_</a> on X</p>
