@@ -264,3 +264,9 @@ th { font-weight: 600; font-size: 0.85rem; color: var(--muted); background: var(
 .toc ol { margin: 0; padding-left: 1.2rem; }
 .toc li { margin: 0.2rem 0; font-size: 0.95rem; }
 html { scroll-padding-top: 1rem; }
+
+/* Star link in the nav and the maker credit in the footer */
+.site-nav .nav-star { color: var(--text); border: 1px solid var(--border); border-radius: 999px; padding: 0.2rem 0.8rem; font-weight: 600; }
+.site-nav .nav-star:hover { border-color: var(--accent); color: var(--accent); }
+.site-footer .made { margin-top: 1rem; color: var(--text); }
+.site-footer .made a { color: var(--text); font-weight: 600; }

@@ -27,7 +27,7 @@
         <a class="btn" href="start.html">Set up a phone</a>
         <a class="btn btn-secondary" href="developers.html">Developer docs</a>
       </div>
-      <p class="small meta">Free and open source. An Android phone, plus a Mac or Windows computer if you want the desktop view.</p>
+      <p class="small meta">Free and open source under the MIT licence. <a href="https://github.com/davidamunga/pesacast">Star it on GitHub</a>. An Android phone, plus a Mac or Windows computer if you want the desktop view.</p>
     </div>
 
     <figure class="stage">
@@ -171,6 +171,37 @@
     </div>
     <p>To the desktop app, straight from the phone, over an encrypted link on your own network. To your webhook, only if you turn it on, over HTTPS, to the address you typed. Nowhere else.</p>
     <p>The desktop app checks GitHub for new versions. The code is open, so you can read exactly what the phone does with a message: <a href="security.html">how it stays yours</a>.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Open source, and meant to be read</h2>
+      <p>PesaCast is MIT licensed. Every line that touches your payments is public, along with the reasons it was built that way.</p>
+    </div>
+    <dl class="plain">
+      <div>
+        <dt>Read the code.</dt>
+        <dd><p>The Android app, the desktop app and the message parser are all in <a href="https://github.com/davidamunga/pesacast">one repository</a>. The parser has tests built from real messages with the names and numbers removed.</p></dd>
+      </div>
+      <div>
+        <dt>Read the decisions.</dt>
+        <dd><p>Each design choice, such as how the Wi-Fi link is encrypted or how the webhook retries, is written down as an <a href="https://github.com/davidamunga/pesacast/tree/main/docs/adr">architecture decision record</a>.</p></dd>
+      </div>
+      <div>
+        <dt>Check what you install.</dt>
+        <dd><p>The setup script checks the download against a published checksum before it goes on the phone. Every <a href="https://github.com/davidamunga/pesacast/releases">release</a> lists its files on GitHub.</p></dd>
+      </div>
+      <div>
+        <dt>Help or complain.</dt>
+        <dd><p>Open an <a href="https://github.com/davidamunga/pesacast/issues/new/choose">issue</a>, tell us how your phone behaved, or send a pull request. <a href="https://github.com/davidamunga/pesacast/blob/main/CONTRIBUTING.md">How to contribute</a>.</p></dd>
+      </div>
+    </dl>
+    <div class="actions">
+      <a class="btn" href="https://github.com/davidamunga/pesacast">&#9733; Star on GitHub</a>
+      <a class="btn btn-secondary" href="https://github.com/davidamunga/pesacast/blob/main/CONTRIBUTING.md">Contribute</a>
+    </div>
   </div>
 </section>
 

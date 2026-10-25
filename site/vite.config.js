@@ -16,7 +16,6 @@ const NAV = [
   ["faq.html", "Questions"],
   ["developers.html", "Developers"],
   ["security.html", "Security"],
-  [GH, "GitHub"],
 ];
 
 const header = (current) => `<header class="site-header">
@@ -24,7 +23,7 @@ const header = (current) => `<header class="site-header">
     <a class="brand" href="index.html"><img src="assets/logo.png" alt="" width="32" height="32">PesaCast</a>
     <nav class="site-nav" aria-label="Main">${NAV.map(
       ([href, label]) => `<a href="${href}"${href === current ? ' aria-current="page"' : ""}>${label}</a>`,
-    ).join("")}</nav>
+    ).join("")}<a class="nav-star" href="${GH}">&#9733; Star on GitHub</a></nav>
   </div>
 </header>`;
 
@@ -33,9 +32,12 @@ const footer = `<footer class="site-footer">
     <div>
       <p>PesaCast is free software under the MIT licence. It is not made by, affiliated with or endorsed by Safaricom. M-PESA is a trademark of Safaricom PLC.</p>
       <p>This site has no cookies, no analytics, no scripts, and loads nothing from other websites.</p>
+      <p class="made">Made by <a href="https://davidamunga.com">David Amunga</a> &middot; <a href="https://x.com/davidamunga_">@davidamunga_</a> on X</p>
     </div>
     <ul>
       <li><a href="${GH}">Source code</a></li>
+      <li><a href="${GH}/blob/main/LICENSE">MIT licence</a></li>
+      <li><a href="${GH}/blob/main/CONTRIBUTING.md">Contribute</a></li>
       <li><a href="${GH}/releases">Downloads</a></li>
       <li><a href="${GH}/issues/new/choose">Report a problem</a></li>
       <li><a href="security.html">Security</a></li>
