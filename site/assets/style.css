@@ -273,3 +273,4 @@ html { scroll-padding-top: 1rem; }
 .site-footer .made a { color: var(--text); font-weight: 600; }
 .site-footer .footer-brand { display: inline-flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; font-weight: 700; font-size: 1.1rem; color: var(--text); text-decoration: none; }
 .site-footer .footer-brand img { width: 2rem; height: 2rem; border-radius: 0.5rem; }
+pre.prompt { white-space: pre-wrap; }
