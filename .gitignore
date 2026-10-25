@@ -95,3 +95,5 @@ yarn-error.log*
 pnpm-debug.log*
 *.tmp
 *.temp
+
+site/dist/

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Checks that keep the site honest. Standard library only. Run: python3 site/check.py
+"""Checks that keep the site honest. Standard library only. Run: pnpm --filter pesacast-site build && python3 site/check.py
+
+Checks the built site in site/dist, which is what gets published.
 
 - every page has lang, a title, a description and exactly one h1;
 - internal links, images, fonts and stylesheets resolve to files that exist;
@@ -12,7 +14,9 @@ import sys
 from html.parser import HTMLParser
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent / "dist"
+if not ROOT.is_dir():
+    sys.exit("site/dist not found: run `pnpm --filter pesacast-site build` first")
 problems = []
 
 
@@ -108,7 +112,10 @@ for name, p in parsed.items():
         elif frag and f.suffix == ".html" and frag not in parsed.get(f.name, Page(f.name)).ids:
             fail(name, f"anchor #{frag} not found in {target}")
 
-css = (ROOT / "assets/style.css").read_text(encoding="utf-8")
+css_files = sorted((ROOT / "assets").glob("*.css"))
+if not css_files:
+    sys.exit("no stylesheet in dist/assets")
+css = "\n".join(f.read_text(encoding="utf-8") for f in css_files)
 for ref in re.findall(r"url\(([^)]+)\)", css):
     ref = ref.strip("'\" ")
     if re.match(r"^[a-z]+:", ref):
