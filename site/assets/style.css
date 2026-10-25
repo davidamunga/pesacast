@@ -123,9 +123,10 @@ section + section { border-top: 1px solid var(--border); }
 .pc-3 { color: var(--accent); font-weight: 600; }
 .pc-1, .pc-2 { opacity: 0; }
 .banner { position: absolute; z-index: 2; top: 2rem; left: 0.4rem; right: 0.4rem; display: flex; align-items: center; gap: 0.55rem; padding: 0.55rem 0.65rem; background: #fff; border: 1px solid oklch(86% 0.012 150); border-radius: 0.9rem; box-shadow: 0 0.4rem 1rem oklch(25% 0.02 160 / 0.14); }
-.banner img { width: 1.75rem; height: 1.75rem; border-radius: 0.4rem; flex: none; }
+.banner .avatar { flex: none; }
 .banner p { margin: 0; white-space: nowrap; max-width: none; display: flex; flex-direction: column; line-height: 1.25; font-size: 0.66rem; color: var(--muted); flex: 1; min-width: 0; }
-.banner b { font-size: 0.72rem; color: var(--text); }
+.banner b { font-size: 0.74rem; color: var(--text); }
+.banner p span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .banner small { font-size: 0.6rem; color: var(--muted); align-self: flex-start; }
 .tick { position: absolute; top: 0.6rem; right: 0.7rem; width: 1.1rem; height: 1.1rem; border-radius: 50%; background: var(--accent); }
 .tick::after { content: ""; position: absolute; left: 0.38rem; top: 0.17rem; width: 0.25rem; height: 0.5rem; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
@@ -155,14 +156,14 @@ section + section { border-top: 1px solid var(--border); }
 .chips { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0.3rem; }
 .chips span { font-size: 0.72rem; padding: 0.2rem 0.6rem; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); background: #fff; }
 
-@keyframes in-bubble { 0%, 5% { opacity: 0; transform: translateY(0.6rem) scale(0.97); } 9%, 90% { opacity: 1; transform: none; } 96%, 100% { opacity: 0; transform: none; } }
+@keyframes in-bubble { 0%, 8% { opacity: 0; transform: translateY(0.6rem) scale(0.97); } 12%, 90% { opacity: 1; transform: none; } 96%, 100% { opacity: 0; transform: none; } }
 @keyframes st-1 { 0%, 11% { opacity: 0; } 13%, 18% { opacity: 1; } 20%, 100% { opacity: 0; } }
 @keyframes st-2 { 0%, 19% { opacity: 0; } 21%, 44% { opacity: 1; } 46%, 100% { opacity: 0; } }
 @keyframes st-3 { 0%, 45% { opacity: 0; } 47%, 90% { opacity: 1; } 96%, 100% { opacity: 0; } }
 @keyframes travel { 0%, 28% { opacity: 0; offset-distance: 0%; } 30% { opacity: 1; } 43% { opacity: 1; offset-distance: 100%; } 44%, 100% { opacity: 0; offset-distance: 100%; } }
 @keyframes draw { 0%, 28% { opacity: 1; stroke-dashoffset: 1; } 43%, 90% { opacity: 1; stroke-dashoffset: 0; } 96%, 100% { opacity: 0; stroke-dashoffset: 0; } }
 @keyframes node-on { 0%, 43% { fill: #fff; stroke: oklch(82% 0.02 150); } 46%, 90% { fill: var(--accent); stroke: var(--accent); } 96%, 100% { fill: #fff; stroke: oklch(82% 0.02 150); } }
-@keyframes banner { 0%, 12% { opacity: 0; transform: translateY(-1.5rem); } 17%, 38% { opacity: 1; transform: none; } 43%, 100% { opacity: 0; transform: translateY(-1rem); } }
+@keyframes banner { 0%, 3% { opacity: 0; transform: translateY(-1.5rem); } 7%, 27% { opacity: 1; transform: none; } 32%, 100% { opacity: 0; transform: translateY(-1rem); } }
 @keyframes tick-in { 0%, 45% { opacity: 0; transform: scale(0.4); } 50%, 90% { opacity: 1; transform: none; } 96%, 100% { opacity: 0; transform: none; } }
 @keyframes land { 0%, 44% { border-color: var(--border); } 48%, 82% { border-color: var(--accent); } 92%, 100% { border-color: var(--border); } }
 @keyframes new-row { 0%, 45% { opacity: 0; transform: translateY(-0.4rem); } 50%, 90% { opacity: 1; transform: none; } 96%, 100% { opacity: 0; transform: none; } }
