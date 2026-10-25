@@ -25,7 +25,40 @@
   <div class="prose">
     <div class="note"><p><strong>Read this first.</strong> A payment SMS is not proof of payment. It can be faked or delayed. Treat these requests as notifications, and confirm money-moving events through Safaricom&rsquo;s Daraja callbacks.</p></div>
 
-    <h2>The request</h2>
+    <ul class="facts">
+      <li><b>HTTPS only</b> A certificate the phone trusts. No redirects, ten-second timeout.</li>
+      <li><b>At least once</b> The same payment can arrive twice. Use the idempotency key.</li>
+      <li><b>Signed</b> HMAC-SHA256 over the timestamp and the raw body.</li>
+      <li><b>Queued</b> Up to 500 payments for seven days if your server is down.</li>
+    </ul>
+
+    <nav class="toc" aria-label="On this page">
+      <p>On this page</p>
+      <ol>
+        <li><a href="#try-it">Try it in five minutes</a></li>
+        <li><a href="#request">The request</a></li>
+        <li><a href="#fields">What each field means</a></li>
+        <li><a href="#server">What your server should do</a></li>
+        <li><a href="#answers">What the phone does with your answer</a></li>
+        <li><a href="#verify">Verify a signature</a></li>
+        <li><a href="#more">Schema, receiver, full guide</a></li>
+      </ol>
+    </nav>
+
+    <h2 id="try-it">Try it in five minutes</h2>
+    <p>You do not need to write a receiver first. The repository has a test server that checks the token and signature and prints what the phone sends.</p>
+    <ol>
+      <li><strong>Start the test server</strong> on your computer. It needs Node and nothing else to install:
+<pre><code>node scripts/webhook-test-server.mjs --port 3919 --token mytoken --secret mysecret</code></pre></li>
+      <li><strong>Give it an HTTPS address.</strong> The phone refuses plain HTTP. Use a tunnel:
+<pre><code>cloudflared tunnel --url http://localhost:3919</code></pre>
+        <code>ngrok http 3919</code> works too.</li>
+      <li><strong>Fill in the Webhook card</strong> in the phone app: the tunnel address ending in <code>/hook</code>, the token <code>mytoken</code> and the secret <code>mysecret</code>. Press <em>Save and test</em>. The server prints the test ping.</li>
+      <li><strong>Turn the switch on</strong> and send yourself a real M-PESA payment, or use the setup checklist&rsquo;s end-to-end test.</li>
+    </ol>
+    <p>Type <code>500</code>, <code>429</code>, <code>401</code>, <code>slow</code> or <code>ok</code> into the test server&rsquo;s terminal to change its answer and watch the phone retry or pause.</p>
+
+    <h2 id="request">The request</h2>
 <pre><code>POST https://your.server/pesacast
 Content-Type: application/json
 Idempotency-Key: ABC123XYZ@2026-10-24T10:00:00+03:00
@@ -52,7 +85,24 @@ Authorization: Bearer &lt;token&gt;       (only if you set a token)</code></pre>
 }</code></pre>
     <p>The desktop app can post the same envelope, with <code>"source": "desktop"</code>. Ignore fields you do not know; new optional fields can appear without changing <code>schema_version</code>.</p>
 
-    <h2>What your server should do</h2>
+
+    <h2 id="fields">What each field means</h2>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>schema_version</code></td><td>Integer, currently <code>1</code>. Breaking changes raise it; new optional fields do not.</td></tr>
+        <tr><td><code>source</code></td><td><code>android</code> from the phone, <code>desktop</code> from the desktop app.</td></tr>
+        <tr><td><code>device_id</code></td><td>Identifies the phone, so one receiver can serve several shops.</td></tr>
+        <tr><td><code>transactions[].direction</code></td><td><code>received</code>, <code>sent</code>, <code>paid</code>, <code>withdrawn</code>, <code>airtime</code> or <code>fuliza</code>. New values can appear: treat an unknown one as other.</td></tr>
+        <tr><td><code>amount</code>, <code>balance</code></td><td>Numbers in <code>currency</code> (<code>KES</code>). The balance is after the payment.</td></tr>
+        <tr><td><code>from</code></td><td>The sender&rsquo;s name, or the merchant for payments you made.</td></tr>
+        <tr><td><code>ref</code></td><td>The M-PESA reference code. Unique per payment.</td></tr>
+        <tr><td><code>time</code></td><td>When the payment happened, ISO 8601 with offset.</td></tr>
+        <tr><td><code>transaction_cost</code></td><td>Optional. The fee, when the message states one.</td></tr>
+      </tbody>
+    </table></div>
+
+    <h2 id="server">What your server should do</h2>
     <ol>
       <li><strong>Check the signature.</strong> <code>v1=</code> plus the hex HMAC-SHA256 of the text <code>&lt;timestamp&gt;.</code> followed by the raw body, keyed with your secret. Compare in constant time. Reject timestamps more than a few minutes old.</li>
       <li><strong>Ignore test pings.</strong> The &ldquo;Save and test&rdquo; button sends <code>"test": true</code> with no transactions. Answer 2xx and record nothing.</li>
@@ -60,7 +110,7 @@ Authorization: Bearer &lt;token&gt;       (only if you set a token)</code></pre>
       <li><strong>Answer quickly.</strong> Store, reply, process later.</li>
     </ol>
 
-    <h2>What the phone does with your answer</h2>
+    <h2 id="answers">What the phone does with your answer</h2>
     <div class="table-scroll"><table>
       <thead><tr><th>You answer</th><th>The phone</th></tr></thead>
       <tbody>
@@ -72,7 +122,8 @@ Authorization: Bearer &lt;token&gt;       (only if you set a token)</code></pre>
     </table></div>
     <p>The queue holds up to 500 transactions for up to seven days. Requests must be HTTPS, redirects are not followed, and there is a ten-second timeout.</p>
 
-    <h2>Verify a signature (Node)</h2>
+    <h2 id="verify">Verify a signature</h2>
+    <h3>Node</h3>
 <pre><code>import crypto from "node:crypto";
 
 function verify(secret, timestamp, rawBody, header) {
@@ -83,7 +134,18 @@ function verify(secret, timestamp, rawBody, header) {
     Math.abs(Date.now() / 1000 - Number(timestamp)) &lt; 300;
 }</code></pre>
 
-    <h2>Everything else</h2>
+
+    <h3>Python</h3>
+<pre><code>import hashlib, hmac, time
+
+def verify(secret: str, timestamp: str, raw_body: bytes, header: str) -&gt; bool:
+    mac = hmac.new(secret.encode(), timestamp.encode() + b"." + raw_body, hashlib.sha256)
+    expected = "v1=" + mac.hexdigest()
+    fresh = abs(time.time() - int(timestamp)) &lt; 300
+    return fresh and hmac.compare_digest(header, expected)</code></pre>
+    <p>Sign the bytes you received, not a re-serialised copy of the JSON: any change to spacing or key order changes the signature.</p>
+
+    <h2 id="more">Everything else</h2>
     <ul>
       <li><a href="https://github.com/davidamunga/pesacast/blob/main/docs/webhook-payload.schema.json">JSON Schema</a> of the body, and the <a href="https://github.com/davidamunga/pesacast/blob/main/docs/openapi/pesacast-webhook.yaml">OpenAPI description</a> of the endpoint you implement. Tests check the apps against both.</li>
       <li><a href="https://github.com/davidamunga/pesacast/tree/main/examples/webhook-receiver">A reference receiver</a> in Python with SQLite: signature check, test pings, de-duplication, raw event storage.</li>
