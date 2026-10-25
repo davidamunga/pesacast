@@ -18,57 +18,73 @@
 <main id="main">
 
 <section class="hero">
-  <div class="wrap">
-    <p class="kicker">M-PESA payments, on screen</p>
-    <h1>Every payment on your screen the second it lands.</h1>
-    <p class="lede">A phone receives the M-PESA message. PesaCast reads it and shows it on your computer, or posts it to your own server. That is all it does.</p>
-    <div class="actions">
-      <a class="btn" href="start.html">Set up a phone</a>
-      <a class="btn btn-secondary" href="developers.html">Build on the webhook</a>
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="kicker">M-PESA payments, on screen</p>
+      <h1>Every payment on your screen the second it lands.</h1>
+      <p class="lede">A phone receives the M-PESA message. PesaCast reads it, keeps it, and sends it to your computer, your own server, or both. No cloud in between.</p>
+      <div class="actions">
+        <a class="btn" href="start.html">Set up a phone</a>
+        <a class="btn btn-secondary" href="developers.html">Build on the webhook</a>
+      </div>
+      <p class="small meta">Free and open source. An Android phone, plus a Mac or Windows computer if you want the desktop view.</p>
     </div>
-    <p class="small meta">Free and open source. An Android phone, plus a Mac or Windows computer if you want the desktop view.</p>
 
-    <figure class="flow-figure">
-      <div class="flow" role="img" aria-label="A text message from M-PESA arrives on an Android phone. PesaCast saves it on the phone, then sends it to your own platform by webhook, to the PesaCast desktop app, and to other integrations such as an Excel export.">
+    <figure class="stage">
+      <div class="flow" role="img" aria-label="An M-PESA text message arrives on an Android phone. PesaCast saves it on the phone, then sends it to your own platform by webhook, to the PesaCast desktop app, and to other integrations such as an Excel export.">
         <div class="phone" aria-hidden="true">
-          <div class="phone-bar"><span>10:00</span><span class="phone-dots"><i></i><i></i><i></i></span></div>
-          <div class="phone-head"><span class="phone-back"></span>MPESA</div>
-          <div class="sms-list">
+          <div class="phone-top"><span>10:00</span><i class="phone-notch"></i><span class="phone-batt"></span></div>
+          <div class="phone-head"><span class="avatar">M</span><span><b>MPESA</b><small>Text message</small></span></div>
+          <div class="thread">
+            <p class="day">Today</p>
             <p class="bubble bubble-old">QWE456RTY Confirmed. Ksh350.00 received from JOHN MWANGI on 24/10/26 at 9:41 AM.</p>
             <p class="bubble bubble-new">ABC123XYZ Confirmed. You have received Ksh500.00 from JANE DOE on 24/10/26 at 10:00 AM. New M-PESA balance is Ksh1,500.00.</p>
           </div>
-          <div class="phone-note">
-            <img src="assets/logo.png" alt="" width="28" height="28">
-            <p><strong>Received KES 500.00</strong><span>Jane Doe &middot; saved on this phone</span></p>
+          <div class="pc">
+            <img src="assets/logo.png" alt="" width="32" height="32">
+            <div class="pc-text">
+              <b>PesaCast</b>
+              <span class="pc-state pc-1">Reading the message</span>
+              <span class="pc-state pc-2">Saved on the phone</span>
+              <span class="pc-state pc-3">Sent to 3 places</span>
+            </div>
           </div>
         </div>
-        <svg class="wires" viewBox="0 0 112 432" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-          <path class="wire" d="M0 216 C 56 216, 56 64, 112 64"/>
-          <path class="wire" d="M0 216 L 112 216"/>
-          <path class="wire" d="M0 216 C 56 216, 56 368, 112 368"/>
-          <circle class="packet packet-1" r="4"/>
-          <circle class="packet packet-2" r="4"/>
-          <circle class="packet packet-3" r="4"/>
+
+        <svg class="wires" viewBox="0 0 80 408" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <path class="wire" d="M0 204 C 40 204, 40 64, 80 64"/>
+          <path class="wire" d="M0 204 L 80 204"/>
+          <path class="wire" d="M0 204 C 40 204, 40 344, 80 344"/>
+          <circle class="packet packet-1" r="5"/>
+          <circle class="packet packet-2" r="5"/>
+          <circle class="packet packet-3" r="5"/>
         </svg>
+
         <div class="dests" aria-hidden="true">
           <div class="dest dest-1">
-            <p class="dest-name">Your platform</p>
-            <p class="dest-sub">A signed webhook, retried until it lands</p>
-            <p class="dest-code"><span class="ok">200</span> POST /hooks/mpesa</p>
+            <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01"/></svg>
+            <p class="dest-name">Your platform<span>Signed webhook</span></p>
+            <div class="log">
+              <p><b>200</b> QWE456RTY</p>
+              <p class="new"><b>200</b> ABC123XYZ</p>
+            </div>
           </div>
           <div class="dest dest-2">
-            <p class="dest-name">PesaCast desktop</p>
-            <p class="dest-sub">Over Bluetooth or your own Wi-Fi</p>
-            <p class="dest-row"><span>Jane Doe</span><b>+ KES 500.00</b></p>
+            <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg>
+            <p class="dest-name">PesaCast desktop<span>Bluetooth or your Wi-Fi</span></p>
+            <div class="log">
+              <p class="new"><span>Jane Doe</span><b>+ 500.00</b></p>
+              <p><span>John Mwangi</span><b>+ 350.00</b></p>
+            </div>
           </div>
           <div class="dest dest-3">
-            <p class="dest-name">Everything else</p>
-            <p class="dest-sub">Whatever can take a webhook or a file</p>
-            <p class="dest-chips"><span>Excel</span><span>Local broadcast</span><span>Your own tools</span></p>
+            <svg class="ico" viewBox="0 0 24 24"><path d="M9 3v5M15 3v5M6 8h12v4a6 6 0 0 1-12 0V8zM12 18v3"/></svg>
+            <p class="dest-name">Everything else<span>Anything that takes a webhook or a file</span></p>
+            <div class="chips"><span>Excel</span><span>Local broadcast</span><span>Your own tools</span></div>
           </div>
         </div>
       </div>
-      <figcaption>The phone keeps each message in a queue until it has been delivered. Sample messages and names are invented for illustration.</figcaption>
+      <figcaption>Sample messages and names are invented. The phone keeps each message in a queue until it is delivered.</figcaption>
     </figure>
   </div>
 </section>
