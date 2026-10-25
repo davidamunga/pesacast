@@ -28,6 +28,28 @@ class WebhookSignerTest {
     }
 }
 
+class WebhookConfigTest {
+    private val base = WebhookConfig(true, "https://example.com/h", "tok", "sec")
+
+    @Test
+    fun `a missing device id is filled in without touching anything else`() {
+        val filled = base.withDeviceIdIfMissing("dev-1")
+        assertEquals("dev-1", filled.deviceId)
+        assertEquals(base.copy(deviceId = "dev-1"), filled)
+    }
+
+    @Test
+    fun `an existing device id is kept`() {
+        val has = base.copy(deviceId = "already")
+        assertEquals("already", has.withDeviceIdIfMissing("dev-1").deviceId)
+    }
+
+    @Test
+    fun `a blank device id counts as missing`() {
+        assertEquals("dev-1", base.copy(deviceId = "  ").withDeviceIdIfMissing("dev-1").deviceId)
+    }
+}
+
 class WebhookUrlTest {
     @Test
     fun `https urls are accepted`() {
