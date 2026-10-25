@@ -41,6 +41,7 @@
         <li><a href="#server">What your server should do</a></li>
         <li><a href="#answers">What the phone does with your answer</a></li>
         <li><a href="#verify">Verify a signature</a></li>
+        <li><a href="#ai">Build it with an AI assistant</a></li>
         <li><a href="#more">Schema, receiver, full guide</a></li>
       </ol>
     </nav>
@@ -144,6 +145,27 @@ def verify(secret: str, timestamp: str, raw_body: bytes, header: str) -&gt; bool
     fresh = abs(time.time() - int(timestamp)) &lt; 300
     return fresh and hmac.compare_digest(header, expected)</code></pre>
     <p>Sign the bytes you received, not a re-serialised copy of the JSON: any change to spacing or key order changes the signature.</p>
+
+    <h2 id="ai">Build it with an AI assistant</h2>
+    <p>Paste this into Claude, ChatGPT, Cursor or any coding assistant, and fill in your stack on the last line. It points the assistant at the real spec files, so it does not have to guess the format. <a href="llms.txt">llms.txt</a> lists the same files for tools that look for it.</p>
+<pre class="prompt"><code>Build a webhook receiver for PesaCast, which forwards M-PESA payment notifications from an Android phone to my server.
+
+Read these first and follow them exactly instead of guessing:
+- https://raw.githubusercontent.com/davidamunga/pesacast/main/docs/webhooks.md
+- https://raw.githubusercontent.com/davidamunga/pesacast/main/docs/webhook-payload.schema.json
+- https://raw.githubusercontent.com/davidamunga/pesacast/main/docs/openapi/pesacast-webhook.yaml
+- https://github.com/davidamunga/pesacast/tree/main/examples/webhook-receiver (a reference receiver in Python)
+
+Requirements:
+1. Accept POST over HTTPS. Verify X-PesaCast-Signature: "v1=" plus the hex HMAC-SHA256 of "&lt;timestamp&gt;." followed by the RAW body, compared in constant time. Reject timestamps older than 5 minutes. Sign the raw bytes, never re-serialised JSON.
+2. Answer 2xx quickly and process later. Ignore bodies with "test": true.
+3. De-duplicate with the Idempotency-Key header. Delivery is at least once.
+4. Return 401 or 403 only for bad credentials. Any other 4xx makes the phone drop the payment, so do not use it for something that could succeed later.
+5. Treat each payment as a notification, not proof of payment. Anything that releases goods or credits an account must be confirmed through Safaricom Daraja callbacks.
+6. Never log the signing secret, the bearer token or raw message bodies.
+
+My stack is &lt;language, framework, database&gt;. First list the files you will create, then write them, then give me a curl command that sends a correctly signed test request.</code></pre>
+    <p>Check what it writes: run it against the <a href="#try-it">test server</a>, and send a real payment before you rely on it.</p>
 
     <h2 id="more">Everything else</h2>
     <ul>

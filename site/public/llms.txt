@@ -1,0 +1,25 @@
+# PesaCast
+
+> PesaCast is a free, open source Android app that reads M-PESA payment text messages and forwards them as payment notifications to a desktop app or to your own server by signed webhook. It is not affiliated with Safaricom, and a payment notification is not proof of payment.
+
+## Build a receiver
+
+- [Webhook guide](https://raw.githubusercontent.com/davidamunga/pesacast/main/docs/webhooks.md): the request, the signature, retries, and a test server you can run in one command.
+- [Payload JSON Schema](https://raw.githubusercontent.com/davidamunga/pesacast/main/docs/webhook-payload.schema.json): the exact body, version 1.
+- [OpenAPI description](https://raw.githubusercontent.com/davidamunga/pesacast/main/docs/openapi/pesacast-webhook.yaml): the endpoint you implement.
+- [Reference receiver](https://github.com/davidamunga/pesacast/tree/main/examples/webhook-receiver): Python and SQLite, with signature check, test pings and de-duplication.
+
+## Set up a phone
+
+- [Phone setup](https://raw.githubusercontent.com/davidamunga/pesacast/main/docs/phone-setup.md): install over USB, grant permissions, send the webhook settings from a computer.
+
+## Rules that matter
+
+- Verify X-PesaCast-Signature over the timestamp, a dot, and the raw request body. Never re-serialise the JSON before checking.
+- Delivery is at least once. De-duplicate on the Idempotency-Key header.
+- Answer 2xx quickly. Return 401 or 403 only for bad credentials; other 4xx responses make the phone drop the payment.
+- Treat each request as a notification. Confirm money-moving events through Safaricom Daraja callbacks.
+
+## Security
+
+- [Security policy](https://raw.githubusercontent.com/davidamunga/pesacast/main/SECURITY.md): what the app can see, and how to report a problem.

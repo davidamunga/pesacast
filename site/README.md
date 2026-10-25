@@ -43,6 +43,10 @@ SITE_URL=https://your.domain pnpm --filter pesacast-site build
 
 Without `SITE_URL` the image path is relative, which is fine for local work but will not unfurl on social sites. Set it as an environment variable in your host's build settings.
 
+## For people building a receiver
+
+`developers.html` has a prompt to paste into an AI assistant, and `public/llms.txt` lists the spec files for tools that look for one. Both point at files on `main`, so update them if those files move.
+
 ## Publish
 
 **Vercel.** Import the repository, then set:

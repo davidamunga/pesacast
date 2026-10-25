@@ -124,7 +124,7 @@ for name, p in parsed.items():
         elif frag and f.suffix == ".html" and frag not in parsed.get(f.name, Page(f.name)).ids:
             fail(name, f"anchor #{frag} not found in {target}")
 
-for icon in ("favicon.ico", "favicon-32.png", "apple-touch-icon.png", "og.png", "robots.txt"):
+for icon in ("favicon.ico", "favicon-32.png", "apple-touch-icon.png", "og.png", "robots.txt", "llms.txt"):
     if not (ROOT / icon).is_file():
         fail(icon, "missing from the build")
 
