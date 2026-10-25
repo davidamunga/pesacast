@@ -48,7 +48,7 @@ a:hover { color: var(--accent-hover); }
 .site-header { border-bottom: 1px solid var(--border); }
 .site-header .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 2rem; padding-block: 1rem; }
 .brand { display: inline-flex; align-items: center; gap: 0.6rem; font-weight: 700; font-size: 1.15rem; color: var(--text); text-decoration: none; }
-.brand img { width: 1.75rem; height: 1.75rem; border-radius: 0.4rem; }
+.brand img { width: 2.25rem; height: 2.25rem; border-radius: 0.5rem; }
 .site-nav { display: flex; flex-wrap: wrap; gap: 0.2rem 1.5rem; margin-left: auto; }
 .site-nav a { color: var(--muted); text-decoration: none; font-size: 0.95rem; padding-block: 0.2rem; border-bottom: 2px solid transparent; }
 .site-nav a:hover { color: var(--text); }

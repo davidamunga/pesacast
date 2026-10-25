@@ -33,6 +33,7 @@ class Page(HTMLParser):
         self.in_title = False
         self.description = None
         self.lang = None
+        self.meta = {}    # property/name -> content
         self.links = []   # (kind, url) for things that load or navigate
         self.ids = set()
 
@@ -48,6 +49,8 @@ class Page(HTMLParser):
             self.in_title = True
         if tag == "meta" and a.get("name") == "description":
             self.description = a.get("content")
+        if tag == "meta" and (a.get("property") or a.get("name")):
+            self.meta[a.get("property") or a.get("name")] = a.get("content", "")
         if tag == "script":
             fail(self.name, "uses <script>")
         if "style" in a:
@@ -56,7 +59,8 @@ class Page(HTMLParser):
             if k.startswith("on"):
                 fail(self.name, f"has an event handler attribute ({k})")
         if tag == "link" and a.get("href"):
-            self.links.append(("load", a["href"]))
+            # a canonical link names this page's own address; it loads nothing
+            self.links.append(("nav" if a.get("rel") == "canonical" else "load", a["href"]))
         if tag in ("img", "source") and a.get("src"):
             self.links.append(("load", a["src"]))
         if tag == "a" and a.get("href"):
@@ -87,6 +91,14 @@ for path in pages:
         fail(path.name, "missing meta description")
     if p.h1 != 1:
         fail(path.name, f"has {p.h1} h1 elements, expected 1")
+    for key in ("og:title", "og:description", "og:image", "twitter:card", "twitter:image"):
+        if not p.meta.get(key):
+            fail(path.name, f"missing {key}")
+    image = p.meta.get("og:image", "")
+    if image and not image.startswith("https://") and not (ROOT / image).is_file():
+        fail(path.name, f"og:image file not found: {image}")
+    if len(p.description or "") > 200:
+        fail(path.name, "meta description is longer than 200 characters")
     if re.search(r"\bTODO\b|lorem ipsum", path.read_text(encoding="utf-8"), re.I):
         fail(path.name, "contains a TODO or placeholder text")
 
@@ -111,6 +123,10 @@ for name, p in parsed.items():
             fail(name, f"broken link: {url}")
         elif frag and f.suffix == ".html" and frag not in parsed.get(f.name, Page(f.name)).ids:
             fail(name, f"anchor #{frag} not found in {target}")
+
+for icon in ("favicon.ico", "favicon-32.png", "apple-touch-icon.png", "og.png", "robots.txt"):
+    if not (ROOT / icon).is_file():
+        fail(icon, "missing from the build")
 
 css_files = sorted((ROOT / "assets").glob("*.css"))
 if not css_files:

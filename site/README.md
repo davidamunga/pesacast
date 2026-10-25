@@ -31,6 +31,18 @@ python3 site/check.py                 # checks site/dist
 
 The check fails if a page loses its title, description or single `h1`, if any link or file is broken, or if the output contains anything the Content-Security-Policy forbids: scripts, inline styles, or resources from other sites. CI builds and checks on every pull request.
 
+## Links, icons and social previews
+
+Every page gets its icons, Open Graph and Twitter card tags from `vite.config.js`, using the page's own title and description. The preview image is `public/og.png` (1200 by 630); its source is `design/og.html`, a plain page you can open with the dev server and screenshot at that size when the headline changes.
+
+Crawlers and link previews need absolute addresses. Build with the real address and the build adds canonical links, absolute image addresses, `sitemap.xml` and a `Sitemap:` line in `robots.txt`:
+
+```bash
+SITE_URL=https://your.domain pnpm --filter pesacast-site build
+```
+
+Without `SITE_URL` the image path is relative, which is fine for local work but will not unfurl on social sites. Set it as an environment variable in your host's build settings.
+
 ## Publish
 
 Any static host works. On Cloudflare Pages: build command `pnpm --filter pesacast-site build`, output directory `site/dist`. `public/_headers` is copied into the output and picked up automatically. Nothing here publishes the site by itself.
