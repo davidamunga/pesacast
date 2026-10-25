@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PesaCast: M-PESA payments on your screen, the second they land</title>
 <meta name="description" content="A phone reads the M-PESA message. PesaCast shows it on your computer or posts it to your own server. Free, open source, no accounts, no cloud.">
-<meta name="color-scheme" content="light dark">
+<meta name="color-scheme" content="light">
 <meta property="og:title" content="PesaCast: M-PESA payments on your screen, the second they land">
 <meta property="og:description" content="A phone reads the M-PESA message. PesaCast shows it on your computer or posts it to your own server. Free, open source, no accounts, no cloud.">
 <meta property="og:type" content="website">
@@ -28,21 +28,47 @@
     </div>
     <p class="small meta">Free and open source. An Android phone, plus a Mac or Windows computer if you want the desktop view.</p>
 
-    <figure class="example">
-      <div>
-        <p class="label">What the phone receives</p>
-        <p class="sms">ABC123XYZ Confirmed. You have received Ksh500.00 from JANE DOE on 24/10/26 at 10:00 AM. New <span class="nb">M-PESA</span> balance is Ksh1,500.00.</p>
+    <figure class="flow-figure">
+      <div class="flow" role="img" aria-label="A text message from M-PESA arrives on an Android phone. PesaCast saves it on the phone, then sends it to your own platform by webhook, to the PesaCast desktop app, and to other integrations such as an Excel export.">
+        <div class="phone" aria-hidden="true">
+          <div class="phone-bar"><span>10:00</span><span class="phone-dots"><i></i><i></i><i></i></span></div>
+          <div class="phone-head"><span class="phone-back"></span>MPESA</div>
+          <div class="sms-list">
+            <p class="bubble bubble-old">QWE456RTY Confirmed. Ksh350.00 received from JOHN MWANGI on 24/10/26 at 9:41 AM.</p>
+            <p class="bubble bubble-new">ABC123XYZ Confirmed. You have received Ksh500.00 from JANE DOE on 24/10/26 at 10:00 AM. New M-PESA balance is Ksh1,500.00.</p>
+          </div>
+          <div class="phone-note">
+            <img src="assets/logo.png" alt="" width="28" height="28">
+            <p><strong>Received KES 500.00</strong><span>Jane Doe &middot; saved on this phone</span></p>
+          </div>
+        </div>
+        <svg class="wires" viewBox="0 0 112 432" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <path class="wire" d="M0 216 C 56 216, 56 64, 112 64"/>
+          <path class="wire" d="M0 216 L 112 216"/>
+          <path class="wire" d="M0 216 C 56 216, 56 368, 112 368"/>
+          <circle class="packet packet-1" r="4"/>
+          <circle class="packet packet-2" r="4"/>
+          <circle class="packet packet-3" r="4"/>
+        </svg>
+        <div class="dests" aria-hidden="true">
+          <div class="dest dest-1">
+            <p class="dest-name">Your platform</p>
+            <p class="dest-sub">A signed webhook, retried until it lands</p>
+            <p class="dest-code"><span class="ok">200</span> POST /hooks/mpesa</p>
+          </div>
+          <div class="dest dest-2">
+            <p class="dest-name">PesaCast desktop</p>
+            <p class="dest-sub">Over Bluetooth or your own Wi-Fi</p>
+            <p class="dest-row"><span>Jane Doe</span><b>+ KES 500.00</b></p>
+          </div>
+          <div class="dest dest-3">
+            <p class="dest-name">Everything else</p>
+            <p class="dest-sub">Whatever can take a webhook or a file</p>
+            <p class="dest-chips"><span>Excel</span><span>Local broadcast</span><span>Your own tools</span></p>
+          </div>
+        </div>
       </div>
-      <div>
-        <p class="label">What PesaCast shows</p>
-        <dl class="fields">
-          <div><dt>Received</dt><dd>KES 500.00</dd></div>
-          <div><dt>From</dt><dd>Jane Doe</dd></div>
-          <div><dt>Reference</dt><dd>ABC123XYZ</dd></div>
-          <div><dt>Balance</dt><dd>KES 1,500.00</dd></div>
-        </dl>
-      </div>
-      <figcaption>Sample message, invented for illustration.</figcaption>
+      <figcaption>The phone keeps each message in a queue until it has been delivered. Sample messages and names are invented for illustration.</figcaption>
     </figure>
   </div>
 </section>
