@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PesaCast: M-PESA payment notifications on your computer or server</title>
+<meta name="description" content="An SMS forwarder for M-PESA only. A spare Android phone reads each payment text and sends it to your computer or your own server. Free, open source, no accounts, no cloud.">
+<meta name="color-scheme" content="light">
+<meta property="og:title" content="PesaCast: M-PESA payment notifications on your computer or server">
+<meta property="og:description" content="An SMS forwarder for M-PESA only. A spare Android phone reads each payment text and sends it to your computer or your own server. Free, open source, no accounts, no cloud.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<!--site:header-->
+<main id="main">
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="kicker">For shops, offices and developers</p>
+      <h1>M-PESA payment notifications on your computer or server.</h1>
+      <p class="lede">A free Android app for a spare phone. It reads each <span class="nb">M-PESA</span> text and sends a payment notification, with the amount, name and reference, where you choose. Every other message is ignored.</p>
+      <div class="actions">
+        <a class="btn" href="start.html">Set up a phone</a>
+        <a class="btn btn-secondary" href="developers.html">Developer docs</a>
+      </div>
+      <p class="small meta">Free and open source under the MIT licence. <a href="https://github.com/davidamunga/pesacast">Star it on GitHub</a>. An Android phone, plus a Mac or Windows computer if you want the desktop view.</p>
+    </div>
+
+    <figure class="stage">
+      <div class="flow" role="img" aria-label="An M-PESA text message arrives on an Android phone. PesaCast saves it on the phone, then sends it to your own platform by webhook, to the PesaCast desktop app, and to other integrations such as an Excel export.">
+        <div class="phone" aria-hidden="true">
+          <div class="phone-top"><span>10:00</span><i class="phone-notch"></i><span class="phone-batt"></span></div>
+          <div class="phone-head"><span class="avatar">M</span><span><b>MPESA</b><small>Text message</small></span></div>
+          <div class="banner">
+            <span class="avatar">M</span>
+            <p><b>MPESA</b><span>ABC123XYZ Confirmed. You have received Ksh500.00 from JANE DOE on 24/10/26&hellip;</span></p>
+          </div>
+          <div class="thread">
+            <p class="day">Today</p>
+            <p class="bubble bubble-old">QWE456RTY Confirmed. Ksh350.00 received from JOHN MWANGI on 24/10/26 at 9:41 AM.</p>
+            <p class="bubble bubble-new">ABC123XYZ Confirmed. You have received Ksh500.00 from JANE DOE on 24/10/26 at 10:00 AM. New M-PESA balance is Ksh1,500.00.</p>
+          </div>
+          <div class="pc">
+            <img src="assets/logo.png" alt="" width="32" height="32">
+            <div class="pc-text">
+              <b>PesaCast</b>
+              <span class="pc-state pc-1">Reading the message</span>
+              <span class="pc-state pc-2">Saved on the phone</span>
+              <span class="pc-state pc-3">Delivered</span>
+            </div>
+          </div>
+        </div>
+
+        <svg class="wires" viewBox="0 0 80 408" aria-hidden="true" focusable="false">
+          <path class="wire" d="M0 204 C 40 204, 40 64, 80 64"/>
+          <path class="wire" d="M0 204 L 80 204"/>
+          <path class="wire" d="M0 204 C 40 204, 40 344, 80 344"/>
+          <path class="stream stream-1" pathLength="1" d="M0 204 C 40 204, 40 64, 80 64"/>
+          <path class="stream stream-2" pathLength="1" d="M0 204 L 80 204"/>
+          <path class="stream stream-3" pathLength="1" d="M0 204 C 40 204, 40 344, 80 344"/>
+          <circle class="node" cx="1" cy="204" r="4"/>
+          <circle class="node node-end node-1" cx="79" cy="64" r="4"/>
+          <circle class="node node-end node-2" cx="79" cy="204" r="4"/>
+          <circle class="node node-end node-3" cx="79" cy="344" r="4"/>
+          <g class="packet packet-1"><rect x="-26" y="-10" width="52" height="20" rx="10"/><text>KES 500</text></g>
+          <g class="packet packet-2"><rect x="-26" y="-10" width="52" height="20" rx="10"/><text>KES 500</text></g>
+          <g class="packet packet-3"><rect x="-26" y="-10" width="52" height="20" rx="10"/><text>KES 500</text></g>
+        </svg>
+
+        <div class="dests" aria-hidden="true">
+          <div class="dest dest-1"><i class="tick"></i>
+            <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M7 7h.01M7 17h.01"/></svg>
+            <p class="dest-name">Your platform<span>Signed webhook</span></p>
+            <div class="log">
+              <p><b>200 OK</b> QWE456RTY</p>
+              <p class="new"><b>200 OK</b> ABC123XYZ</p>
+            </div>
+          </div>
+          <div class="dest dest-2"><i class="tick"></i>
+            <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg>
+            <p class="dest-name">PesaCast desktop<span>Bluetooth or your Wi-Fi</span></p>
+            <div class="log">
+              <p class="new"><span>Jane Doe</span><b>+ 500.00</b></p>
+              <p><span>John Mwangi</span><b>+ 350.00</b></p>
+            </div>
+          </div>
+          <div class="dest dest-3"><i class="tick"></i>
+            <svg class="ico" viewBox="0 0 24 24"><path d="M9 3v5M15 3v5M6 8h12v4a6 6 0 0 1-12 0V8zM12 18v3"/></svg>
+            <p class="dest-name">Everything else<span>Anything that takes a webhook or a file</span></p>
+            <div class="chips"><span>Excel</span><span>Local broadcast</span><span>Your own tools</span></div>
+          </div>
+        </div>
+      </div>
+      <figcaption>Sample messages and names are invented. The phone keeps each message in a queue until it is delivered.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <h2>What it does</h2>
+      <p>From the customer's phone to your screen, in three hops.</p>
+    </div>
+    <ol class="ledger">
+      <li>
+        <div>
+          <h3>The phone reads the message.</h3>
+          <p>Safaricom texts the phone for every payment. PesaCast, running on that phone, picks up messages from MPESA and turns each into an amount, a name, a reference and a balance.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h3>It sends it where you point it.</h3>
+          <p>To your computer over Bluetooth or your own Wi-Fi. Or to a web address you control, called a webhook. Or both. Nothing goes through a server of ours, because there is not one.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <h3>Your screen shows it.</h3>
+          <p>A notification, and a live list on the desktop app. Nothing to refresh. Export the list to Excel when you need it.</p>
+        </div>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <h2>What it does not do</h2>
+      <p>Read this part before you rely on it for money.</p>
+    </div>
+    <dl class="plain">
+      <div>
+        <dt>It is not proof of payment.</dt>
+        <dd><p>PesaCast forwards a text message. A text can be faked, delayed, or lost if the phone was off. If money or goods depend on a payment, confirm it with Safaricom&rsquo;s Daraja callbacks and use PesaCast alongside them.</p></dd>
+      </div>
+      <div>
+        <dt>It never touches your money or your PIN.</dt>
+        <dd><p>It cannot send money, cannot send SMS, and never asks for your <span class="nb">M-PESA</span> PIN. It only receives what arrives.</p></dd>
+      </div>
+      <div>
+        <dt>It is not from Safaricom.</dt>
+        <dd><p>Independent, unofficial, and not affiliated with or endorsed by Safaricom.</p></dd>
+      </div>
+      <div>
+        <dt>It is not on the Play Store.</dt>
+        <dd><p>You install it from a file. The <a href="start.html">setup guide</a> shows how, and checks the file against a checksum before it goes on the phone.</p></dd>
+      </div>
+      <div>
+        <dt>It will not make a cheap phone behave.</dt>
+        <dd><p>Many budget phones stop background apps to save battery. The setup checklist walks you through the settings that keep PesaCast alive, but some are menus only you can open. See <a href="phones.html">phones</a>.</p></dd>
+      </div>
+      <div>
+        <dt>It only understands <span class="nb">M-PESA</span>.</dt>
+        <dd><p>Other wallets and banks send different messages. They are ignored.</p></dd>
+      </div>
+    </dl>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Where your data goes</h2>
+    </div>
+    <p>To the desktop app, straight from the phone, over an encrypted link on your own network. To your webhook, only if you turn it on, over HTTPS, to the address you typed. Nowhere else.</p>
+    <p>The desktop app checks GitHub for new versions. The code is open, so you can read exactly what the phone does with a message: <a href="security.html">how it stays yours</a>.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Open source, and meant to be read</h2>
+      <p>PesaCast is MIT licensed. Every line that touches your payments is public.</p>
+    </div>
+    <dl class="plain">
+      <div>
+        <dt>Read the code.</dt>
+        <dd><p>The Android app, the desktop app and the message parser are all in <a href="https://github.com/davidamunga/pesacast">one repository</a>. The parser has tests built from real messages with the names and numbers removed.</p></dd>
+      </div>
+      <div>
+        <dt>Check what you install.</dt>
+        <dd><p>The setup script checks the download against a published checksum before it goes on the phone. Every <a href="https://github.com/davidamunga/pesacast/releases">release</a> lists its files on GitHub.</p></dd>
+      </div>
+      <div>
+        <dt>Help or complain.</dt>
+        <dd><p>Open an <a href="https://github.com/davidamunga/pesacast/issues/new/choose">issue</a>, tell us how your phone behaved, or send a pull request. <a href="https://github.com/davidamunga/pesacast/blob/main/CONTRIBUTING.md">How to contribute</a>.</p></dd>
+      </div>
+    </dl>
+    <div class="actions">
+      <a class="btn" href="https://github.com/davidamunga/pesacast">&#9733; Star on GitHub</a>
+      <a class="btn btn-secondary" href="https://github.com/davidamunga/pesacast/blob/main/CONTRIBUTING.md">Contribute</a>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="paths">
+      <div>
+        <h3>Running a shop or an office?</h3>
+        <p>About fifteen minutes: put the app on a spare Android phone, put the desktop app on a computer, pair them.</p>
+        <p><a class="btn" href="start.html">Set up a phone</a></p>
+      </div>
+      <div>
+        <h3>Building something?</h3>
+        <p>Each payment can be posted, signed and retried, to your own server. The format is published as a schema, with a reference receiver.</p>
+        <p><a class="btn btn-secondary" href="developers.html">Read the developer docs</a></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+<!--site:footer-->
+</body>
+</html>

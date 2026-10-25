@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How PesaCast stays yours</title>
+<meta name="description" content="What the app can see, where data goes, how it is protected, and what has not been independently reviewed.">
+<meta name="color-scheme" content="light">
+<meta property="og:title" content="How PesaCast stays yours">
+<meta property="og:description" content="What the app can see, where data goes, how it is protected, and what has not been independently reviewed.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<!--site:header-->
+<main id="main">
+
+<div class="wrap">
+  <div class="page-head">
+    <h1>How it stays yours.</h1>
+    <p class="lede">What the app can see, where the data goes, how it is protected, and what has not been checked by anyone else yet.</p>
+  </div>
+  <div class="prose">
+    <h2>What it can see</h2>
+    <p>The SMS permission lets an app receive every incoming text. PesaCast keeps only messages whose sender is MPESA, parses them, and ignores the rest: they are not stored, not logged, not forwarded. The app does not log message text, tokens or secrets, and a test fails the build if someone adds code that does. It has no permission to send SMS, and no access to your contacts or files.</p>
+
+    <h2>Where the data goes</h2>
+    <ul>
+      <li><strong>Phone to desktop, over Wi-Fi.</strong> Encrypted. The phone and desktop agree on fresh keys for every connection (ECDH on P-256), mixed with the pairing token so only the paired desktop can join, and each message is sealed with AES-256-GCM. The token itself is never sent over the network. Older, unencrypted versions are no longer supported.</li>
+      <li><strong>Phone to desktop, over Bluetooth.</strong> Short-range Bluetooth LE, with no application-level encryption. Use Wi-Fi if the room is not yours.</li>
+      <li><strong>Phone to your server (webhook).</strong> Only if you switch it on. HTTPS only, no redirects, signed if you set a secret, and the phone will not enable it until a test to that address has succeeded.</li>
+      <li><strong>To us.</strong> Nowhere. There is no PesaCast server, account or analytics. The desktop app asks GitHub whether a newer version exists.</li>
+    </ul>
+
+    <h2>What is stored on the phone</h2>
+    <p>Pairing token, webhook token and signing secret are encrypted with a key held in Android&rsquo;s secure storage. Backups and device-to-device transfer are switched off, so none of it is copied off the phone or restored onto another. Unsent webhook payments wait in a private file, for at most seven days, and are deleted once your server accepts them.</p>
+
+    <h2>Installing safely</h2>
+    <p>Newer releases publish a SHA-256 checksum next to the app. The setup script refuses to install a file that does not match, and for older releases uses the checksum GitHub itself recorded. Play Protect may ask about the app; choose to continue, and never switch Play Protect off for this.</p>
+
+    <h2>What has not been checked</h2>
+    <div class="note"><p><strong>The Wi-Fi handshake has not had an independent review.</strong> It is built from standard parts (ECDH, HKDF, AES-GCM) and is covered by tests that both apps must pass against shared vectors, but the way the parts are combined is ours. The <a href="https://github.com/davidamunga/pesacast/blob/main/docs/security/wifi-handshake-review-request.md">specification, threat model and the questions we most want answered</a> are public. If you can review it, please do.</p></div>
+    <p>Anyone who learns your pairing token can impersonate either side. Regenerate it in the app to revoke access.</p>
+
+    <h2>Reporting a problem</h2>
+    <p>Please do not post a security problem in a public issue. Follow <a href="https://github.com/davidamunga/pesacast/blob/main/SECURITY.md">SECURITY.md</a>, and do not include real transaction messages or tokens in a report.</p>
+
+    <h2>Read it yourself</h2>
+    <p>The code is public on <a href="https://github.com/davidamunga/pesacast">GitHub</a>, so you can check any of the above against what the app actually does.</p>
+  </div>
+</div>
+
+</main>
+<!--site:footer-->
+</body>
+</html>

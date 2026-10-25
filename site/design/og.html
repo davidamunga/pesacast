@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Social preview source</title>
+
+<style>
+  * { box-sizing: border-box; }
+  :root { --muted: oklch(46% 0.012 160); --accent: oklch(48% 0.14 152); --border: oklch(90% 0.006 150); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; color: oklch(21% 0.012 160); }
+  body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: #fff; }
+  .og { box-sizing: border-box; width: 1200px; height: 630px; padding: 64px 72px; display: grid; grid-template-columns: 1fr 380px; gap: 56px; align-items: center; }
+  .brand { display: flex; align-items: center; gap: 16px; font-weight: 700; font-size: 34px; }
+  .brand img { width: 56px; height: 56px; border-radius: 13px; }
+  h1 { font-size: 68px; line-height: 1.06; letter-spacing: -0.025em; margin: 44px 0 0; max-width: 14ch; }
+  .sub { font-size: 28px; line-height: 1.4; color: var(--muted); margin: 28px 0 0; max-width: 24em; }
+  .foot { margin-top: 40px; font-size: 22px; font-weight: 600; color: var(--accent); }
+  .col { display: grid; gap: 18px; }
+  .card { border: 2px solid var(--border); border-radius: 20px; padding: 22px 26px; background: #fff; display: flex; align-items: center; gap: 18px; }
+  .card.sms { background: oklch(94% 0.04 152); border-color: oklch(86% 0.06 152); }
+  .dot { flex: none; width: 44px; height: 44px; border-radius: 12px; background: oklch(95% 0.03 152); display: grid; place-items: center; }
+  .dot i { width: 18px; height: 18px; border-radius: 50%; background: var(--accent); }
+  .card b { display: block; font-size: 26px; }
+  .card span { color: var(--muted); font-size: 20px; }
+  .arrow { text-align: center; color: var(--accent); font-size: 30px; line-height: 1; margin: -6px 0; }
+</style>
+</head>
+<body>
+<div class="og">
+  <div>
+    <div class="brand"><img src="../assets/logo.png" alt="">PesaCast</div>
+    <h1>M-PESA payment notifications on your computer or server.</h1>
+    <p class="sub">A free Android app that reads each M-PESA text and forwards it where you choose.</p>
+    <p class="foot">Free &middot; Open source &middot; No account, no cloud</p>
+  </div>
+  <div class="col">
+    <div class="card sms"><div class="dot"><i></i></div><p style="margin:0"><b>MPESA text</b><span>Confirmed. You have received Ksh500.00</span></p></div>
+    <div class="arrow">&darr;</div>
+    <div class="card"><div class="dot"><i></i></div><p style="margin:0"><b>PesaCast desktop</b><span>Bluetooth or Wi-Fi</span></p></div>
+    <div class="card"><div class="dot"><i></i></div><p style="margin:0"><b>Your server</b><span>Signed webhook</span></p></div>
+  </div>
+</div>
+</body>
+</html>

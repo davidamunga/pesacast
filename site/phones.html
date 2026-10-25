@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phones that work with PesaCast</title>
+<meta name="description" content="Which Android phones have been tested, which ones stop background apps, and what PesaCast needs.">
+<meta name="color-scheme" content="light">
+<meta property="og:title" content="Phones that work with PesaCast">
+<meta property="og:description" content="Which Android phones have been tested, which ones stop background apps, and what PesaCast needs.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<!--site:header-->
+<main id="main">
+
+<div class="wrap">
+  <div class="page-head">
+    <h1>Which phones work, and what to expect.</h1>
+    <p class="lede">Any Android 8 or newer phone that receives <span class="nb">M-PESA</span> messages should work. Whether it keeps working with the screen off is a different question.</p>
+  </div>
+  <div class="prose">
+    <h2>What has actually been tested</h2>
+    <div class="table-scroll"><table>
+      <thead><tr><th>Phone</th><th>Android</th><th>Result</th></tr></thead>
+      <tbody>
+        <tr><td>Nokia G21 (HMD)</td><td>12</td><td>Set up, paired and tested by the maintainer.</td></tr>
+      </tbody>
+    </table></div>
+    <p>That is the whole list. It is short on purpose: this page only says what someone has tried. If you set up another phone, <a href="https://github.com/davidamunga/pesacast/issues/new/choose">tell us what happened</a>, good or bad, and the page grows.</p>
+
+    <h2>Phones that stop background apps</h2>
+    <p>These makers are known for closing background apps aggressively. PesaCast has not been tested on them yet. The setup checklist shows a hint for your maker, with the menu names those phones usually use. Menu names change between software versions, so treat the hints as a guide.</p>
+    <ul>
+      <li>Tecno, Infinix and itel</li>
+      <li>Xiaomi, Redmi and Poco</li>
+      <li>Oppo, realme and OnePlus</li>
+      <li>vivo and iQOO</li>
+      <li>Samsung</li>
+      <li>Huawei and Honor</li>
+    </ul>
+    <p>For all of them: allow background activity, allow auto-start, exclude PesaCast from battery saving, and lock it in the recent-apps list if your phone has that option.</p>
+
+    <h2>What is required</h2>
+    <ul>
+      <li>Android 8.0 or newer.</li>
+      <li>The SIM that receives the <span class="nb">M-PESA</span> messages, with signal.</li>
+      <li>For the desktop over Bluetooth: a phone that can act as a Bluetooth LE peripheral. Some phones cannot. Use Wi-Fi if yours cannot.</li>
+      <li>For the desktop over Wi-Fi: the phone and the computer on the same network.</li>
+      <li>For the webhook only: nothing else. No Bluetooth, no computer.</li>
+    </ul>
+
+    <h2>What it does not support</h2>
+    <p>iPhones, Airtel Money and other wallets, and Linux desktops (there is no Linux build yet). Feature phones that do not run Android cannot install the app.</p>
+  </div>
+</div>
+
+</main>
+<!--site:footer-->
+</body>
+</html>

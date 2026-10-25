@@ -1,0 +1,16 @@
+{
+  "name": "pesacast-site",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "The PesaCast website. A static multi-page Vite site: no framework, no scripts in the output.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "python3 check.py"
+  },
+  "devDependencies": {
+    "vite": "^7.0.4"
+  }
+}

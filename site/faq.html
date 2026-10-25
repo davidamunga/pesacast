@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Questions about PesaCast</title>
+<meta name="description" content="Is it safe, does it read all my texts, why is it not on the Play Store, and can I trust a payment it shows.">
+<meta name="color-scheme" content="light">
+<meta property="og:title" content="Questions about PesaCast">
+<meta property="og:description" content="Is it safe, does it read all my texts, why is it not on the Play Store, and can I trust a payment it shows.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to the content</a>
+<!--site:header-->
+<main id="main">
+
+<div class="wrap">
+  <div class="page-head">
+    <h1>Questions people ask first.</h1>
+  </div>
+  <div class="prose">
+    <dl class="plain">
+      <div><dt>Is it safe?</dt><dd><p>It does less than you might fear. It receives <span class="nb">M-PESA</span> messages and forwards them where you tell it. It cannot send money, cannot send SMS and never asks for your PIN. Read the <a href='security.html'>security page</a> for the details, including the parts that are not yet independently reviewed.</p></dd></div>
+      <div><dt>How is this different from an SMS forwarding app?</dt><dd><p>It is an SMS forwarder that only does <span class="nb">M-PESA</span>. A general forwarder passes on every text it sees, as raw text. PesaCast keeps only messages from MPESA, drops the rest, and turns each payment into an amount, a name, a reference and a balance. It then shows it on your computer or posts it to your server, signed, with a queue that retries until your server answers. The price of being narrow: it understands nothing but M-PESA.</p></dd></div>
+      <div><dt>Does it read all my text messages?</dt><dd><p>Android&rsquo;s SMS permission is all or nothing, so the app is able to receive every incoming text. The code looks at the sender, keeps only messages from MPESA, and drops the rest without storing or logging them. You do not have to take our word for it: <a href='https://github.com/davidamunga/pesacast/blob/main/android/app/src/main/kotlin/com/pesacast/android/sms/SmsReceiver.kt'>the receiver is about fifty lines</a>.</p></dd></div>
+      <div><dt>Why is it not on the Play Store?</dt><dd><p>Google Play restricts which apps may read SMS to a short list of uses, and mirroring payments is not an obvious fit. So PesaCast is installed from a file. That is why the setup checks the file&rsquo;s checksum, and why Play Protect may ask about it.</p></dd></div>
+      <div><dt>Can I trust a payment that PesaCast shows?</dt><dd><p>Trust it as a notification, not as a receipt. An SMS can be spoofed or arrive late. For anything that releases goods or credits an account, confirm through Safaricom&rsquo;s Daraja callbacks.</p></dd></div>
+      <div><dt>Do I need a computer?</dt><dd><p>No. The webhook sends payments straight from the phone to your server. The computer is for the desktop view, notifications and Excel export.</p></dd></div>
+      <div><dt>What happens if the phone is off or has no signal?</dt><dd><p>No message arrives, so nothing is forwarded. The mobile network usually delivers the SMS once the phone is back, and the phone forwards it then. If the phone has the message but your server is down, PesaCast keeps up to 500 transactions for up to seven days and retries until your server accepts them.</p></dd></div>
+      <div><dt>Does it work with two phones, or two shops?</dt><dd><p>Each phone sends its own payments. A webhook receiver can tell them apart by the device identifier in every request. The desktop app talks to one phone at a time, so use the webhook if you need several.</p></dd></div>
+      <div><dt>What does it cost?</dt><dd><p>Nothing. It is free software under the MIT licence.</p></dd></div>
+      <div><dt>Which versions have which features?</dt><dd><p>The setup script, setup checklist and webhook are newer than version 0.8. The <a href='https://github.com/davidamunga/pesacast/releases'>releases page</a> lists what each version contains.</p></dd></div>
+      <div><dt>Something is wrong. Where do I say so?</dt><dd><p>Open an <a href='https://github.com/davidamunga/pesacast/issues/new/choose'>issue</a>. For a security problem, do not post it publicly; follow the steps on the <a href='security.html'>security page</a>.</p></dd></div>
+    </dl>
+  </div>
+</div>
+
+</main>
+<!--site:footer-->
+</body>
+</html>
