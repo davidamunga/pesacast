@@ -96,7 +96,9 @@ class WifiSecureServerTest {
             guard = guard,
         )
         server.start()
-        eventually("bound") { server.port != 0 }
+        // Until the socket is bound, getPort() reports -1 (not 0), so "!= 0" passes too early and the
+        // first client connects to a port that is not listening yet.
+        eventually("bound") { server.port > 0 }
     }
 
     private fun eventually(message: String, condition: () -> Boolean) {
