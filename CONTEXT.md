@@ -13,6 +13,9 @@ Shared vocabulary. Use these terms exactly in code, docs and commits.
 | **WiFi transport** | The phone hosts a WebSocket server on the LAN; the desktop connects as a client. |
 | **Pairing token** | Random secret generated on the phone that the desktop sends to authenticate a WiFi connection. |
 | **Phone webhook** | Optional Android feature that POSTs each transaction from the phone to a user-configured HTTPS URL, independent of any desktop. Not the same as the desktop's webhook push or the local broadcast. |
+| **Device id** | A random UUID created once per install, sent in every webhook request (`device_id`, and the `X-PesaCast-Device-Id` header) so a receiver can tell phones apart. Not a secret; it changes if the app is reinstalled. |
+| **Provisioning** | Configuring a phone from a computer: installing the app and sending webhook settings over `adb` (`scripts/setup-phone.sh`, `ProvisionActivity`). See ADR-0015. |
+| **Receiver** | The server that accepts the phone's webhook requests. See `docs/webhooks.md` and `examples/webhook-receiver`. |
 | **Setup checklist** | The Android screen (Connect tab, then Setup checklist) that shows what a phone still needs before it reliably forwards payments (SMS permission, battery settings, the phone maker's auto-start menu, a destination) and runs an end-to-end test. See ADR-0015. |
 | **Local broadcast** | Optional desktop WebSocket server on `127.0.0.1:7878` that re-publishes every ingested transaction to local tools. Not related to the WiFi transport. |
 | **Ingest** | The desktop pipeline every transaction passes through: parse, dedupe, notify, emit, broadcast. |

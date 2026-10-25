@@ -26,6 +26,9 @@ pnpm lint                                      # eslint + tsc + rustfmt + clippy
 cd android && ./gradlew :app:lintDebug         # Android lint
 cd android && ./gradlew :app:testDebugUnitTest # Android unit tests (parser, BLE framing, WiFi auth)
 cd desktop && pnpm tauri dev                   # run desktop app
+pnpm --filter pesacast-site build              # build the website (site/dist)
+pnpm --filter pesacast-site dev                # run the website locally
+python3 site/check.py                          # check the built site (run the build first)
 pnpm test:scripts                              # tests for scripts/setup-phone.sh (fake adb and curl, no phone)
 ```
 

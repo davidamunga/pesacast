@@ -1,6 +1,6 @@
 # Architecture
 
-PesaCast has two apps that talk over a local link. No server or cloud is involved.
+PesaCast has two apps. The phone sends each transaction to the desktop over a local link, and can also post it to a server you choose. No PesaCast server or cloud is involved.
 
 ```mermaid
 flowchart LR
@@ -10,10 +10,12 @@ flowchart LR
     subgraph Android
       TM --> BLE[BleTransport<br/>GATT server]
       TM --> WIFI[WifiTransport<br/>WebSocket server]
+      TM --> WH[WebhookDelivery<br/>queue, sign, retry]
       MS[MirrorService<br/>foreground] -.keeps alive.-> TM
     end
     BLE -- BLE notify --> UB[useBle]
-    WIFI -- ws:// --> UW[useWifi]
+    WIFI -- encrypted WebSocket --> UW[useWifi]
+    WH -- HTTPS POST --> YS[Your server]
     subgraph Desktop
       UB --> ING[ingest.rs]
       UW --> ING
@@ -31,7 +33,9 @@ flowchart LR
 | `sms/SmsReceiver`, `MpesaParser` | Detect and parse M-PESA SMS into `MpesaTransaction` |
 | `transport/TransportManager` | Owns all transports, merges their state, fans out each transaction |
 | `transport/BleTransport` | GATT peripheral: advertise, accept central, chunked notify |
-| `transport/WifiTransport` | WebSocket server, token auth, mDNS registration (found by the desktop's `discovery.rs`) |
+| `transport/WifiTransport` | WebSocket server, encrypted handshake keyed by the pairing token, mDNS registration (found by the desktop's `discovery.rs`) |
+| `webhook/` (`WebhookDelivery`, `WebhookQueue`, `WebhookSigner`) | Optional phone-to-server push: HTTPS only, persisted queue, backoff, HMAC signature, secrets encrypted with the Keystore. See [ADR-0013](adr/0013-phone-webhook-delivery.md) |
+| `setup/` (`SetupChecklist`, `ProvisionActivity`) | The setup checklist with its end-to-end test, and provisioning from a computer over `adb`. See [ADR-0015](adr/0015-setup-checklist-and-provisioning.md) |
 | `service/MirrorService` | Foreground service that keeps transports running; `BootReceiver` restarts it |
 | `ui/` | Transactions and Connect tabs |
 

@@ -12,6 +12,8 @@ shasum -a 256 -c pesacast-0.9.0.apk.sha256
 
 (On Linux, `sha256sum -c` does the same.) It must print `OK`. Do not install a file that fails the check or has no checksum.
 
+> Release 0.8.0 and older have no `.sha256` file. For those, use `scripts/setup-phone.sh`, which falls back to the SHA-256 digest GitHub shows for the release file, or install a newer release.
+
 ## 2. Install and grant what you can from the computer
 
 On the phone, turn on **Developer options** (Settings, About phone, tap Build number 7 times) and **USB debugging**, plug it in, and accept the prompt. Then:
