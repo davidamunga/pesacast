@@ -67,6 +67,5 @@ Any static host works. On Cloudflare Pages: build command `pnpm --filter pesacas
 
 Edit the HTML pages. The header and footer are shared: `vite.config.js` replaces the `<!--site:header-->` and `<!--site:footer-->` markers in every page, so change the navigation there once.
 
-Keep the tone: short sentences, honest about limits, no hype. Every claim should be something the code or the docs already say; when a claim depends on a release that is not out yet, say so on the page (see the note at the top of `start.html`, and remove it once the release is out).
+Keep the tone: short sentences, honest about limits, no hype. Every claim should be something the code or the docs already say; when a claim depends on a release that is not out yet, say so on the page, and remove the note once the release is out.
 
-Things to update once the next release is out: the version note on `start.html` and the "Which versions have which features?" answer on `faq.html`.
