@@ -274,3 +274,7 @@ html { scroll-padding-top: 1rem; }
 .site-footer .footer-brand { display: inline-flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem; font-weight: 700; font-size: 1.1rem; color: var(--text); text-decoration: none; }
 .site-footer .footer-brand img { width: 2rem; height: 2rem; border-radius: 0.5rem; }
 pre.prompt { white-space: pre-wrap; }
+
+.shot { margin: 2.5rem 0 0; max-width: 46rem; }
+.shot img { display: block; width: 100%; height: auto; border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 12px 32px -12px rgb(0 0 0 / 0.18); }
+.shot figcaption { margin-top: 0.75rem; font-size: 0.88rem; color: var(--muted); }
