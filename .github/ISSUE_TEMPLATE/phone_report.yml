@@ -1,0 +1,60 @@
+name: Phone report
+description: Tell us how PesaCast worked on your phone, good or bad
+title: "Phone report: "
+labels: [phone-report]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Reports like this are how the Phones page on the website grows. Working and not working are equally useful.
+        Do not paste SMS text, phone numbers, names, amounts or pairing tokens.
+  - type: input
+    id: phone
+    attributes:
+      label: Phone maker and model
+      placeholder: Samsung Galaxy A15
+    validations:
+      required: true
+  - type: input
+    id: android
+    attributes:
+      label: Android version
+      description: Settings, About phone. Include the maker's skin if you know it (One UI, MIUI, HyperOS).
+      placeholder: Android 14, One UI 6.1
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: PesaCast version
+      description: Shown at the bottom of the Android app.
+    validations:
+      required: true
+  - type: dropdown
+    id: transport
+    attributes:
+      label: What did you use?
+      multiple: true
+      options: [Bluetooth LE to desktop, WiFi to desktop, Webhook]
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: How did it go?
+      options:
+        - Worked, including after the phone sat idle for a few hours
+        - Worked, but only while the screen was on or the app was open
+        - Needed extra settings before it worked
+        - Did not work
+    validations:
+      required: true
+  - type: textarea
+    id: settings
+    attributes:
+      label: Settings you had to change
+      description: Battery, autostart, notification or permission settings, with the menu names you saw.
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
